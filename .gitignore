@@ -1,0 +1,10 @@
+target/
+mvn_out.txt
+mvn_test_out.txt
+*.class
+.idea/
+*.iml
+.vscode/
+src/main/resources/application.properties
+build.log
+mvn_run.log

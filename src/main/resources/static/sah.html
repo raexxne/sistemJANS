@@ -1,0 +1,320 @@
+<!DOCTYPE html>
+<html lang="ms">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Verifikasi Pas Kebenaran | JANS</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.6.0/css/all.min.css">
+  <link rel="stylesheet" href="/css/style.css">
+  <style>
+    body {
+      background: #f0f2f5;
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+    }
+    .verify-card {
+      border: 3px solid #00467f;
+      border-radius: 12px;
+      background: linear-gradient(135deg, #f8fbff 0%, #ffffff 100%);
+      max-width: 700px;
+      width: 100%;
+      box-shadow: 0 10px 40px rgba(0,0,0,0.1);
+    }
+    .verify-header {
+      background: linear-gradient(135deg, #00467f 0%, #0d5ba5 100%);
+      color: white;
+      padding: 20px;
+      border-radius: 9px 9px 0 0;
+      text-align: center;
+    }
+    .verify-header i {
+      font-size: 48px;
+      margin-bottom: 10px;
+      display: block;
+    }
+    .data-row {
+      display: grid;
+      grid-template-columns: 200px 1fr;
+      gap: 20px;
+      padding: 12px 0;
+      border-bottom: 1px solid #f0f0f0;
+      align-items: center;
+    }
+    .data-row:last-child {
+      border-bottom: none;
+    }
+    .data-label {
+      font-weight: bold;
+      color: #00467f;
+      font-size: 14px;
+    }
+    .data-value {
+      color: #333;
+      font-size: 15px;
+      word-break: break-word;
+    }
+    .verify-badge {
+      display: inline-block;
+      padding: 8px 16px;
+      border-radius: 20px;
+      font-weight: bold;
+      font-size: 13px;
+    }
+    .badge-passed {
+      background-color: #d4edda;
+      color: #155724;
+    }
+    .action-buttons {
+      margin-top: 20px;
+      text-align: center;
+    }
+    .action-buttons button,
+    .action-buttons a {
+      margin: 5px;
+    }
+    .verification-code {
+      background: #f8f9fa;
+      padding: 10px;
+      border-radius: 6px;
+      font-family: monospace;
+      font-size: 12px;
+      word-break: break-all;
+      border: 1px solid #dee2e6;
+    }
+    
+    @media print {
+      body {
+        background: white;
+        padding: 0;
+      }
+      .action-buttons {
+        display: none !important;
+      }
+      .verify-card {
+        box-shadow: none;
+        border: 2px solid #00467f;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <div class="verify-card">
+    <div class="verify-header">
+      <i class="fas fa-check-circle"></i>
+      <h2 class="mb-0">VERIFIKASI PAS KEBENARAN</h2>
+      <p class="mb-0 mt-2" style="font-size: 14px;">Sistem Pengesahan Akses JANS</p>
+    </div>
+    
+    <div class="card-body p-4">
+      <div id="content" class="text-center">
+        <div class="spinner-border text-primary" role="status">
+          <span class="visually-hidden">Memuatkan...</span>
+        </div>
+        <p class="mt-3 text-muted">Memproses data verifikasi...</p>
+      </div>
+    </div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+  <script>
+    function escapeHtml(text) {
+      if (!text) return '';
+      const map = {
+        '&': '&amp;',
+        '<': '&lt;',
+        '>': '&gt;',
+        '"': '&quot;',
+        "'": '&#39;'
+      };
+      return String(text).replace(/[&<>"']/g, (c) => map[c]);
+    }
+
+    /** Padankan dengan telefonBimbit() di PermohonanService.java: phoneMobile, fallback ke phone legacy */
+    function telefonBimbit(pass) {
+      if (pass.phoneMobile && String(pass.phoneMobile).trim()) return pass.phoneMobile;
+      if (pass.phone && String(pass.phone).trim()) return pass.phone;
+      return '-';
+    }
+
+    /** Padankan dengan formatMasa() di PermohonanService.java: LocalTime "HH:mm:ss" -> 12 jam AM/PM */
+    function formatMasa(visitTime) {
+      if (!visitTime) return '-';
+      const parts = String(visitTime).split(':');
+      if (parts.length < 2) return visitTime;
+      let h = parseInt(parts[0], 10);
+      const m = parseInt(parts[1], 10);
+      if (isNaN(h) || isNaN(m)) return visitTime;
+      const period = h >= 12 ? 'PM' : 'AM';
+      let h12 = h % 12;
+      if (h12 === 0) h12 = 12;
+      return `${String(h12).padStart(2, '0')}:${String(m).padStart(2, '0')} ${period}`;
+    }
+
+    async function apiFetch(url) {
+      const res = await fetch(url, {
+        headers: {
+          'ngrok-skip-browser-warning': 'true'
+        }
+      });
+
+      const contentType = res.headers.get('content-type') || '';
+
+      if (!res.ok) {
+        if (contentType.includes('application/json')) {
+          const err = await res.json().catch(() => ({}));
+          throw new Error(err.ralat || err.message || `Pas tidak ditemui atau tidak sah (status ${res.status})`);
+        }
+        throw new Error(`Pas tidak ditemui atau tidak sah (status ${res.status})`);
+      }
+
+      if (!contentType.includes('application/json')) {
+        const bodyPreview = await res.text().catch(() => '');
+        console.error('Respons bukan JSON. Content-Type:', contentType, 'Badan respons:', bodyPreview.slice(0, 300));
+        throw new Error('Respons daripada server tidak sah.');
+      }
+
+      return res.json();
+    }
+
+    async function verifyPass() {
+      const params = new URLSearchParams(location.search);
+      const token = params.get('token');
+      
+      if (!token) {
+        document.querySelector('#content').innerHTML = `
+          <div class="alert alert-danger mt-3">
+            <i class="fas fa-exclamation-triangle me-2"></i>
+            Token verifikasi tidak ditemui
+          </div>
+        `;
+        return;
+      }
+
+      try {
+        const apiUrl = '/api/pas/' + encodeURIComponent(token);
+        console.log('Fetching:', apiUrl);
+
+        const pass = await apiFetch(apiUrl);
+
+        const isValid = pass.status === 'PAS_DIKELUARKAN';
+        const statusClass = isValid ? 'badge-passed' : 'bg-warning text-dark';
+        const statusIcon = isValid ? 'fa-check-circle text-success' : 'fa-info-circle';
+        
+        document.querySelector('#content').innerHTML = `
+          <div class="mb-4 p-3 bg-light rounded">
+            <span class="verify-badge ${statusClass}">
+              <i class="fas ${statusIcon} me-2"></i>
+              ${isValid ? 'PAS SAH' : 'DALAM PROSES'}
+            </span>
+          </div>
+
+          <div style="text-align: left;">
+            <div class="data-row">
+              <div class="data-label">No. Permohonan:</div>
+              <div class="data-value"><strong>${escapeHtml(pass.nomborPermohonan)}</strong></div>
+            </div>
+
+            <div class="data-row">
+              <div class="data-label">Nama Penuh:</div>
+              <div class="data-value">${escapeHtml(pass.applicantName || '-')}</div>
+            </div>
+
+            <div class="data-row">
+              <div class="data-label">No. Kad Pengenalan / Pasport:</div>
+              <div class="data-value">${escapeHtml(pass.icNo || '-')}</div>
+            </div>
+
+            <div class="data-row">
+              <div class="data-label">E-mel:</div>
+              <div class="data-value">${escapeHtml(pass.email || '-')}</div>
+            </div>
+
+            <div class="data-row">
+              <div class="data-label">Jawatan (Gred):</div>
+              <div class="data-value">${escapeHtml(pass.jawatanGred || '-')}</div>
+            </div>
+
+            <div class="data-row">
+              <div class="data-label">No. Telefon (Bimbit):</div>
+              <div class="data-value">${escapeHtml(telefonBimbit(pass))}</div>
+            </div>
+
+            <div class="data-row">
+              <div class="data-label">No. Telefon (Pejabat):</div>
+              <div class="data-value">${escapeHtml(pass.phoneOffice || '-')}</div>
+            </div>
+
+            <div class="data-row">
+              <div class="data-label">Kementerian / Jabatan / Agensi / Universiti / Syarikat:</div>
+              <div class="data-value">${escapeHtml(pass.organisation || '-')}</div>
+            </div>
+
+            <div class="data-row">
+              <div class="data-label">Tarikh Permohonan:</div>
+              <div class="data-value">${escapeHtml(pass.applicationDate || '-')}</div>
+            </div>
+
+            <div class="data-row">
+              <div class="data-label">Tarikh Lawatan:</div>
+              <div class="data-value">${escapeHtml(pass.visitDate || '-')}</div>
+            </div>
+
+            <div class="data-row">
+              <div class="data-label">Masa Lawatan:</div>
+              <div class="data-value">${escapeHtml(formatMasa(pass.visitTime))}</div>
+            </div>
+
+            <div class="data-row">
+              <div class="data-label">Jenis Lokasi:</div>
+              <div class="data-value">${escapeHtml(pass.locationType || '-')}</div>
+            </div>
+
+            <div class="data-row">
+              <div class="data-label">Nama / Alamat Lokasi:</div>
+              <div class="data-value">${escapeHtml(pass.locationName || '-')}</div>
+            </div>
+
+            ${pass.vehicleNo && String(pass.vehicleNo).trim() ? `
+            <div class="data-row">
+              <div class="data-label">No. Pendaftaran Kenderaan:</div>
+              <div class="data-value">${escapeHtml(pass.vehicleNo)}</div>
+            </div>
+            ` : ''}
+
+            <div class="data-row">
+              <div class="data-label">Tujuan Lawatan:</div>
+              <div class="data-value">${escapeHtml(pass.purpose || '-')}</div>
+            </div>
+
+            <div class="data-row">
+              <div class="data-label">Status:</div>
+              <div class="data-value">
+                <span class="verify-badge ${statusClass}">
+                  ${escapeHtml((pass.status || '').replace(/_/g, ' '))}
+                </span>
+              </div>
+            </div>
+
+          </div>
+        `;
+      } catch (error) {
+        console.error(error);
+        document.querySelector('#content').innerHTML = `
+          <div class="alert alert-danger mt-3">
+            <i class="fas fa-times-circle me-2"></i>
+            <strong>Ralat Verifikasi</strong><br>
+            ${escapeHtml(error.message)}
+          </div>
+        `;
+      }
+    }
+
+    document.addEventListener('DOMContentLoaded', verifyPass);
+  </script>
+</body>
+</html>

@@ -1,0 +1,295 @@
+<!DOCTYPE html>
+<html lang="ms">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Borang Aduan | JANS</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.6.0/css/all.min.css">
+  <link rel="stylesheet" href="/css/style.css">
+  <style>
+    :root {
+      --biru: #075985;
+      --gelap: #082f49;
+      --biru-terang: #0ea5e9;
+      --biru-lembut: #e0f2fe;
+    }
+    
+    body {
+      background-color: #f8f9fa;
+      display: flex;
+      flex-direction: column;
+      min-height: 100vh;
+    }
+    
+
+    
+    .header-section {
+      background: linear-gradient(135deg, var(--biru), var(--biru-terang));
+      padding: 60px 0;
+      color: #fff;
+    }
+    
+
+    
+    main {
+      flex: 1;
+    }
+    
+    .info-card {
+      border-radius: 12px;
+      border: none;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+    
+    .form-card {
+      border-radius: 12px;
+      border: none;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    }
+    
+    .alert {
+      border-radius: 8px;
+      border: none;
+    }
+    
+    .btn-aduan {
+      background-color: var(--biru-terang);
+      border-color: var(--biru-terang);
+      color: #fff;
+    }
+    
+    .btn-aduan:hover {
+      background-color: var(--biru);
+      border-color: var(--biru);
+      color: #fff;
+    }
+    
+    .form-control:focus,
+    .form-select:focus {
+      border-color: var(--biru-terang);
+      box-shadow: 0 0 0 0.2rem rgba(14, 165, 233, 0.2);
+    }
+    
+    .form-label {
+      color: #082f49;
+      font-weight: 500;
+    }
+    
+    .info-highlight {
+      border-left: 4px solid var(--biru-terang) !important;
+      background-color: var(--biru-lembut);
+    }
+
+    .persetujuan-check {
+      display: flex;
+      align-items: flex-start;
+      gap: 0.6rem;
+    }
+
+    .persetujuan-check .form-check-input {
+      flex: 0 0 auto;
+      margin: 0.25rem 0 0;
+    }
+
+    .persetujuan-check .form-check-label {
+      flex: 1;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Navbar -->
+  <nav class="navbar navbar-expand-lg navbar-dark sticky-top">
+    <div class="container-fluid">
+      <a class="navbar-brand fw-bold fs-3 d-flex align-items-center" href="/">
+        <img src="/images/logo3.png" alt="Logo JANS" style="height: 60px; width: auto; margin-right: 14px;">
+        <span class="d-flex flex-column align-items-start">
+          <span class="fw-bold" style="font-size: 1.6rem; line-height: 1;">JANS</span>
+          <span class="text-white-50" style="font-size: 0.8rem; line-height: 1.1; letter-spacing: 0.04em; margin-top: 3px;">Jabatan Air Negeri Sabah</span>
+        </span>
+      </a>
+    </div>
+  </nav>
+
+  <!-- Page Header -->
+  <section class="header-section">
+    <div class="container-fluid text-center">
+      <div class="mb-3" style="font-size: 3rem;">
+        <i class="fas fa-exclamation-triangle"></i>
+      </div>
+      <h1 class="fw-bold display-5">Borang Aduan</h1>
+      <p class="lead mb-0 opacity-75">Aduan anda akan diproses dalam masa 3 hari bekerja</p>
+    </div>
+  </section>
+
+  <!-- Main Content -->
+  <main class="py-5">
+    <div class="container-fluid">
+      <div class="row g-5 justify-content-center">
+
+        <!-- Form Column -->
+        <div class="col-lg-7">
+          <div id="mesej-aduan"></div>
+
+          <div class="card form-card">
+            <div class="card-body p-5">
+              <h2 class="h4 fw-bold mb-1">Maklumat Pengadu &amp; Aduan</h2>
+              <p class="text-muted mb-4">Sila lengkapkan semua maklumat dengan teliti dan jelas.</p>
+
+              <form id="borang-aduan">
+                <div class="row g-3">
+                  <div class="col-md-6">
+                    <label for="nama-aduan" class="form-label">Nama penuh *</label>
+                    <input id="nama-aduan" name="nama" type="text" class="form-control" placeholder="Nama anda" required>
+                  </div>
+                  <div class="col-md-6">
+                    <label for="email-aduan" class="form-label">E-mel *</label>
+                    <input id="email-aduan" name="email" type="email" class="form-control" placeholder="email@contoh.com" required>
+                  </div>
+                  <div class="col-md-6">
+                    <label for="telefon-aduan" class="form-label">No. telefon *</label>
+                    <input id="telefon-aduan" name="telefon" type="tel" class="form-control" placeholder="+60-XX-XXXX-XXXX" required>
+                  </div>
+                  <div class="col-md-6">
+                    <label for="no-permohonan" class="form-label">No. permohonan</label>
+                    <input id="no-permohonan" name="noPermohonan" type="text" class="form-control" placeholder="JANS-2026-XXXXXX (jika ada)">
+                  </div>
+                  <div class="col-md-6">
+                    <label for="jenis-aduan" class="form-label">Jenis aduan *</label>
+                    <select id="jenis-aduan" name="jenisAduan" class="form-select" required>
+                      <option value="">-- Pilih jenis aduan --</option>
+                      <option value="lambat-proses">Permohonan lambat diproses</option>
+                      <option value="penolakan-tidak-adil">Penolakan tidak adil</option>
+                      <option value="masalah-sistem">Masalah teknikal sistem</option>
+                      <option value="layanan-buruk">Layanan kakitangan</option>
+                      <option value="maklumat-salah">Maklumat tidak tepat</option>
+                      <option value="lain-lain">Lain-lain</option>
+                    </select>
+                  </div>
+                  <div class="col-md-6">
+                    <label for="tarikh-kejadian" class="form-label">Tarikh kejadian *</label>
+                    <input id="tarikh-kejadian" name="tarikhKejadian" type="date" class="form-control" required>
+                  </div>
+                  <div class="col-12">
+                    <label for="butiran-aduan" class="form-label">Butiran aduan *</label>
+                    <textarea id="butiran-aduan" name="butiran" class="form-control" rows="5" placeholder="Huraikan aduan anda dengan terperinci termasuk tarikh, masa, dan pihak yang terlibat..." required></textarea>
+                  </div>
+                  <div class="col-12">
+                    <label for="tindakan-diminta" class="form-label">Tindakan yang diminta *</label>
+                    <textarea id="tindakan-diminta" name="tindakan" class="form-control" rows="3" placeholder="Apakah penyelesaian yang anda harapkan?" required></textarea>
+                  </div>
+                  <div class="col-12">
+                    <div class="form-check persetujuan-check">
+                      <input class="form-check-input" type="checkbox" id="persetujuan" required>
+                      <label class="form-check-label text-muted small" for="persetujuan">
+                        Saya mengesahkan bahawa maklumat yang diberikan adalah benar dan tepat. Saya memahami bahawa aduan palsu boleh diambil tindakan undang-undang.
+                      </label>
+                    </div>
+                  </div>
+                  <div class="col-12">
+                    <button type="submit" class="btn btn-aduan btn-lg w-100">
+                      <i class="fas fa-exclamation-circle me-2"></i> Hantar Aduan
+                    </button>
+                  </div>
+                </div>
+              </form>
+            </div>
+          </div>
+        </div>
+
+        <!-- Sidebar Info -->
+        <div class="col-lg-4">
+
+          <div class="card info-card info-highlight mb-4">
+            <div class="card-body p-4">
+              <h6 class="fw-bold mb-3"><i class="fas fa-list-ol text-primary me-2"></i>Proses Aduan</h6>
+              <ol class="text-muted small ps-3 mb-0">
+                <li class="mb-2"><strong>Diterima:</strong> Aduan anda akan disahkan &amp; nombor rujukan dijana</li>
+                <li class="mb-2"><strong>Diselidik:</strong> Penyiasatan dijalankan dalam 3 hari bekerja</li>
+                <li><strong>Maklum balas:</strong> Hasil penyelesaian dihantar melalui e-mel anda</li>
+              </ol>
+            </div>
+          </div>
+
+          <div class="card info-card mb-4">
+            <div class="card-body p-4">
+              <h6 class="fw-bold mb-3"><i class="fas fa-info-circle text-primary me-2"></i>Maklumat Penting</h6>
+              <ul class="text-muted small ps-3 mb-0">
+                <li class="mb-2">Sertakan nombor permohonan jika aduan berkaitan permohonan</li>
+                <li class="mb-2">Berikan maklumat yang lengkap untuk mempercepatkan proses</li>
+                <li class="mb-2">Simpan nombor rujukan aduan untuk tujuan susulan</li>
+                <li>Aduan palsu boleh diambil tindakan undang-undang</li>
+              </ul>
+            </div>
+          </div>
+
+          <div class="card info-card" style="background: #f0f9ff;">
+            <div class="card-body p-4">
+              <h6 class="fw-bold mb-3"><i class="fas fa-phone-alt text-primary me-2"></i>Hubungi Kami</h6>
+              <p class="text-muted small mb-3">Untuk pertanyaan lanjut:</p>
+              <a href="/hubungi.html" class="btn btn-sm btn-outline-primary w-100">
+                <i class="fas fa-envelope me-1"></i> Halaman Hubungi Kami
+              </a>
+            </div>
+          </div>
+
+        </div>
+
+      </div>
+    </div>
+  </main>
+
+  <!-- Footer -->
+  <footer class="bg-dark text-white py-3 text-center mt-auto">
+    <div class="container-fluid">
+      <p class="mb-0 small">&copy; 2026 Jabatan Air Negeri Sabah (JANS). Semua hak dilindungi.</p>
+    </div>
+  </footer>
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+  <script>
+    // Form handler: Aduan
+    document.querySelector('#borang-aduan').onsubmit = async function (e) {
+      e.preventDefault();
+      const data = {
+        nama: document.querySelector('#nama-aduan').value,
+        email: document.querySelector('#email-aduan').value,
+        telefon: document.querySelector('#telefon-aduan').value,
+        noPermohonan: document.querySelector('#no-permohonan').value,
+        jenisAduan: document.querySelector('#jenis-aduan').value,
+        tarikhKejadian: document.querySelector('#tarikh-kejadian').value,
+        butiran: document.querySelector('#butiran-aduan').value,
+        tindakan: document.querySelector('#tindakan-diminta').value,
+      };
+      try {
+        const r = await fetch('/api/public/aduan', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(data)
+        });
+        if (!r.ok) throw new Error();
+        const result = await r.json();
+        document.querySelector('#mesej-aduan').innerHTML = `
+          <div class="alert alert-success alert-dismissible fade show" role="alert">
+            <i class="fas fa-check-circle me-2"></i>
+            <strong>Aduan berjaya dihantar!</strong>
+            Nombor rujukan anda: <b>${result.rujukan ?? 'ADU-' + Date.now()}</b>. Simpan nombor ini untuk rujukan susulan.
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+          </div>
+        `;
+        e.target.reset();
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+      } catch (err) {
+        document.querySelector('#mesej-aduan').innerHTML = `
+          <div class="alert alert-danger alert-dismissible fade show" role="alert">
+            <i class="fas fa-times-circle me-2"></i>
+            <strong>Aduan gagal dihantar.</strong> Sila cuba lagi atau hubungi kami melalui e-mel.
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+          </div>
+        `;
+      }
+    };
+  </script>
+</body>
+</html>

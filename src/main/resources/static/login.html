@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="ms">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Log Masuk | JANS</title>
+
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.6.0/css/all.min.css">
+  <link rel="stylesheet" href="/css/style.css">
+</head>
+<body class="auth-page">
+  <main class="auth-main">
+    <div class="auth-shell">
+      <section class="auth-form-panel" aria-label="Borang log masuk">
+        <div class="auth-brand">
+        </div>
+        <h1 class="auth-title">Log Masuk Petugas</h1>
+        <p class="auth-subtitle">Cawangan Agihan & Pengarah JANS</p>
+
+        <div id="ralat" class="alert alert-danger d-none" role="alert">
+          <i class="fas fa-exclamation-circle me-2"></i> E-mel atau kata laluan tidak tepat.
+        </div>
+
+        <form class="auth-form" method="post" action="/login">
+          <div class="mb-3">
+            <label for="username" class="form-label fw-medium">E-mel</label>
+            <div class="input-group">
+              <span class="input-group-text"><i class="fas fa-envelope"></i></span>
+              <input id="username" name="username" type="email" class="form-control" placeholder="nama@jans.gov.my" required>
+            </div>
+          </div>
+
+          <div class="mb-4">
+            <label for="password" class="form-label fw-medium">Kata Laluan</label>
+            <div class="input-group">
+              <span class="input-group-text"><i class="fas fa-lock"></i></span>
+              <input id="password" name="password" type="password" class="form-control" placeholder="Masukkan kata laluan" required>
+            </div>
+          </div>
+
+          <div class="text-center mb-3 small text-muted">
+            Terlupa kata laluan? Sila klik <a href="/forgot-password.html" class="auth-link">sini</a>.
+          </div>
+
+          <button type="submit" class="btn btn-primary w-100 btn-lg mb-3">
+            <i class="fas fa-sign-in-alt me-2"></i> Log Masuk
+          </button>
+        </form>
+      </section>
+
+      <!-- Panel Visual dengan kandungan di tengah (Center) -->
+      <aside class="auth-visual-panel d-flex flex-column align-items-center justify-content-center text-center" aria-label="Maklumat akses sistem">
+        <div class="auth-logo-wrapper mb-3">
+          <img src="images/logo3.png" alt="Logo JANS" class="img-fluid auth-logo" style="max-height: 120px;">
+        </div>
+
+        <h2 class="auth-visual-title">Selamat Kembali</h2>
+        <p class="auth-visual-copy">Sila log masuk untuk meneruskan urusan anda.</p>
+        <ul class="auth-visual-list">
+        </ul>
+      </aside>
+    </div>
+  </main>
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+  <script>
+    if (location.search.includes('error')) {
+      const ralat = document.querySelector('#ralat');
+      if (ralat) {
+        ralat.classList.remove('d-none');
+      }
+    }
+  </script>
+</body>
+</html>

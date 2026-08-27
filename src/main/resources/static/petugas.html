@@ -1,0 +1,1725 @@
+<!DOCTYPE html>
+<html lang="ms">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Petugas Cawangan Agihan | JANS</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.6.0/css/all.min.css">
+  <link rel="stylesheet" href="/css/style.css">
+  <style>
+    .dashboard-stat-card {
+      border: 0;
+      border-radius: 18px;
+      box-shadow: 0 10px 25px rgba(0, 0, 0, 0.06);
+      overflow: hidden;
+    }
+    .dashboard-stat-card .stat-icon {
+      font-size: 1.75rem;
+    }
+    .dashboard-chart-card {
+      border: 0;
+      border-radius: 18px;
+      box-shadow: 0 10px 25px rgba(0, 0, 0, 0.06);
+      overflow: hidden;
+    }
+    .pie-chart-wrap {
+      position: relative;
+      max-width: 280px;
+      margin: 0 auto;
+    }
+    .trend-chart-wrap {
+      position: relative;
+      height: 220px;
+      margin-top: 16px;
+    }
+    .dashboard-table thead th {
+      font-size: 0.8rem;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+      white-space: nowrap;
+      padding-top: 0.9rem;
+      padding-bottom: 0.9rem;
+      background: #f8fbff;
+    }
+    .dashboard-table tbody td {
+      padding-top: 0.85rem;
+      padding-bottom: 0.85rem;
+      vertical-align: middle;
+    }
+    .dashboard-action-btn {
+      width: 36px;
+      height: 36px;
+      padding: 0;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 10px;
+      margin-right: 4px;
+    }
+    .dashboard-action-btn:last-child {
+      margin-right: 0;
+    }
+
+    .detail-modal-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.65);
+      z-index: 2100;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+    }
+    .detail-modal {
+      background: #fff;
+      border-radius: 16px;
+      width: 100%;
+      max-width: 920px;
+      max-height: 90vh;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.25);
+    }
+    .detail-modal-header {
+      padding: 20px 28px;
+      border-bottom: 1px solid #e9ecef;
+      background: linear-gradient(135deg, #00467f 0%, #0d5ba5 100%);
+      color: #fff;
+    }
+    .detail-modal-body {
+      padding: 28px;
+      overflow-y: auto;
+      flex: 1;
+    }
+    .detail-modal-footer {
+      padding: 16px 28px;
+      border-top: 1px solid #e9ecef;
+      display: flex;
+      justify-content: flex-end;
+      gap: 10px;
+      background: #f8f9fa;
+    }
+    .detail-field {
+      margin-bottom: 16px;
+    }
+    .detail-field label {
+      display: block;
+      font-size: 0.8rem;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+      color: #6c757d;
+      margin-bottom: 4px;
+    }
+    .detail-field .value {
+      font-size: 1.05rem;
+      color: #212529;
+      font-weight: 500;
+    }
+
+    .catatan-modal-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.65);
+      backdrop-filter: blur(4px);
+      z-index: 2300;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 16px;
+    }
+    .catatan-modal-card {
+      background: #fff;
+      border-radius: 14px;
+      width: 100%;
+      max-width: 520px;
+      box-shadow: 0 20px 50px rgba(0, 0, 0, 0.3);
+      overflow: hidden;
+    }
+    .catatan-modal-header {
+      background: linear-gradient(135deg, #00467f, #0d5ba5);
+      color: #fff;
+      padding: 18px 24px;
+      font-size: 1.1rem;
+      font-weight: 600;
+    }
+    .catatan-modal-body {
+      padding: 24px;
+    }
+    .catatan-modal-body textarea {
+      width: 100%;
+      border: 2px solid #dee2e6;
+      border-radius: 8px;
+      padding: 12px 14px;
+      font-size: 15px;
+      resize: vertical;
+      min-height: 120px;
+      font-family: inherit;
+      outline: none;
+    }
+    .catatan-modal-body textarea:focus {
+      border-color: #00467f;
+    }
+    .catatan-modal-actions {
+      display: flex;
+      gap: 12px;
+      padding: 0 24px 24px;
+      justify-content: flex-end;
+    }
+    .catatan-modal-actions .btn {
+      border-radius: 8px;
+      font-weight: 500;
+      min-width: 100px;
+    }
+
+    .notify-modal-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.65);
+      backdrop-filter: blur(4px);
+      z-index: 2400;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 16px;
+      animation: fadeIn 0.2s ease-out;
+    }
+    .notify-modal-card {
+      background: #fff;
+      border-radius: 14px;
+      width: 100%;
+      max-width: 420px;
+      box-shadow: 0 20px 50px rgba(0, 0, 0, 0.3);
+      overflow: hidden;
+      text-align: center;
+      animation: slideDown 0.25s ease-out;
+    }
+    .notify-modal-header {
+      padding: 18px 24px;
+      font-size: 1.1rem;
+      font-weight: 600;
+      color: #fff;
+    }
+    .notify-modal-header.notify-success {
+      background: linear-gradient(135deg, #198754, #20c997);
+    }
+    .notify-modal-header.notify-error {
+      background: linear-gradient(135deg, #dc3545, #e35d6a);
+    }
+    .notify-modal-header.notify-info {
+      background: linear-gradient(135deg, #00467f, #0d5ba5);
+    }
+    .notify-modal-body {
+      padding: 28px 24px 20px;
+    }
+    .notify-modal-body .notify-icon {
+      font-size: 52px;
+      margin-bottom: 14px;
+    }
+    .notify-icon-success { color: #198754; }
+    .notify-icon-error { color: #dc3545; }
+    .notify-icon-info { color: #0d5ba5; }
+    .notify-modal-body p {
+      font-size: 1rem;
+      color: #495057;
+      margin: 0;
+      line-height: 1.5;
+    }
+    .notify-modal-actions {
+      display: flex;
+      justify-content: center;
+      padding: 0 24px 24px;
+    }
+    .notify-modal-actions .btn {
+      border-radius: 8px;
+      font-weight: 500;
+      min-width: 120px;
+    }
+
+    .welcome-modal {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: rgba(0, 0, 0, 0.7);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      z-index: 2000;
+      animation: fadeIn 0.3s ease-out;
+    }
+    .welcome-card {
+      background: white;
+      border-radius: 12px;
+      padding: 40px;
+      max-width: 500px;
+      text-align: center;
+      box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
+      animation: slideDown 0.4s ease-out;
+    }
+    .welcome-card i {
+      font-size: 64px;
+      color: #00467f;
+      margin-bottom: 20px;
+    }
+    .welcome-card h2 {
+      color: #00467f;
+      margin-bottom: 15px;
+    }
+    .welcome-card p {
+      color: #666;
+      font-size: 16px;
+      margin-bottom: 0;
+    }
+    @keyframes fadeIn {
+      from { opacity: 0; }
+      to { opacity: 1; }
+    }
+    @keyframes slideDown {
+      from { transform: translateY(-30px); opacity: 0; }
+      to { transform: translateY(0); opacity: 1; }
+    }
+
+    .dashboard-stat-card,
+    .dashboard-chart-card,
+    .dashboard-card,
+    .card,
+    .welcome-card,
+    .dashboard-action-btn,
+    .detail-modal,
+    .catatan-modal-card,
+    .notify-modal-card {
+      transition: none !important;
+    }
+    .dashboard-stat-card:hover,
+    .dashboard-chart-card:hover,
+    .dashboard-card:hover,
+    .card:hover {
+      transform: none !important;
+      box-shadow: 0 10px 25px rgba(0, 0, 0, 0.06) !important;
+    }
+    .card.shadow-sm:hover {
+      box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075) !important;
+    }
+    .card-flat,
+    .card-flat:hover {
+      background: transparent !important;
+      box-shadow: none !important;
+    }
+    .dashboard-action-btn:hover {
+      transform: none !important;
+    }
+
+    .search-panel {
+      border: 1px solid #e9ecef;
+      border-radius: 16px;
+      background: linear-gradient(135deg, #f8fbff 0%, #f3f7ff 100%);
+      padding: 16px;
+      box-shadow: inset 0 1px 0 rgba(255,255,255,0.7);
+      min-height: 100%;
+    }
+    .search-panel .form-label {
+      font-size: 0.72rem;
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+      margin-bottom: 0.3rem;
+      color: #64748b;
+    }
+    .search-panel .form-control,
+    .search-panel .form-select {
+      border-radius: 10px;
+      border-color: #dbe3ee;
+      font-size: 0.9rem;
+      line-height: 1.4;
+      height: 40px;
+      min-height: 40px;
+      padding: 0.4rem 0.75rem;
+      box-sizing: border-box;
+    }
+    .search-panel .form-select {
+      padding-right: 2.2rem;
+      white-space: normal;
+    }
+    .search-panel .form-select option {
+      white-space: normal;
+      padding: 0.45rem 0.65rem;
+      font-size: 0.9rem;
+    }
+    .search-panel .form-control::placeholder {
+      font-size: 0.9rem;
+      color: #6c757d;
+      opacity: 1;
+    }
+    .search-panel #filter-keyword,
+    .search-panel #filter-keyword::placeholder {
+      font-size: 0.9rem;
+    }
+    .search-panel #filter-status option[value=""] {
+      font-size: 0.9rem;
+      color: #6c757d;
+    }
+    .search-panel #filter-status.status-placeholder-active {
+      font-size: 0.9rem;
+      color: #6c757d;
+    }
+    .search-panel .input-group-text {
+      background: #fff;
+      border-right: 0;
+      color: #64748b;
+      border-color: #dbe3ee;
+      height: 40px;
+      min-height: 40px;
+      padding: 0 0.75rem;
+      font-size: 0.9rem;
+      display: flex;
+      align-items: center;
+    }
+    .search-panel .input-group .form-control {
+      border-left: 0;
+      height: 40px;
+      min-height: 40px;
+    }
+    .search-panel .btn-reset-icon {
+      border-radius: 10px;
+      width: 40px;
+      height: 40px;
+      min-width: 40px;
+      padding: 0;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 0.95rem;
+    }
+    .search-summary {
+      font-size: 0.86rem;
+      color: #64748b;
+      margin-top: 0.5rem;
+    }
+
+    @media (max-width: 991.98px) {
+      .search-panel {
+        padding: 12px;
+      }
+      .search-panel .row > [class*="col-"] {
+        margin-bottom: 0.5rem;
+      }
+      .search-panel .btn-reset-icon {
+        width: 100%;
+      }
+    }
+
+    @media (max-width: 767.98px) {
+      .dashboard-stat-card .card-body,
+      .dashboard-chart-card .card-body {
+        padding: 1rem !important;
+      }
+      .trend-chart-wrap {
+        height: 180px;
+      }
+      .dashboard-table thead th:nth-child(2),
+      .dashboard-table tbody td:nth-child(2) {
+        display: none;
+      }
+      .dashboard-table th,
+      .dashboard-table td {
+        padding-top: 0.65rem;
+        padding-bottom: 0.65rem;
+      }
+    }
+
+    @media (max-width: 575.98px) {
+      .search-panel {
+        padding: 10px;
+        border-radius: 12px;
+      }
+      .search-panel .form-label {
+        font-size: 0.68rem;
+      }
+      .dashboard-action-btn {
+        width: 32px;
+        height: 32px;
+      }
+      .dashboard-table {
+        font-size: 0.92rem;
+      }
+      .dashboard-table thead {
+        display: none;
+      }
+      .dashboard-table tbody tr {
+        display: block;
+        padding: 0.7rem 0;
+        border-bottom: 1px solid #eef2f7;
+      }
+      .dashboard-table tbody td {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        border: 0;
+        padding: 0.28rem 0;
+      }
+      .dashboard-table tbody td::before {
+        content: attr(data-label);
+        font-weight: 600;
+        color: #64748b;
+        margin-right: 0.75rem;
+        flex: 0 0 90px;
+      }
+      .dashboard-table tbody td:last-child {
+        justify-content: flex-start;
+      }
+      .search-summary {
+        font-size: 0.8rem;
+      }
+    }
+  </style>
+</head>
+<body class="internal-portal d-flex flex-column min-vh-100">
+
+  <div id="welcomeModal" class="welcome-modal" style="display: none;">
+    <div class="welcome-card">
+      <i class="fas fa-wave-hand"></i>
+      <h2 id="welcomeTitle">Selamat Datang!</h2>
+      <p id="welcomeMessage">Anda telah berjaya log masuk ke sistem JANS.</p>
+    </div>
+  </div>
+
+  <nav class="navbar navbar-expand-lg navbar-dark sticky-top internal-nav">
+    <div class="container-fluid">
+      <a class="navbar-brand fw-bold fs-3 d-flex align-items-center" href="/petugas.html">
+        <img src="/images/logo3.png" alt="Logo JANS" style="height: 60px; width: auto; margin-right: 14px;">
+        <span class="d-flex flex-column align-items-start">
+          <span class="fw-bold" style="font-size: 1.6rem; line-height: 1;">JANS</span>
+          <span class="text-white-50" style="font-size: 0.8rem; line-height: 1.1; letter-spacing: 0.04em; margin-top: 3px;">Jabatan Air Negeri Sabah</span>
+        </span>
+      </a>
+      <div class="ms-auto d-flex align-items-center gap-3">
+        <a href="/profile.html" class="d-flex align-items-center gap-2 text-decoration-none" style="cursor: pointer;">
+          <img id="navProfilePic" src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 200 200'%3E%3Crect width='200' height='200' fill='%23e9ecef'/%3E%3Ccircle cx='100' cy='60' r='35' fill='%236c757d'/%3E%3Cellipse cx='100' cy='150' rx='50' ry='45' fill='%236c757d'/%3E%3C/svg%3E" alt="Profil" class="rounded-circle" style="width: 36px; height: 36px; object-fit: cover; border: 2px solid white;">
+          <span id="navUsername" class="text-light fw-500" style="font-size: 14px;"></span>
+        </a>
+        <form method="post" action="/logout" class="d-inline">
+          <button type="submit" class="btn btn-outline-light btn-sm">Log keluar</button>
+        </form>
+      </div>
+    </div>
+  </nav>
+
+  <main class="internal-main flex-grow-1" style="margin-top: 0.5rem;">
+    <section class="pt-2 pb-2">
+      <div class="container-fluid">
+        <h1 class="h4 fw-bold mb-1 text-dark">Dashboard Cawangan Agihan</h1>
+        <p class="mb-0 text-muted">Pusat operasi untuk semakan permohonan dan pengeluaran pas lawatan.</p>
+      </div>
+    </section>
+
+    <section class="py-4">
+      <div class="container-fluid">
+        <div class="row g-4 mb-4 align-items-stretch">
+          <!-- Carta Ringkasan Permohonan -->
+          <div class="col-lg-4">
+            <div class="card dashboard-chart-card h-100">
+              <div class="card-body p-4 d-flex flex-column">
+                <h4 class="h5 mb-3">Carta Ringkasan Permohonan</h4>
+                <div class="pie-chart-wrap flex-grow-1 d-flex align-items-center justify-content-center">
+                  <canvas id="pieChart" width="280" height="280"></canvas>
+                </div>
+                <div id="pie-legend" class="d-flex flex-column gap-2 mt-3 small text-muted"></div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Statistik + Graf Tren -->
+          <div class="col-lg-8">
+            <div class="row g-3 mb-4">
+              <!-- Jumlah Permohonan (lebih besar, warna sama) -->
+              <div class="col-md-4">
+                <div class="card dashboard-stat-card h-100">
+                  <div class="card-body p-4 d-flex flex-column justify-content-center">
+                    <div class="d-flex justify-content-between align-items-start mb-3">
+                      <span class="text-muted" style="font-size: 0.95rem;">Jumlah Permohonan</span>
+                      <i class="fas fa-file-alt text-primary" style="font-size: 2.1rem;"></i>
+                    </div>
+                    <h3 id="stat-total" class="fw-bold mb-0" style="font-size: 2.6rem;">0</h3>
+                  </div>
+                </div>
+              </div>
+
+              <!-- 4 kad di kanan (2x2) -->
+              <div class="col-md-8">
+                <div class="row g-3 h-100">
+                  <div class="col-6">
+                    <div class="card dashboard-stat-card h-100">
+                      <div class="card-body p-4">
+                        <div class="d-flex justify-content-between align-items-center mb-2">
+                          <span class="text-muted small">Diluluskan</span>
+                          <i class="fas fa-check-circle text-success stat-icon"></i>
+                        </div>
+                        <h3 id="stat-approved" class="display-6 fw-bold mb-0">0</h3>
+                      </div>
+                    </div>
+                  </div>
+                  <div class="col-6">
+                    <div class="card dashboard-stat-card h-100">
+                      <div class="card-body p-4">
+                        <div class="d-flex justify-content-between align-items-center mb-2">
+                          <span class="text-muted small">Tidak Diluluskan</span>
+                          <i class="fas fa-times-circle text-danger stat-icon"></i>
+                        </div>
+                        <h3 id="stat-rejected" class="display-6 fw-bold mb-0">0</h3>
+                      </div>
+                    </div>
+                  </div>
+                  <div class="col-6">
+                    <div class="card dashboard-stat-card h-100">
+                      <div class="card-body p-4">
+                        <div class="d-flex justify-content-between align-items-center mb-2">
+                          <span class="text-muted small">Menunggu Semakan</span>
+                          <i class="fas fa-clock text-primary stat-icon"></i>
+                        </div>
+                        <h3 id="stat-pending-review" class="display-6 fw-bold mb-0">0</h3>
+                      </div>
+                    </div>
+                  </div>
+                  <div class="col-6">
+                    <div class="card dashboard-stat-card h-100">
+                      <div class="card-body p-4">
+                        <div class="d-flex justify-content-between align-items-center mb-2">
+                          <span class="text-muted small">Menunggu Pengarah</span>
+                          <i class="fas fa-user-clock text-warning stat-icon"></i>
+                        </div>
+                        <h3 id="stat-waiting-director" class="display-6 fw-bold mb-0">0</h3>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Graf Tren -->
+            <div class="card dashboard-stat-card">
+              <div class="card-body p-4">
+                <h4 class="h5 mb-3">Graf Tren Permohonan</h4>
+                <div class="trend-chart-wrap">
+                  <canvas id="trendChart"></canvas>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="card card-flat border-0 shadow-none bg-transparent">
+          <div class="card-header bg-transparent border-0 py-3 px-0">
+            <div class="flex-grow-1">
+              <h2 class="h5 mb-0"><i class="fas fa-list me-2"></i>Senarai Permohonan</h2>
+              <p class="text-muted mb-0 small">Senarai permohonan untuk semakan. Hanya status <strong>Menunggu Semakan</strong> boleh dihantar kepada pengarah.</p>
+            </div>
+          </div>
+          <div class="card-body px-0">
+            <div class="search-panel mb-4">
+              <div class="row g-2 align-items-end flex-nowrap">
+                <div class="col">
+                  <label class="form-label" for="filter-keyword">Cari nama pemohon</label>
+                  <div class="input-group">
+                    <span class="input-group-text"><i class="fas fa-magnifying-glass"></i></span>
+                    <input id="filter-keyword" type="text" class="form-control" placeholder="Contoh: Amanda Lindrus" title="Cari nama, no. rujukan atau e-mel">
+                  </div>
+                </div>
+                <div class="col">
+                  <label class="form-label" for="filter-date">Tarikh hantar</label>
+                  <input id="filter-date" type="date" class="form-control" title="Tarikh masuk permohonan">
+                </div>
+                <div class="col">
+                  <label class="form-label" for="filter-status">Status</label>
+                  <select id="filter-status" class="form-select">
+                    <option value="">Semua status</option>
+                    <option value="DIHANTAR">Menunggu Semakan</option>
+                    <option value="MENUNGGU_PENGARAH">Menunggu Pengarah</option>
+                    <option value="DILULUSKAN">Diluluskan</option>
+                    <option value="DITOLAK">Tidak Diluluskan</option>
+                  </select>
+                </div>
+                <div class="col-auto">
+                  <label class="form-label d-block">&nbsp;</label>
+                  <div class="d-flex gap-2">
+                    <button id="btn-clear-filter" class="btn btn-outline-secondary btn-reset-icon" title="Reset" aria-label="Reset">
+                      <i class="fas fa-rotate-left"></i>
+                    </button>
+                    <button type="button" id="bulk-send-director-btn" class="btn btn-outline-primary btn-reset-icon" title="Hantar pengarah terpilih" aria-label="Hantar pengarah terpilih" disabled style="display: none;">
+                      <i class="fas fa-paper-plane"></i>
+                    </button>
+                  </div>
+                </div>
+              </div>
+              <div id="search-summary" class="search-summary">Sila gunakan carian untuk menapis permohonan dengan lebih cepat.</div>
+            </div>
+
+            <div class="small text-muted mb-3" id="selection-summary">Tiada permohonan dipilih.</div>
+
+            <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-3">
+              <div id="pagination-summary" class="text-muted small">Sila tunggu...</div>
+              <div class="d-flex align-items-center gap-2 flex-wrap">
+                <label class="form-label mb-0 small text-muted" for="page-size-select">Paparkan</label>
+                <select id="page-size-select" class="form-select form-select-sm" style="width: auto; min-width: 90px;">
+                  <option value="20">20</option>
+                  <option value="50">50</option>
+                  <option value="100">100</option>
+                </select>
+                <nav aria-label="Pagination senarai permohonan">
+                  <ul id="pagination-nav" class="pagination pagination-sm mb-0"></ul>
+                </nav>
+              </div>
+            </div>
+
+            <div class="table-responsive">
+              <table class="table table-hover align-middle dashboard-table">
+                <thead class="table-light">
+                  <tr>
+                    <th class="text-center" style="width: 42px;">
+                      <input type="checkbox" class="form-check-input" id="select-all-rows" title="Pilih semua permohonan Menunggu Semakan pada halaman ini">
+                    </th>
+                    <th>Nama Pemohon</th>
+                    <th>E-mel</th>
+                    <th class="text-center">Tarikh Hantar</th>
+                    <th class="text-center">Status</th>
+                    <th class="text-center">Butiran</th>
+                  </tr>
+                </thead>
+                <tbody id="permohonan-list">
+                  <tr>
+                    <td colspan="6" class="text-center text-muted">Memuatkan...</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer class="bg-dark text-white py-4 mt-auto">
+    <div class="container-fluid text-center">
+      <p class="mb-1 fw-semibold">Jabatan Air Negeri Sabah (JANS)</p>
+      <p class="mb-0 text-white-50 small">Portal Dalaman Cawangan Agihan</p>
+    </div>
+  </footer>
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script>
+    let pieChartInstance = null;
+    let trendChartInstance = null;
+    let selectedApplicationIds = new Set();
+    let allPendingReviewIds = []; // Store all pending review IDs across all pages
+    let currentPage = 1;
+    let pageSize = 20;
+
+    async function loadWelcome() {
+      try {
+        const response = await fetch('/api/profile');
+        if (!response.ok) return;
+        const data = await response.json();
+        document.querySelector('#navUsername').textContent = data.name;
+        loadNavProfilePicture();
+        if (!sessionStorage.getItem('welcomeShown')) {
+          const roleLabel = data.role === 'PENGARAH' ? 'Pengarah' : 'Petugas Cawangan Agihan';
+          document.querySelector('#welcomeTitle').textContent = `Selamat Datang, ${data.name}!`;
+          document.querySelector('#welcomeMessage').textContent = `Anda log masuk sebagai ${roleLabel}.`;
+          document.querySelector('#welcomeModal').style.display = 'flex';
+          setTimeout(() => {
+            document.querySelector('#welcomeModal').style.display = 'none';
+          }, 300000);
+          document.querySelector('#welcomeModal').addEventListener('click', (e) => {
+            if (e.target === document.querySelector('#welcomeModal')) {
+              document.querySelector('#welcomeModal').style.display = 'none';
+            }
+          });
+          sessionStorage.setItem('welcomeShown', 'true');
+        }
+      } catch (error) {
+        console.error('Error:', error);
+      }
+    }
+
+    function loadNavProfilePicture() {
+      const img = document.querySelector('#navProfilePic');
+      fetch('/api/profile/picture')
+        .then(response => {
+          if (response.ok) {
+            img.src = '/api/profile/picture?t=' + Date.now();
+          }
+        })
+        .catch(() => {});
+    }
+
+    function renderPieChart(pendingReview, waitingDirector, approved, rejected) {
+      const ctx = document.getElementById('pieChart').getContext('2d');
+      if (pieChartInstance) pieChartInstance.destroy();
+
+      const labels = ['Menunggu Semakan', 'Menunggu Pengarah', 'Diluluskan', 'Tidak Diluluskan'];
+      const values = [pendingReview, waitingDirector, approved, rejected];
+      const colors = ['#0d6efd', '#ffc107', '#198754', '#dc3545'];
+      const hasData = values.some(v => v > 0);
+
+      pieChartInstance = new Chart(ctx, {
+        type: 'pie',
+        data: {
+          labels: hasData ? labels : ['Tiada data'],
+          datasets: [{
+            data: hasData ? values : [1],
+            backgroundColor: hasData ? colors : ['#e9ecef'],
+            borderColor: '#ffffff',
+            borderWidth: 2
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: true,
+          plugins: {
+            legend: { display: false },
+            tooltip: {
+              callbacks: {
+                label: function(context) {
+                  if (!hasData) return 'Tiada data';
+                  const total = context.dataset.data.reduce((a, b) => a + b, 0);
+                  const pct = total ? ((context.raw / total) * 100).toFixed(1) : 0;
+                  return `${context.label}: ${context.raw} (${pct}%)`;
+                }
+              }
+            }
+          },
+          animation: false
+        }
+      });
+
+      const legendEl = document.getElementById('pie-legend');
+      if (hasData) {
+        const legendItem = (label, i) => `
+          <span class="d-inline-flex align-items-center gap-1">
+            <span style="width:12px;height:12px;border-radius:3px;background:${colors[i]};display:inline-block;"></span>
+            ${label}: <strong>${values[i]}</strong>
+          </span>
+        `;
+        const legendRow = (indices) => `<div class="d-flex flex-wrap justify-content-center gap-3">${indices.map(i => legendItem(labels[i], i)).join('')}</div>`;
+        legendEl.innerHTML = legendRow([0, 2]) + legendRow([1, 3]);
+      } else {
+        legendEl.innerHTML = '<span>Tiada data permohonan</span>';
+      }
+
+      renderTrendChart(pendingReview, waitingDirector, approved, rejected);
+    }
+
+    function renderTrendChart(pendingReview, waitingDirector, approved, rejected) {
+      const ctx = document.getElementById('trendChart').getContext('2d');
+      if (trendChartInstance) trendChartInstance.destroy();
+
+      const labels = [
+        'Jumlah Permohonan',
+        'Diluluskan',
+        'Tidak Diluluskan',
+        'Menunggu Semakan',
+        'Menunggu Pengarah'
+      ];
+      const values = [
+        pendingReview + waitingDirector + approved + rejected,
+        approved,
+        rejected,
+        pendingReview,
+        waitingDirector
+      ];
+
+      trendChartInstance = new Chart(ctx, {
+        type: 'line',
+        data: {
+          labels,
+          datasets: [{
+            label: 'Statistik',
+            data: values,
+            borderColor: '#0d6efd',
+            backgroundColor: 'rgba(13, 110, 253, 0.15)',
+            borderWidth: 2,
+            tension: 0.35,
+            fill: true,
+            pointRadius: 4,
+            pointBackgroundColor: '#0d6efd'
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            legend: { display: false },
+            tooltip: { enabled: true }
+          },
+          scales: {
+            y: {
+              beginAtZero: true,
+              ticks: { precision: 0 }
+            }
+          },
+          animation: false
+        }
+      });
+    }
+
+    function escapeHtml(value) {
+      return String(value ?? '').replace(/[&<>"']/g, (c) => ({
+        '&': '&amp;',
+        '<': '&lt;',
+        '>': '&gt;',
+        '"': '&quot;',
+        "'": '&#39;'
+      }[c]));
+    }
+
+    function getApplicationId(item) {
+      return String(
+        item?.id ?? item?._id ?? item?.nomborPermohonan ?? item?.noRujukan ?? item?.rujukan ?? item?.referenceNo ?? item?.email ?? item?.emel ?? ''
+      ).trim();
+    }
+
+    function renderStatusBadge(status) {
+      const normalized = (status || '').toUpperCase();
+      const map = {
+        'DIHANTAR': { label: 'Menunggu Semakan', color: 'primary' },
+        'SEMAKAN_STAFF': { label: 'Menunggu Semakan', color: 'secondary' },
+        'MENUNGGU_PENGARAH': { label: 'Menunggu Pengarah', color: 'warning' },
+        'DILULUSKAN': { label: 'Diluluskan', color: 'success' },
+        'DITOLAK': { label: 'Tidak Diluluskan', color: 'danger' },
+        'PAS_DIKELUARKAN': { label: 'Diluluskan', color: 'success' }
+      };
+      const info = map[normalized] || { label: status || '-', color: 'secondary' };
+      return `<span class="badge bg-${info.color}">${info.label}</span>`;
+    }
+
+    function formatDate(value) {
+      if (!value) return '-';
+      try {
+        const d = new Date(value);
+        if (isNaN(d.getTime())) return value;
+        return d.toLocaleDateString('ms-MY', { day: '2-digit', month: 'short', year: 'numeric' });
+      } catch {
+        return value;
+      }
+    }
+
+    function formatTime(value) {
+      if (!value) return '-';
+      try {
+        let hours, minutes;
+        const str = String(value).trim();
+        if (str.includes('T') || str.includes(' ')) {
+          const d = new Date(str);
+          if (!isNaN(d.getTime())) {
+            hours = d.getHours();
+            minutes = d.getMinutes();
+          }
+        }
+        if (hours === undefined) {
+          const parts = str.split(':');
+          if (parts.length < 2) return str;
+          hours = parseInt(parts[0], 10);
+          minutes = parseInt(parts[1], 10);
+        }
+        if (isNaN(hours) || isNaN(minutes)) return str;
+        const period = hours >= 12 ? 'PM' : 'AM';
+        let h12 = hours % 12;
+        if (h12 === 0) h12 = 12;
+        return `${String(h12).padStart(2, '0')}:${String(minutes).padStart(2, '0')} ${period}`;
+      } catch {
+        return value;
+      }
+    }
+
+    function field(label, value) {
+      return `
+        <div class="detail-field">
+          <label>${label}</label>
+          <div class="value">${value != null && value !== '' ? value : '-'}</div>
+        </div>
+      `;
+    }
+
+    function getApplicantName(data) {
+      return data.applicantName || data.nama || data.name || data.namaPemohon || '-';
+    }
+
+    function getSearchableText(data) {
+      return [
+        getApplicantName(data),
+        data.email || data.emel || '',
+        data.icNo || data.noKp || data.ic || '',
+        data.nomborPermohonan || data.noRujukan || data.rujukan || data.referenceNo || data.id || '',
+        data.organisation || data.organisasi || '',
+        data.purpose || data.tujuan || data.keterangan || '',
+        data.locationName || data.lokasi || data.namaLokasi || '',
+        data.status || ''
+      ].join(' ').toLowerCase();
+    }
+
+    function getFilterValues() {
+      return {
+        keyword: document.querySelector('#filter-keyword')?.value?.trim().toLowerCase() || '',
+        filterDate: document.querySelector('#filter-date')?.value || '',
+        filterStatus: document.querySelector('#filter-status')?.value || ''
+      };
+    }
+
+    // Kumpulan status untuk penapis — nilai dropdown ialah kunci kumpulan.
+    // Sama dengan pemetaan dalam renderStatusBadge(), supaya paparan lencana
+    // dan penapis sentiasa selaras (contoh: PAS_DIKELUARKAN dipapar sebagai
+    // 'Diluluskan', maka penapis 'Diluluskan' mesti turut padankan PAS_DIKELUARKAN).
+    const STATUS_FILTER_GROUPS = {
+      'DIHANTAR': ['DIHANTAR', 'SEMAKAN_STAFF'],
+      'MENUNGGU_PENGARAH': ['MENUNGGU_PENGARAH'],
+      'DILULUSKAN': ['DILULUSKAN', 'PAS_DIKELUARKAN'],
+      'DITOLAK': ['DITOLAK']
+    };
+
+    function matchesSearchFilters(item, filters) {
+      const keyword = filters.keyword || '';
+      const filterDate = filters.filterDate || '';
+      const filterStatus = filters.filterStatus || '';
+
+      if (keyword && !getSearchableText(item).includes(keyword)) {
+        return false;
+      }
+
+      if (filterStatus) {
+        const itemStatus = String(item.status || '').toUpperCase();
+        const group = STATUS_FILTER_GROUPS[filterStatus] || [filterStatus];
+        if (!group.includes(itemStatus)) {
+          return false;
+        }
+      }
+
+      if (filterDate) {
+        const recordDate = item.tarikhHantar || item.createdAt || item.tarikh || item.applicationDate || item.visitDate || '';
+        if (!recordDate) return false;
+        const recordDateString = new Date(recordDate);
+        if (isNaN(recordDateString.getTime())) return false;
+        const normalizedRecord = recordDateString.toISOString().slice(0, 10);
+        if (normalizedRecord !== filterDate) return false;
+      }
+
+      return true;
+    }
+
+    function locationTypeLabel(value) {
+      const map = { LOJI: 'Loji Rawatan Air', INTAKE: 'Intake' };
+      return map[(value || '').toUpperCase()] || value || '-';
+    }
+
+    function isPendingReviewStatus(status) {
+      return ['DIHANTAR', 'SEMAKAN_STAFF'].includes((status || '').toUpperCase());
+    }
+
+    function showNotifyModal({
+      title = 'Makluman',
+      message = '',
+      icon = 'fa-check-circle',
+      type = 'success'
+    } = {}) {
+      return new Promise((resolve) => {
+        const old = document.querySelector('.notify-modal-overlay');
+        if (old) old.remove();
+
+        const overlay = document.createElement('div');
+        overlay.className = 'notify-modal-overlay';
+        overlay.innerHTML = `
+          <div class="notify-modal-card">
+            <div class="notify-modal-header notify-${type}">${title}</div>
+            <div class="notify-modal-body">
+              <div class="notify-icon notify-icon-${type}"><i class="fas ${icon}"></i></div>
+              <p>${message}</p>
+            </div>
+            <div class="notify-modal-actions">
+              <button type="button" class="btn btn-primary" id="notify-btn-ok">OK</button>
+            </div>
+          </div>
+        `;
+        document.body.appendChild(overlay);
+
+        const close = () => {
+          overlay.remove();
+          resolve(true);
+        };
+        overlay.querySelector('#notify-btn-ok').onclick = close;
+        overlay.onclick = (e) => { if (e.target === overlay) close(); };
+      });
+    }
+
+    function showCatatanModal({
+      title = 'Catatan Semakan untuk Pengarah',
+      placeholder = 'Contoh: Dokumen lengkap, lokasi sesuai, dicadangkan untuk diluluskan...'
+    } = {}) {
+      return new Promise((resolve) => {
+        const old = document.querySelector('.catatan-modal-overlay');
+        if (old) old.remove();
+
+        const overlay = document.createElement('div');
+        overlay.className = 'catatan-modal-overlay';
+        overlay.innerHTML = `
+          <div class="catatan-modal-card">
+            <div class="catatan-modal-header">
+              <i class="fas fa-comment-dots me-2"></i>${title}
+            </div>
+            <div class="catatan-modal-body">
+              <label class="form-label text-muted small mb-2">Catatan ini akan dibaca oleh pengarah semasa membuat keputusan.</label>
+              <textarea id="catatan-input" placeholder="${placeholder}" rows="5"></textarea>
+            </div>
+            <div class="catatan-modal-actions">
+              <button type="button" class="btn btn-outline-secondary" id="catatan-btn-batal">Batal</button>
+              <button type="button" class="btn btn-primary" id="catatan-btn-hantar">
+                <i class="fas fa-paper-plane me-1"></i> Hantar
+              </button>
+            </div>
+          </div>
+        `;
+        document.body.appendChild(overlay);
+
+        const input = overlay.querySelector('#catatan-input');
+        input.focus();
+
+        const close = (value) => {
+          overlay.remove();
+          resolve(value);
+        };
+
+        overlay.querySelector('#catatan-btn-batal').onclick = () => close(null);
+        overlay.querySelector('#catatan-btn-hantar').onclick = () => close(input.value.trim());
+        overlay.onclick = (e) => { if (e.target === overlay) close(null); };
+
+        input.addEventListener('keydown', (e) => {
+          if (e.key === 'Escape') close(null);
+          if (e.key === 'Enter' && e.ctrlKey) close(input.value.trim());
+        });
+      });
+    }
+
+    async function hantarKePengarah(id, overlay, catatan) {
+      const btn = overlay.querySelector('#btn-hantar-pengarah');
+      if (btn) {
+        btn.disabled = true;
+        btn.innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i> Menghantar...';
+      }
+
+      try {
+        const res = await fetch(`/api/staff/permohonan/${id}/hantar-pengarah`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ catatan: catatan || '' })
+        });
+
+        const result = await res.json().catch(() => ({}));
+
+        if (!res.ok) {
+          await showNotifyModal({
+            title: 'Gagal Menghantar',
+            message: result.ralat || result.message || 'Gagal menghantar kepada pengarah.',
+            icon: 'fa-circle-exclamation',
+            type: 'error'
+          });
+          if (btn) {
+            btn.disabled = false;
+            btn.innerHTML = '<i class="fas fa-paper-plane me-1"></i> Hantar Pengarah';
+          }
+          return;
+        }
+
+        await showNotifyModal({
+          title: 'Berjaya Dihantar',
+          message: result.message || 'Permohonan berjaya dihantar kepada pengarah untuk kelulusan.',
+          icon: 'fa-check-circle',
+          type: 'success'
+        });
+        overlay.remove();
+        await loadDashboardStats();
+        await loadPermohonanTable();
+      } catch (error) {
+        console.error(error);
+        await showNotifyModal({
+          title: 'Ralat Rangkaian',
+          message: 'Ralat rangkaian. Sila cuba lagi.',
+          icon: 'fa-triangle-exclamation',
+          type: 'error'
+        });
+        if (btn) {
+          btn.disabled = false;
+          btn.innerHTML = '<i class="fas fa-paper-plane me-1"></i> Hantar Pengarah';
+        }
+      }
+    }
+
+    function showConfirmActionModal({ title, message, confirmText, cancelText, icon, type = 'primary' }) {
+      return new Promise((resolve) => {
+        const old = document.querySelector('.confirm-action-overlay');
+        if (old) old.remove();
+
+        const colorMap = {
+          primary: { header: 'linear-gradient(135deg, #00467f, #0d5ba5)', btn: 'btn-primary' },
+          success: { header: 'linear-gradient(135deg, #198754, #20c997)', btn: 'btn-success' },
+          warning: { header: 'linear-gradient(135deg, #f59e0b, #d97706)', btn: 'btn-warning text-dark' },
+          danger: { header: 'linear-gradient(135deg, #dc3545, #e35d6a)', btn: 'btn-danger' }
+        };
+        const style = colorMap[type] || colorMap.primary;
+
+        const overlay = document.createElement('div');
+        overlay.className = 'confirm-action-overlay';
+        overlay.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.65);backdrop-filter:blur(4px);z-index:2500;display:flex;align-items:center;justify-content:center;padding:16px;';
+        overlay.innerHTML = `
+          <div style="background:#fff;border-radius:14px;width:100%;max-width:440px;box-shadow:0 20px 50px rgba(0,0,0,0.3);overflow:hidden;">
+            <div style="background:${style.header};color:#fff;padding:18px 24px;font-size:1.05rem;font-weight:600;">
+              <i class="fas ${icon} me-2"></i>${title}
+            </div>
+            <div style="padding:24px; text-align:center;">
+              <div style="font-size:2.4rem; margin-bottom:14px; color:${style.header.includes('#198754') ? '#198754' : style.header.includes('#f59e0b') ? '#f59e0b' : '#00467f'};"><i class="fas ${icon}"></i></div>
+              <p style="margin:0;font-size:1rem;line-height:1.6;color:#495057;">${message}</p>
+            </div>
+            <div style="display:flex;justify-content:center;gap:10px;padding:0 24px 24px;">
+              <button type="button" class="btn btn-outline-secondary" id="confirm-action-cancel">${cancelText}</button>
+              <button type="button" class="btn ${style.btn}" id="confirm-action-ok">${confirmText}</button>
+            </div>
+          </div>
+        `;
+        document.body.appendChild(overlay);
+
+        const close = (value) => {
+          overlay.remove();
+          resolve(value);
+        };
+
+        overlay.querySelector('#confirm-action-cancel').onclick = () => close(false);
+        overlay.querySelector('#confirm-action-ok').onclick = () => close(true);
+        overlay.onclick = (e) => { if (e.target === overlay) close(false); };
+      });
+    }
+
+    async function showDetailModal(item) {
+      const id = item.id || item._id || '';
+      let data = { ...item };
+
+      try {
+        const res = await fetch(`/api/staff/permohonan/${id}`);
+        if (res.ok) data = await res.json();
+      } catch (e) {
+        console.warn('Gagal muat butiran penuh, guna data senarai.', e);
+      }
+
+      const nama = getApplicantName(data);
+      const icNo = data.icNo || data.noKp || data.ic || '-';
+      const email = data.email || data.emel || '-';
+      const jawatanGred = data.jawatanGred || data.jawatan || '-';
+      const phoneMobile = data.phoneMobile || data.phone || data.telefon || '-';
+      const phoneOffice = data.phoneOffice || data.telefonPejabat || '-';
+      const organisation = data.organisation || data.organisasi || '-';
+      const applicationDate = formatDate(data.applicationDate || data.tarikhPermohonan);
+      const visitDate = formatDate(data.visitDate || data.tarikhLawatan);
+      const visitTime = formatTime(data.visitTime || data.masaLawatan);
+      const locationType = locationTypeLabel(data.locationType || data.jenisLokasi);
+      const locationName = data.locationName || data.lokasi || data.namaLokasi || '-';
+      const vehicleNo = data.vehicleNo || data.noKenderaan || '-';
+      const purpose = data.purpose || data.tujuan || data.keterangan || '-';
+      const directorNote = data.directorNote || data.catatanPengarah || data.catatan || '-';
+      const status = (data.status || '').toUpperCase();
+      const tarikhHantar = formatDate(data.tarikhHantar || data.createdAt || data.tarikh);
+      const noRujukan = data.nomborPermohonan || data.noRujukan || data.rujukan || data.referenceNo || id || '-';
+      const auditTrailReference = data.nomborPermohonan || data.noRujukan || data.rujukan || data.referenceNo || noRujukan || '';
+      let auditTrailEntries = [];
+      if (auditTrailReference) {
+        try {
+          const auditRes = await fetch(`/api/public/permohonan/${encodeURIComponent(auditTrailReference)}/audit-trail`);
+          if (auditRes.ok) {
+            auditTrailEntries = await auditRes.json();
+          }
+        } catch (e) {
+          console.warn('Gagal memuat audit trail permohonan.', e);
+        }
+      }
+
+      // HANYA status Menunggu Semakan boleh dihantar
+      const bolehHantar = isPendingReviewStatus(status);
+      const sudahDiproses = ['DILULUSKAN', 'DITOLAK', 'PAS_DIKELUARKAN', 'MENUNGGU_PENGARAH'].includes(status);
+
+      const overlay = document.createElement('div');
+      overlay.className = 'detail-modal-overlay';
+      overlay.innerHTML = `
+        <div class="detail-modal">
+          <div class="detail-modal-header">
+            <div>
+              <h5 class="mb-0 fw-bold">Butiran Permohonan</h5>
+              <small class="opacity-75">No. Rujukan: ${noRujukan}</small>
+            </div>
+          </div>
+          <div class="detail-modal-body">
+            <div class="row g-3">
+              <div class="col-md-6">${field('Nama Penuh', nama)}</div>
+              <div class="col-md-6">${field('No. Kad Pengenalan / Pasport', icNo)}</div>
+              <div class="col-md-6">${field('E-mel', email)}</div>
+              <div class="col-md-6">${field('Jawatan (Gred)', jawatanGred)}</div>
+              <div class="col-md-6">${field('No. Telefon (Bimbit)', phoneMobile)}</div>
+              <div class="col-md-6">${field('No. Telefon (Pejabat)', phoneOffice)}</div>
+              <div class="col-md-6">${field('Kementerian / Jabatan / Agensi / Universiti / Syarikat', organisation)}</div>
+              <div class="col-md-6">${field('Tarikh Permohonan', applicationDate)}</div>
+              <div class="col-md-6">${field('Tarikh Lawatan', visitDate)}</div>
+              <div class="col-md-6">${field('Masa Lawatan', visitTime)}</div>
+              <div class="col-md-6">${field('Jenis Lokasi', locationType)}</div>
+              <div class="col-md-6">${field('Nama / Alamat Lokasi', locationName)}</div>
+              <div class="col-md-6">${field('No. Pendaftaran Kenderaan', vehicleNo)}</div>
+              <div class="col-md-6">${field('Status', renderStatusBadge(status))}</div>
+              <div class="col-md-6">${field('Tarikh Hantar', tarikhHantar)}</div>
+              <div class="col-12">${field('Tujuan Lawatan', purpose)}</div>
+              ${directorNote && String(directorNote).trim() && String(directorNote).trim() !== '-' ? `
+                <div class="col-12">
+                  <div class="detail-field">
+                    <label>Catatan Pengarah</label>
+                    <div class="value" style="background:#fff3cd;padding:10px 12px;border-radius:8px;border:1px solid #ffe69c;white-space:pre-wrap;">${escapeHtml(directorNote)}</div>
+                  </div>
+                </div>
+              ` : ''}
+              ${auditTrailEntries.length ? `
+                <div class="col-12">
+                  <div class="detail-field">
+                    <label>Jejak Audit</label>
+                    <div class="value" style="padding:0;">
+                      <div class="d-flex flex-column gap-3">
+                        ${auditTrailEntries.map((entry) => {
+                          const eventType = String(entry.eventType || 'Perubahan status').toLowerCase();
+                          let badgeClass = 'bg-secondary';
+                          if (eventType.includes('lulus') || eventType.includes('approve') || eventType.includes('pas')) badgeClass = 'bg-success';
+                          else if (eventType.includes('tolak') || eventType.includes('reject')) badgeClass = 'bg-danger';
+                          else if (eventType.includes('semak') || eventType.includes('review')) badgeClass = 'bg-warning text-dark';
+                          else if (eventType.includes('hantar') || eventType.includes('submit')) badgeClass = 'bg-primary';
+                          return `
+                            <div class="position-relative ps-3">
+                              <span class="position-absolute top-2 start-0 translate-middle rounded-circle border border-2 border-primary" style="width: 12px; height: 12px; background: #fff;"></span>
+                              <div class="border-start border-2 border-primary ps-3 pb-2">
+                                <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-2">
+                                  <span class="badge ${badgeClass}">${escapeHtml(entry.eventType || 'Perubahan status')}</span>
+                                  <span class="small text-muted">${escapeHtml(formatDate(entry.createdAt))}</span>
+                                </div>
+                                <div class="fw-semibold text-dark">${escapeHtml(String(entry.fromStatus || '-').replaceAll('_', ' '))} → ${escapeHtml(String(entry.toStatus || '-').replaceAll('_', ' '))}</div>
+                                ${entry.actor ? `<div class="small text-muted mt-1">Oleh: ${escapeHtml(entry.actor)}</div>` : ''}
+                                ${entry.note ? `<div class="small text-muted mt-2" style="white-space: pre-wrap;">${escapeHtml(entry.note)}</div>` : ''}
+                              </div>
+                            </div>
+                          `;
+                        }).join('')}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              ` : ''}
+            </div>
+          </div>
+          <div class="detail-modal-footer">
+            <button type="button" class="btn btn-secondary px-4" id="btn-tutup-detail">Tutup</button>
+          </div>
+        </div>
+      `;
+
+      document.body.appendChild(overlay);
+
+      overlay.querySelector('#btn-tutup-detail').addEventListener('click', () => overlay.remove());
+    }
+
+    function getVisiblePendingReviewIds() {
+      return Array.from(document.querySelectorAll('#permohonan-list tr[data-app-id]'))
+        .filter((row) => isPendingReviewStatus(row.getAttribute('data-status')))
+        .map((row) => row.getAttribute('data-app-id'))
+        .filter(Boolean);
+    }
+
+    function updateBulkSelectionUI() {
+      const button = document.querySelector('#bulk-send-director-btn');
+      const summary = document.querySelector('#selection-summary');
+      const selectAll = document.querySelector('#select-all-rows');
+      const count = selectedApplicationIds.size;
+      const visibleRows = Array.from(document.querySelectorAll('#permohonan-list tr[data-app-id]'));
+
+      if (button) {
+        button.disabled = count === 0;
+        button.style.display = count > 0 ? 'inline-flex' : 'none';
+        button.innerHTML = '<i class="fas fa-paper-plane"></i>';
+      }
+
+      if (summary) {
+        summary.textContent = count > 0
+          ? `${count} permohonan dipilih.`
+          : 'Tiada permohonan dipilih.';
+      }
+
+      if (selectAll) {
+        const hasPendingReview = allPendingReviewIds.length > 0;
+        const allSelected = hasPendingReview && allPendingReviewIds.every((id) => selectedApplicationIds.has(id));
+        selectAll.checked = allSelected;
+        selectAll.indeterminate = hasPendingReview && !allSelected && allPendingReviewIds.some((id) => selectedApplicationIds.has(id));
+      }
+
+      visibleRows.forEach((row) => {
+        const checkbox = row.querySelector('.row-select-checkbox');
+        const appId = row.getAttribute('data-app-id');
+        if (checkbox) {
+          checkbox.checked = selectedApplicationIds.has(appId);
+          row.classList.toggle('table-active', selectedApplicationIds.has(appId));
+        }
+      });
+    }
+
+    async function bulkHantarKePengarah() {
+      const selectedIds = Array.from(selectedApplicationIds);
+      if (!selectedIds.length) {
+        await showNotifyModal({
+          title: 'Tiada Pemilihan',
+          message: 'Sila pilih sekurang-kurangnya satu permohonan Menunggu Semakan sebelum menghantar kepada pengarah.',
+          icon: 'fa-circle-exclamation',
+          type: 'warning'
+        });
+        return;
+      }
+
+      const confirmed = await showConfirmActionModal({
+        title: 'Hantar Ke Pengarah',
+        message: `Anda ingin menghantar ${selectedIds.length} permohonan terpilih kepada pengarah?`,
+        confirmText: 'Ya, Hantar',
+        cancelText: 'Batal',
+        icon: 'fa-paper-plane',
+        type: 'primary'
+      });
+      if (!confirmed) return;
+
+      const button = document.querySelector('#bulk-send-director-btn');
+      if (button) {
+        button.disabled = true;
+        button.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
+      }
+
+      let successCount = 0;
+      let failCount = 0;
+
+      for (const id of selectedIds) {
+        try {
+          const res = await fetch(`/api/staff/permohonan/${encodeURIComponent(id)}/hantar-pengarah`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ catatan: '' })
+          });
+          if (res.ok) successCount += 1; else failCount += 1;
+        } catch (error) {
+          console.error(error);
+          failCount += 1;
+        }
+      }
+
+      selectedApplicationIds.clear();
+      updateBulkSelectionUI();
+      await loadDashboardStats();
+      await loadPermohonanTable();
+
+      await showNotifyModal({
+        title: successCount > 0 ? 'Berjaya Dihantar' : 'Gagal Menghantar',
+        message: successCount > 0
+          ? `${successCount} permohonan berjaya dihantar kepada pengarah.${failCount ? ` ${failCount} permohonan gagal.` : ''}`
+          : 'Tiada permohonan berjaya dihantar kepada pengarah.',
+        icon: successCount > 0 ? 'fa-check-circle' : 'fa-circle-exclamation',
+        type: successCount > 0 ? 'success' : 'error'
+      });
+
+      if (button) {
+        button.disabled = false;
+        button.innerHTML = '<i class="fas fa-paper-plane"></i>';
+      }
+    }
+
+    function bindBulkSelectionEvents() {
+      const selectAll = document.querySelector('#select-all-rows');
+      const bulkButton = document.querySelector('#bulk-send-director-btn');
+
+      selectAll?.addEventListener('change', (event) => {
+        if (event.target.checked) {
+          allPendingReviewIds.forEach((id) => selectedApplicationIds.add(id));
+        } else {
+          allPendingReviewIds.forEach((id) => selectedApplicationIds.delete(id));
+        }
+        updateBulkSelectionUI();
+      });
+
+      bulkButton?.addEventListener('click', bulkHantarKePengarah);
+    }
+
+    function renderPaginationControls(totalItems) {
+      const paginationNav = document.querySelector('#pagination-nav');
+      const paginationSummary = document.querySelector('#pagination-summary');
+      const pageSizeSelect = document.querySelector('#page-size-select');
+      const totalPages = Math.max(1, Math.ceil(totalItems / pageSize));
+
+      if (pageSizeSelect) {
+        pageSizeSelect.value = String(pageSize);
+      }
+
+      if (currentPage > totalPages) {
+        currentPage = totalPages;
+      }
+
+      if (paginationSummary) {
+        if (!totalItems) {
+          paginationSummary.textContent = 'Tiada rekod dipaparkan.';
+        } else {
+          const start = totalItems === 0 ? 0 : (currentPage - 1) * pageSize + 1;
+          const end = Math.min(currentPage * pageSize, totalItems);
+          paginationSummary.textContent = `Menunjukkan ${start}-${end} daripada ${totalItems} permohonan.`;
+        }
+      }
+
+      if (!paginationNav) return;
+
+      if (!totalItems) {
+        paginationNav.innerHTML = '';
+        return;
+      }
+
+      const buttons = [];
+      buttons.push(`<li class="page-item ${currentPage === 1 ? 'disabled' : ''}">
+        <button type="button" class="page-link" data-page="prev" ${currentPage === 1 ? 'disabled' : ''}>
+          <i class="fas fa-chevron-left"></i>
+        </button>
+      </li>`);
+
+      const maxVisiblePages = 5;
+      let startPage = Math.max(1, currentPage - 2);
+      let endPage = Math.min(totalPages, startPage + maxVisiblePages - 1);
+      if (endPage - startPage + 1 < maxVisiblePages) {
+        startPage = Math.max(1, endPage - maxVisiblePages + 1);
+      }
+
+      for (let page = startPage; page <= endPage; page += 1) {
+        buttons.push(`<li class="page-item ${page === currentPage ? 'active' : ''}">
+          <button type="button" class="page-link" data-page="${page}">${page}</button>
+        </li>`);
+      }
+
+      buttons.push(`<li class="page-item ${currentPage === totalPages ? 'disabled' : ''}">
+        <button type="button" class="page-link" data-page="next" ${currentPage === totalPages ? 'disabled' : ''}>
+          <i class="fas fa-chevron-right"></i>
+        </button>
+      </li>`);
+
+      paginationNav.innerHTML = buttons.join('');
+    }
+
+    function bindPaginationEvents() {
+      const pageSizeSelect = document.querySelector('#page-size-select');
+      const paginationNav = document.querySelector('#pagination-nav');
+
+      pageSizeSelect?.addEventListener('change', (event) => {
+        pageSize = Number(event.target.value) || 20;
+        currentPage = 1;
+        loadPermohonanTable();
+      });
+
+      paginationNav?.addEventListener('click', (event) => {
+        const button = event.target.closest('button[data-page]');
+        if (!button) return;
+
+        const targetPage = button.getAttribute('data-page');
+        if (targetPage === 'prev') {
+          if (currentPage > 1) currentPage -= 1;
+        } else if (targetPage === 'next') {
+          currentPage += 1;
+        } else {
+          currentPage = Number(targetPage) || 1;
+        }
+        loadPermohonanTable();
+      });
+    }
+
+    async function loadPermohonanTable() {
+      const tbody = document.querySelector('#permohonan-list');
+      const summary = document.querySelector('#search-summary');
+      tbody.innerHTML = '<tr><td colspan="6" class="text-center text-muted">Memuatkan...</td></tr>';
+
+      const filters = getFilterValues();
+
+      try {
+        const response = await fetch('/api/staff/permohonan');
+        if (!response.ok) throw new Error('Gagal memuat senarai permohonan');
+
+        const all = (await response.json()).map(item => ({
+          ...item,
+          _sortDate: new Date(item.tarikhHantar || item.createdAt || item.tarikh || item.visitDate || 0).getTime()
+        }));
+        all.sort((a, b) => b._sortDate - a._sortDate);
+
+        const filtered = all.filter((item) => matchesSearchFilters(item, filters));
+
+        // Extract all pending review IDs across all pages for "Select All" functionality
+        allPendingReviewIds = filtered
+          .filter((item) => isPendingReviewStatus(item.status))
+          .map((item) => getApplicationId(item))
+          .filter(Boolean);
+
+        const totalPages = Math.max(1, Math.ceil(filtered.length / pageSize));
+
+        if (currentPage > totalPages) {
+          currentPage = totalPages;
+        }
+
+        const startIndex = (currentPage - 1) * pageSize;
+        const pageItems = filtered.slice(startIndex, startIndex + pageSize);
+
+        if (!filtered.length) {
+          tbody.innerHTML = '<tr><td colspan="6" class="text-center text-muted">Tiada permohonan dipadankan dengan kriteria carian.</td></tr>';
+          if (summary) summary.textContent = '';
+          renderPaginationControls(0);
+          return;
+        }
+
+        tbody.innerHTML = '';
+        pageItems.forEach((item) => {
+          const nama = getApplicantName(item);
+          const email = item.email || item.emel || '-';
+          const tarikh = formatDate(item.tarikhHantar || item.createdAt || item.tarikh || item.applicationDate);
+          const status = item.status || '';
+          const id = getApplicationId(item);
+          const bolehPilih = isPendingReviewStatus(status);
+
+          const row = document.createElement('tr');
+          row.dataset.appId = id;
+          row.dataset.status = status;
+          row.innerHTML = `
+            <td class="text-center">
+              ${bolehPilih
+                ? `<input type="checkbox" class="form-check-input row-select-checkbox" value="${escapeHtml(id)}">`
+                : `<input type="checkbox" class="form-check-input" disabled title="Hanya status Menunggu Semakan boleh dihantar kepada pengarah">`
+              }
+            </td>
+            <td data-label="Nama Pemohon">${nama}</td>
+            <td data-label="E-mel">${email}</td>
+            <td data-label="Tarikh Hantar" class="text-center">${tarikh}</td>
+            <td data-label="Status" class="text-center">${renderStatusBadge(status)}</td>
+            <td data-label="Butiran" class="text-center"></td>
+          `;
+
+          const checkbox = row.querySelector('.row-select-checkbox');
+          if (checkbox) {
+            checkbox.checked = selectedApplicationIds.has(id);
+            checkbox.addEventListener('change', (event) => {
+              if (event.target.checked) {
+                if (id) selectedApplicationIds.add(id);
+              } else {
+                selectedApplicationIds.delete(id);
+              }
+              updateBulkSelectionUI();
+            });
+          }
+
+          row.classList.toggle('table-active', selectedApplicationIds.has(id));
+
+          const actionsCell = row.querySelector('td:last-child');
+          const viewBtn = document.createElement('button');
+          viewBtn.type = 'button';
+          viewBtn.title = 'Lihat butiran';
+          viewBtn.className = 'btn btn-sm btn-outline-primary dashboard-action-btn';
+          viewBtn.innerHTML = '<i class="fas fa-eye"></i>';
+          viewBtn.addEventListener('click', () => showDetailModal(item));
+          actionsCell.appendChild(viewBtn);
+
+          tbody.appendChild(row);
+        });
+
+        updateBulkSelectionUI();
+        renderPaginationControls(filtered.length);
+
+        if (summary) summary.textContent = '';
+      } catch (error) {
+        console.error('Error loading permohonan table:', error);
+        tbody.innerHTML = `<tr><td colspan="6" class="text-center text-danger">Gagal memuat senarai permohonan.</td></tr>`;
+        if (summary) {
+          summary.textContent = 'Gagal memuatkan senarai. Sila cuba sebentar lagi.';
+        }
+      }
+    }
+
+    async function loadDashboardStats() {
+      try {
+        const response = await fetch('/api/staff/permohonan');
+        if (!response.ok) return;
+        const applications = await response.json();
+        const pendingReview = applications.filter((item) =>
+          ['DIHANTAR', 'SEMAKAN_STAFF'].includes(item.status)).length;
+        const waitingDirector = applications.filter((item) => item.status === 'MENUNGGU_PENGARAH').length;
+        const approved = applications.filter((item) => ['DILULUSKAN', 'PAS_DIKELUARKAN'].includes(item.status)).length;
+        const rejected = applications.filter((item) => item.status === 'DITOLAK').length;
+        document.querySelector('#stat-total').textContent = applications.length;
+        document.querySelector('#stat-approved').textContent = approved;
+        document.querySelector('#stat-rejected').textContent = rejected;
+        document.querySelector('#stat-pending-review').textContent = pendingReview;
+        document.querySelector('#stat-waiting-director').textContent = waitingDirector;
+        renderPieChart(pendingReview, waitingDirector, approved, rejected);
+      } catch (error) {
+        console.error('Error loading dashboard stats:', error);
+      }
+    }
+
+    function debounce(fn, delay) {
+      let timer = null;
+      return (...args) => {
+        clearTimeout(timer);
+        timer = setTimeout(() => fn(...args), delay);
+      };
+    }
+
+    function bindFilterEvents() {
+      const clearBtn = document.querySelector('#btn-clear-filter');
+      const keywordInput = document.querySelector('#filter-keyword');
+      const dateInput = document.querySelector('#filter-date');
+      const statusInput = document.querySelector('#filter-status');
+
+      const updateStatusPlaceholderStyle = () => {
+        if (!statusInput) return;
+        statusInput.classList.toggle('status-placeholder-active', statusInput.value === '');
+      };
+      updateStatusPlaceholderStyle();
+
+      const apply = () => {
+        updateStatusPlaceholderStyle();
+        loadPermohonanTable();
+      };
+      const applyDebounced = debounce(apply, 300);
+
+      clearBtn?.addEventListener('click', () => {
+        if (keywordInput) keywordInput.value = '';
+        if (dateInput) dateInput.value = '';
+        if (statusInput) statusInput.value = '';
+        selectedApplicationIds.clear();
+        updateBulkSelectionUI();
+        apply();
+      });
+
+      keywordInput?.addEventListener('input', applyDebounced);
+      dateInput?.addEventListener('change', apply);
+      statusInput?.addEventListener('change', apply);
+
+      [keywordInput, dateInput, statusInput].forEach((input) => {
+        input?.addEventListener('keydown', (event) => {
+          if (event.key === 'Enter') {
+            event.preventDefault();
+            apply();
+          }
+        });
+      });
+    }
+
+    document.addEventListener('DOMContentLoaded', () => {
+      loadWelcome();
+      loadDashboardStats();
+      bindFilterEvents();
+      bindBulkSelectionEvents();
+      bindPaginationEvents();
+      loadPermohonanTable();
+    });
+  </script>
+</body>
+</html>

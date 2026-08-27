@@ -1,0 +1,904 @@
+<!DOCTYPE html>
+<html lang="ms">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Admin | JANS</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.6.0/css/all.min.css">
+  <link rel="stylesheet" href="/css/style.css">
+</head>
+<style>
+  .admin-hero {
+    background: linear-gradient(135deg, #00467f 0%, #0d5ba5 100%);
+    color: white;
+    border-radius: 20px;
+    box-shadow: 0 20px 40px rgba(0, 70, 127, 0.18);
+  }
+  .admin-card {
+    border: 0;
+    border-radius: 18px;
+    box-shadow: 0 12px 30px rgba(0, 0, 0, 0.06);
+  }
+  .admin-table thead th {
+    font-size: 0.9rem;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    text-align: center;
+  }
+  .admin-table tbody td {
+    text-align: center;
+    vertical-align: middle;
+  }
+  .admin-user-photo {
+    width: 42px;
+    height: 42px;
+    object-fit: cover;
+    border-radius: 50%;
+    border: 1px solid #e6eef7;
+  }
+  .admin-action-btn {
+    width: 38px;
+    height: 38px;
+    padding: 0;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 10px;
+    margin-right: 6px;
+  }
+  .admin-action-btn:last-child {
+    margin-right: 0;
+  }
+
+  .admin-hero,
+  .admin-card,
+  .card,
+  .admin-action-btn {
+    transition: none !important;
+  }
+  .admin-hero:hover,
+  .admin-card:hover,
+  .card:hover {
+    transform: none !important;
+    box-shadow: inherit !important;
+  }
+  .admin-card:hover {
+    box-shadow: 0 12px 30px rgba(0, 0, 0, 0.06) !important;
+  }
+  .admin-hero:hover {
+    box-shadow: 0 20px 40px rgba(0, 70, 127, 0.18) !important;
+  }
+  .admin-action-btn:hover {
+    transform: none !important;
+  }
+
+  /* ===========================================================
+     Modal bersaiz kompak & tetap - menggantikan popup ad-hoc
+     yang besar/memanjang sebelum ini.
+     =========================================================== */
+  .admin-modal-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.6);
+    backdrop-filter: blur(3px);
+    z-index: 2000;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 16px;
+  }
+  .admin-modal-card {
+    background: #fff;
+    border-radius: 14px;
+    width: 100%;
+    max-width: 440px;
+    max-height: 85vh;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    box-shadow: 0 20px 50px rgba(0, 0, 0, 0.3);
+  }
+  .admin-modal-card.admin-modal-wide {
+    max-width: 520px;
+  }
+  .admin-modal-header {
+    background: linear-gradient(135deg, #00467f, #0d5ba5);
+    color: #fff;
+    padding: 16px 22px;
+    font-size: 1.05rem;
+    font-weight: 600;
+    flex-shrink: 0;
+  }
+  .admin-modal-body {
+    padding: 20px 22px;
+    overflow-y: auto;
+    flex: 1;
+  }
+  .admin-modal-body .form-label {
+    font-size: 0.82rem;
+    font-weight: 500;
+    color: #495057;
+    margin-bottom: 4px;
+  }
+  .admin-modal-body .mb-2 {
+    margin-bottom: 14px !important;
+  }
+  .admin-modal-footer {
+    padding: 14px 22px;
+    border-top: 1px solid #e9ecef;
+    background: #f8f9fa;
+    display: flex;
+    justify-content: flex-end;
+    gap: 10px;
+    flex-shrink: 0;
+  }
+  .admin-modal-footer .btn {
+    border-radius: 8px;
+    font-weight: 500;
+    min-width: 90px;
+  }
+  .admin-info-list {
+    font-size: 0.95rem;
+    line-height: 1.9;
+  }
+
+  .admin-tabs {
+    background: transparent;
+    display: flex;
+    gap: 28px;
+    border-bottom: 1px solid #e6eef7;
+  }
+  .admin-tab-btn {
+    background: transparent;
+    border: none;
+    border-bottom: 3px solid transparent;
+    color: #000;
+    font-weight: 600;
+    padding: 10px 4px;
+    font-size: 1rem;
+  }
+  .admin-tab-btn:hover {
+    color: #0d5ba5;
+  }
+  .admin-tab-btn.active {
+    color: #0d5ba5;
+    border-bottom-color: #0d5ba5;
+  }
+
+  .admin-icon-btn {
+    width: 44px;
+    height: 44px;
+    padding: 0;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 10px;
+    font-size: 1.05rem;
+    flex-shrink: 0;
+  }
+
+  .admin-page-main {
+    margin-top: 0.4rem;
+  }
+</style>
+
+<body class="internal-portal d-flex flex-column min-vh-100">
+  <nav class="navbar navbar-expand-lg navbar-dark sticky-top internal-nav">
+    <div class="container-fluid">
+      <a class="navbar-brand fw-bold fs-3 d-flex align-items-center" href="/admin.html">
+        <img src="/images/logo3.png" alt="Logo JANS" style="height: 60px; width: auto; margin-right: 14px;">
+        <span class="d-flex flex-column align-items-start">
+          <span class="fw-bold" style="font-size: 1.6rem; line-height: 1;">JANS</span>
+          <span class="text-white-50" style="font-size: 0.8rem; line-height: 1.1; letter-spacing: 0.04em; margin-top: 3px;">Jabatan Air Negeri Sabah</span>
+        </span>
+      </a>
+      <div class="ms-auto d-flex align-items-center gap-3">
+        <a href="/profile.html" class="d-flex align-items-center gap-2 text-decoration-none" style="cursor: pointer;">
+          <img id="navProfilePic" src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 200 200'%3E%3Crect width='200' height='200' fill='%23e9ecef'/%3E%3Ccircle cx='100' cy='60' r='35' fill='%236c757d'/%3E%3Cellipse cx='100' cy='150' rx='50' ry='45' fill='%236c757d'/%3E%3C/svg%3E" alt="Profil" class="rounded-circle" style="width: 36px; height: 36px; object-fit: cover; border: 2px solid white;">
+          <span id="navUsername" class="text-light fw-500" style="font-size: 14px;"></span>
+        </a>
+        <form method="post" action="/logout" class="d-inline">
+          <button type="submit" class="btn btn-outline-light btn-sm">Log keluar</button>
+        </form>
+      </div>
+    </div>
+  </nav>
+
+  <main class="container-fluid internal-main admin-page-main flex-grow-1 pt-2 pb-4">
+    <div class="admin-tabs mb-3">
+      <button type="button" class="admin-tab-btn active" data-tab="pengguna">Pengurusan Pengguna</button>
+      <button type="button" class="admin-tab-btn" data-tab="lokasi">Pengurusan Lokasi</button>
+    </div>
+
+    <div id="tab-pengguna">
+    <div class="row g-4 mb-4">
+      <div class="col-lg-4">
+        <div class="card admin-card h-100">
+          <div class="card-body">
+            <div class="d-flex align-items-center justify-content-between mb-2">
+              <span class="text-muted small">Jumlah Pengguna</span>
+              <i class="fas fa-users text-primary"></i>
+            </div>
+            <div id="admin-user-count" class="display-6 fw-bold text-dark">0</div>
+          </div>
+        </div>
+      </div>
+      <div class="col-lg-4">
+        <div class="card admin-card h-100">
+          <div class="card-body">
+            <div class="d-flex align-items-center justify-content-between mb-2">
+              <span class="text-muted small">Staff</span>
+              <i class="fas fa-user-check text-success"></i>
+            </div>
+            <div id="admin-staff-count" class="display-6 fw-bold text-dark">0</div>
+          </div>
+        </div>
+      </div>
+      <div class="col-lg-4">
+        <div class="card admin-card h-100">
+          <div class="card-body">
+            <div class="d-flex align-items-center justify-content-between mb-2">
+              <span class="text-muted small">Pengarah</span>
+              <i class="fas fa-user-shield text-info"></i>
+            </div>
+            <div id="admin-director-count" class="display-6 fw-bold text-dark">0</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="card admin-card">
+      <div class="card-header bg-white border-0 py-3 d-flex justify-content-between align-items-center">
+        <div>
+          <h2 class="h5 mb-0"><i class="fas fa-users-gear me-2"></i>Senarai Pengguna</h2>
+          <p class="text-muted mb-0 small">Klik ikon tindakan untuk melihat, menukar maklumat atau memadam pengguna.</p>
+        </div>
+        <button id="btn-create-user" class="btn btn-primary admin-icon-btn" title="Tambah Pengguna">
+          <i class="fas fa-plus"></i>
+        </button>
+      </div>
+      <div class="card-body">
+        <div class="table-responsive">
+          <table class="table table-hover align-middle admin-table">
+            <thead class="table-light">
+              <tr>
+                <th>Gambar</th>
+                <th>Nama</th>
+                <th>Emel</th>
+                <th>Peranan</th>
+                <th>Tindakan</th>
+              </tr>
+            </thead>
+            <tbody id="admin-user-list"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+    </div>
+
+    <div id="tab-lokasi" style="display: none;">
+    <div class="row g-4 mb-4">
+      <div class="col-lg-4">
+        <div class="card admin-card h-100">
+          <div class="card-body">
+            <div class="d-flex align-items-center justify-content-between mb-2">
+              <span class="text-muted small">Jumlah Lokasi</span>
+              <i class="fas fa-map-marker-alt text-primary"></i>
+            </div>
+            <div id="admin-lokasi-count" class="display-6 fw-bold text-dark">0</div>
+          </div>
+        </div>
+      </div>
+      <div class="col-lg-4">
+        <div class="card admin-card h-100">
+          <div class="card-body">
+            <div class="d-flex align-items-center justify-content-between mb-2">
+              <span class="text-muted small">Loji Rawatan Air</span>
+              <i class="fas fa-tint text-success"></i>
+            </div>
+            <div id="admin-loji-count" class="display-6 fw-bold text-dark">0</div>
+          </div>
+        </div>
+      </div>
+      <div class="col-lg-4">
+        <div class="card admin-card h-100">
+          <div class="card-body">
+            <div class="d-flex align-items-center justify-content-between mb-2">
+              <span class="text-muted small">Intake</span>
+              <i class="fas fa-water text-info"></i>
+            </div>
+            <div id="admin-intake-count" class="display-6 fw-bold text-dark">0</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="card admin-card">
+      <div class="card-header bg-white border-0 py-3 d-flex justify-content-between align-items-center">
+        <div>
+          <h2 class="h5 mb-0"><i class="fas fa-map-marked-alt me-2"></i>Senarai Lokasi</h2>
+          <p class="text-muted mb-0 small">Klik ikon tindakan untuk menukar maklumat atau memadam lokasi.</p>
+        </div>
+        <button id="btn-create-lokasi" class="btn btn-primary admin-icon-btn" title="Tambah Lokasi">
+          <i class="fas fa-plus"></i>
+        </button>
+      </div>
+      <div class="card-body">
+        <div class="table-responsive">
+          <table class="table table-hover align-middle admin-table">
+            <thead class="table-light">
+              <tr>
+                <th>Jenis</th>
+                <th>Nama Lokasi</th>
+                <th>Alamat</th>
+                <th>Tindakan</th>
+              </tr>
+            </thead>
+            <tbody id="admin-lokasi-list"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+    </div>
+  </main>
+
+  <footer class="bg-dark text-white py-4 mt-auto">
+    <div class="container-fluid text-center">
+      <p class="mb-1 fw-semibold">Jabatan Air Negeri Sabah (JANS)</p>
+      <p class="mb-0 text-white-50 small">Portal Dalaman Cawangan Agihan</p>
+    </div>
+  </footer>
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+  <script>
+    const DEFAULT_AVATAR = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 200 200'%3E%3Crect width='200' height='200' fill='%23e9ecef'/%3E%3Ccircle cx='100' cy='60' r='35' fill='%236c757d'/%3E%3Cellipse cx='100' cy='150' rx='50' ry='45' fill='%236c757d'/%3E%3C/svg%3E";
+
+    async function loadProfile() {
+      const response = await fetch('/api/profile');
+      if (!response.ok) return;
+      const data = await response.json();
+      document.querySelector('#navUsername').textContent = data.name;
+      loadNavProfilePicture();
+    }
+
+    function loadNavProfilePicture() {
+      const img = document.querySelector('#navProfilePic');
+      fetch('/api/profile/picture')
+        .then(response => {
+          if (response.ok) {
+            img.src = '/api/profile/picture?t=' + Date.now();
+          }
+        })
+        .catch(() => {});
+    }
+
+    function renderRoleBadge(role) {
+      const normalized = (role || '').toUpperCase();
+      const map = {
+        ADMIN: 'danger',
+        PENGARAH: 'info',
+        STAFF: 'secondary'
+      };
+      const color = map[normalized] || 'secondary';
+      return `<span class="badge bg-${color}">${normalized}</span>`;
+    }
+
+    function createActionButton(icon, title, color, handler) {
+      const button = document.createElement('button');
+      button.type = 'button';
+      button.title = title;
+      button.className = `btn btn-sm btn-outline-${color} admin-action-btn`;
+      button.innerHTML = `<i class="${icon}"></i>`;
+      button.addEventListener('click', handler);
+      return button;
+    }
+
+    function updateSummary(users) {
+      document.querySelector('#admin-user-count').textContent = users.length;
+      document.querySelector('#admin-staff-count').textContent = users.filter((user) => user.role === 'STAFF').length;
+      document.querySelector('#admin-director-count').textContent = users.filter((user) => user.role === 'PENGARAH').length;
+    }
+
+    /**
+     * Bina elemen gambar profil untuk setiap pengguna dalam jadual.
+     * Cuba muatkan gambar sebenar dari server; jika tiada gambar
+     * (404 / ralat), gunakan avatar lalai secara automatik.
+     */
+    function createUserPhotoCell(user) {
+      const wrapper = document.createElement('div');
+      wrapper.className = 'd-flex justify-content-center';
+
+      const img = document.createElement('img');
+      img.className = 'admin-user-photo';
+      img.alt = user.name || 'Pengguna';
+      img.src = DEFAULT_AVATAR;
+      img.onerror = () => {
+        img.onerror = null;
+        img.src = DEFAULT_AVATAR;
+      };
+      // Endpoint gambar khusus admin untuk melihat gambar pengguna lain.
+      img.src = `/api/admin/users/${user.id}/picture?t=${Date.now()}`;
+
+      wrapper.appendChild(img);
+      return wrapper;
+    }
+
+    async function loadUsers() {
+      const tbody = document.querySelector('#admin-user-list');
+      tbody.innerHTML = '<tr><td colspan="5" class="text-center text-muted">Memuatkan...</td></tr>';
+      try {
+        const response = await fetch('/api/admin/users');
+        if (!response.ok) throw new Error('Gagal memuat senarai pengguna');
+        const users = await response.json();
+        if (!users.length) {
+          tbody.innerHTML = '<tr><td colspan="5" class="text-center text-muted">Tiada pengguna dijumpai.</td></tr>';
+          return;
+        }
+        updateSummary(users);
+        tbody.innerHTML = '';
+        users.forEach((user) => {
+          const row = document.createElement('tr');
+          row.innerHTML = `
+            <td></td>
+            <td>${user.name || '-'}</td>
+            <td>${user.email || '-'}</td>
+            <td>${renderRoleBadge(user.role)}</td>
+            <td></td>
+          `;
+          row.querySelector('td:first-child').appendChild(createUserPhotoCell(user));
+
+          const actionsCell = row.querySelector('td:last-child');
+          const actions = [
+            createActionButton('fas fa-eye', 'View user info', 'primary', async () => {
+              const detail = await fetch(`/api/admin/users/${user.id}`);
+              const data = await detail.json();
+              const message = `
+                <div class="admin-info-list">
+                  <strong>Nama:</strong> ${data.name || '-'}<br>
+                  <strong>E-mel:</strong> ${data.email || '-'}<br>
+                  <strong>Role:</strong> ${data.role || '-'}<br>
+                  <strong>Telefon:</strong> ${data.phone || '-'}<br>
+                  <strong>Alamat:</strong> ${data.address || '-'}
+                </div>
+              `;
+              await showInfoModal('Maklumat Pengguna', message);
+            }),
+            createActionButton('fas fa-edit', 'Edit user', 'warning', async () => {
+              const result = await showEditModal(user);
+              if (result) {
+                await fetch(`/api/admin/users/${user.id}`, {
+                  method: 'PUT',
+                  headers: { 'Content-Type': 'application/json' },
+                  body: JSON.stringify(result)
+                });
+                await loadUsers();
+              }
+            }),
+            createActionButton('fas fa-trash', 'Delete user', 'danger', async () => {
+              const confirmed = await showConfirmModal({
+                title: 'Padam pengguna',
+                message: `Padam ${user.name || user.email}?`,
+                type: 'danger',
+                confirmText: 'Padam',
+                cancelText: 'Batal'
+              });
+              if (!confirmed) return;
+              await fetch(`/api/admin/users/${user.id}`, { method: 'DELETE' });
+              await loadUsers();
+            })
+          ];
+          actions.forEach((btn) => actionsCell.appendChild(btn));
+          tbody.appendChild(row);
+        });
+      } catch (error) {
+        tbody.innerHTML = `<tr><td colspan="5" class="text-center text-danger">${error.message}</td></tr>`;
+      }
+    }
+
+    /**
+     * Modal generik bersaiz kompak & tetap.
+     * Menggantikan corak position-fixed/position-absolute ad-hoc sebelum ini
+     * yang tiada had tinggi/lebar sepatutnya, jadi nampak besar/memanjang.
+     *
+     * @param {string} title       Tajuk header modal
+     * @param {string} bodyHtml    Kandungan HTML badan modal
+     * @param {object} opts        { wide: boolean, closeOnOverlay: boolean }
+     * @returns {{ overlay, card, close }}
+     */
+    function createModalShell(title, bodyHtml, opts = {}) {
+      const overlay = document.createElement('div');
+      overlay.className = 'admin-modal-overlay';
+      overlay.innerHTML = `
+        <div class="admin-modal-card ${opts.wide ? 'admin-modal-wide' : ''}">
+          <div class="admin-modal-header">${title}</div>
+          <div class="admin-modal-body">${bodyHtml}</div>
+        </div>
+      `;
+      document.body.appendChild(overlay);
+
+      const close = () => overlay.remove();
+
+      if (opts.closeOnOverlay !== false) {
+        overlay.addEventListener('click', (e) => {
+          if (e.target === overlay) close();
+        });
+      }
+
+      const onKey = (e) => {
+        if (e.key === 'Escape') {
+          document.removeEventListener('keydown', onKey);
+          close();
+        }
+      };
+      document.addEventListener('keydown', onKey);
+
+      return { overlay, card: overlay.querySelector('.admin-modal-card'), close };
+    }
+
+    function showCreateModal() {
+      return new Promise((resolve) => {
+        const bodyHtml = `
+          <form id="create-user-form">
+            <div class="mb-2"><label class="form-label">Nama</label><input name="name" class="form-control" required></div>
+            <div class="mb-2"><label class="form-label">E-mel</label><input type="email" name="email" class="form-control" required></div>
+            <div class="mb-2"><label class="form-label">Kata Laluan</label><input type="password" name="password" class="form-control" placeholder="Biarkan kosong untuk jana automatik"></div>
+            <div class="mb-2">
+              <label class="form-label">Role</label>
+              <select name="role" class="form-select">
+                <option value="STAFF">STAFF</option>
+                <option value="PENGARAH">PENGARAH</option>
+                <option value="ADMIN">ADMIN</option>
+              </select>
+            </div>
+            <div class="mb-2"><label class="form-label">Telefon</label><input name="phone" class="form-control"></div>
+            <div class="mb-2"><label class="form-label">Alamat</label><input name="address" class="form-control"></div>
+          </form>
+        `;
+
+        const { overlay, card, close } = createModalShell('Tambah Pengguna Baharu', bodyHtml);
+
+        const footer = document.createElement('div');
+        footer.className = 'admin-modal-footer';
+        footer.innerHTML = `
+          <button type="button" class="btn btn-outline-secondary" id="create-user-cancel">Batal</button>
+          <button type="submit" form="create-user-form" class="btn btn-primary" id="create-user-submit">Simpan</button>
+        `;
+        card.appendChild(footer);
+
+        const form = overlay.querySelector('#create-user-form');
+
+        const finish = (value) => {
+          close();
+          resolve(value);
+        };
+
+        footer.querySelector('#create-user-cancel').addEventListener('click', () => finish(false));
+        form.addEventListener('submit', (event) => {
+          event.preventDefault();
+          const payload = Object.fromEntries(new FormData(form).entries());
+          finish(payload);
+        });
+
+        // Elak overlay-click menutup modal tanpa resolve
+        overlay.addEventListener('click', (e) => {
+          if (e.target === overlay) finish(false);
+        });
+      });
+    }
+
+    function showInfoModal(title, message) {
+      return new Promise((resolve) => {
+        const { overlay, card, close } = createModalShell(title, message);
+
+        const footer = document.createElement('div');
+        footer.className = 'admin-modal-footer';
+        footer.innerHTML = `<button type="button" class="btn btn-primary" id="info-modal-close">Tutup</button>`;
+        card.appendChild(footer);
+
+        const finish = () => {
+          close();
+          resolve(true);
+        };
+
+        footer.querySelector('#info-modal-close').addEventListener('click', finish);
+        overlay.addEventListener('click', (e) => {
+          if (e.target === overlay) finish();
+        });
+      });
+    }
+
+    function showEditModal(user) {
+      return new Promise((resolve) => {
+        const bodyHtml = `
+          <form id="edit-user-form">
+            <div class="mb-2"><label class="form-label">Nama</label><input name="name" class="form-control" value="${user.name || ''}"></div>
+            <div class="mb-2"><label class="form-label">E-mel</label><input name="email" class="form-control" value="${user.email || ''}"></div>
+            <div class="mb-2"><label class="form-label">Telefon</label><input name="phone" class="form-control" value="${user.phone || ''}"></div>
+            <div class="mb-2"><label class="form-label">Alamat</label><input name="address" class="form-control" value="${user.address || ''}"></div>
+            <div class="mb-2">
+              <label class="form-label">Role</label>
+              <select name="role" class="form-select">
+                <option value="STAFF" ${user.role === 'STAFF' ? 'selected' : ''}>STAFF</option>
+                <option value="PENGARAH" ${user.role === 'PENGARAH' ? 'selected' : ''}>PENGARAH</option>
+                <option value="ADMIN" ${user.role === 'ADMIN' ? 'selected' : ''}>ADMIN</option>
+              </select>
+            </div>
+          </form>
+        `;
+
+        const { overlay, card, close } = createModalShell('Edit Pengguna', bodyHtml);
+
+        const footer = document.createElement('div');
+        footer.className = 'admin-modal-footer';
+        footer.innerHTML = `
+          <button type="button" class="btn btn-outline-secondary" id="edit-user-cancel">Batal</button>
+          <button type="submit" form="edit-user-form" class="btn btn-primary" id="edit-user-submit">Simpan</button>
+        `;
+        card.appendChild(footer);
+
+        const form = overlay.querySelector('#edit-user-form');
+
+        const finish = (value) => {
+          close();
+          resolve(value);
+        };
+
+        footer.querySelector('#edit-user-cancel').addEventListener('click', () => finish(false));
+        form.addEventListener('submit', (event) => {
+          event.preventDefault();
+          const payload = Object.fromEntries(new FormData(form).entries());
+          finish(payload);
+        });
+
+        overlay.addEventListener('click', (e) => {
+          if (e.target === overlay) finish(false);
+        });
+      });
+    }
+
+    function showConfirmModal({ title, message, type = 'primary', confirmText = 'Ya', cancelText = 'Batal' }) {
+      return new Promise((resolve) => {
+        const bodyHtml = `<p class="mb-0">${message}</p>`;
+        const { overlay, card, close } = createModalShell(title, bodyHtml);
+
+        const color = type === 'danger' ? 'danger' : 'primary';
+        const footer = document.createElement('div');
+        footer.className = 'admin-modal-footer';
+        footer.innerHTML = `
+          <button type="button" class="btn btn-outline-secondary" id="confirm-modal-cancel">${cancelText}</button>
+          <button type="button" class="btn btn-${color}" id="confirm-modal-ok">${confirmText}</button>
+        `;
+        card.appendChild(footer);
+
+        const finish = (value) => {
+          close();
+          resolve(value);
+        };
+
+        footer.querySelector('#confirm-modal-cancel').addEventListener('click', () => finish(false));
+        footer.querySelector('#confirm-modal-ok').addEventListener('click', () => finish(true));
+        overlay.addEventListener('click', (e) => {
+          if (e.target === overlay) finish(false);
+        });
+      });
+    }
+
+    function renderJenisLokasiBadge(type) {
+      const normalized = (type || '').toUpperCase();
+      const map = { LOJI: 'primary', INTAKE: 'info' };
+      const color = map[normalized] || 'secondary';
+      return `<span class="badge bg-${color}">${normalized}</span>`;
+    }
+
+    function updateLokasiSummary(senaraiLokasi) {
+      document.querySelector('#admin-lokasi-count').textContent = senaraiLokasi.length;
+      document.querySelector('#admin-loji-count').textContent = senaraiLokasi.filter((l) => l.type === 'LOJI').length;
+      document.querySelector('#admin-intake-count').textContent = senaraiLokasi.filter((l) => l.type === 'INTAKE').length;
+    }
+
+    async function loadLokasi() {
+      const tbody = document.querySelector('#admin-lokasi-list');
+      tbody.innerHTML = '<tr><td colspan="4" class="text-center text-muted">Memuatkan...</td></tr>';
+      try {
+        const response = await fetch('/api/public/locations');
+        if (!response.ok) throw new Error('Gagal memuat senarai lokasi');
+        const senaraiLokasi = await response.json();
+        updateLokasiSummary(senaraiLokasi);
+        if (!senaraiLokasi.length) {
+          tbody.innerHTML = '<tr><td colspan="4" class="text-center text-muted">Tiada lokasi dijumpai.</td></tr>';
+          return;
+        }
+        tbody.innerHTML = '';
+        senaraiLokasi.forEach((lokasi) => {
+          const row = document.createElement('tr');
+          row.innerHTML = `
+            <td>${renderJenisLokasiBadge(lokasi.type)}</td>
+            <td>${lokasi.name || '-'}</td>
+            <td>${lokasi.address || '-'}</td>
+            <td></td>
+          `;
+
+          const actionsCell = row.querySelector('td:last-child');
+          const actions = [
+            createActionButton('fas fa-edit', 'Edit lokasi', 'warning', async () => {
+              const result = await showEditLokasiModal(lokasi);
+              if (result) {
+                const response = await fetch(`/api/locations/${lokasi.id}`, {
+                  method: 'PUT',
+                  headers: { 'Content-Type': 'application/json' },
+                  body: JSON.stringify(result)
+                });
+                const data = await response.json();
+                if (!response.ok) {
+                  await showInfoModal('Ralat', `<p class="mb-0 text-danger">${data.ralat || 'Gagal mengemaskini lokasi'}</p>`);
+                  return;
+                }
+                await loadLokasi();
+              }
+            }),
+            createActionButton('fas fa-trash', 'Delete lokasi', 'danger', async () => {
+              const confirmed = await showConfirmModal({
+                title: 'Padam lokasi',
+                message: `Padam lokasi "${lokasi.name}"?`,
+                type: 'danger',
+                confirmText: 'Padam',
+                cancelText: 'Batal'
+              });
+              if (!confirmed) return;
+              await fetch(`/api/locations/${lokasi.id}`, { method: 'DELETE' });
+              await loadLokasi();
+            })
+          ];
+          actions.forEach((btn) => actionsCell.appendChild(btn));
+          tbody.appendChild(row);
+        });
+      } catch (error) {
+        tbody.innerHTML = `<tr><td colspan="4" class="text-center text-danger">${error.message}</td></tr>`;
+      }
+    }
+
+    function showCreateLokasiModal() {
+      return new Promise((resolve) => {
+        const bodyHtml = `
+          <form id="create-lokasi-form">
+            <div class="mb-2">
+              <label class="form-label">Jenis Lokasi</label>
+              <select name="type" class="form-select" required>
+                <option value="LOJI">LOJI (Loji Rawatan Air)</option>
+                <option value="INTAKE">INTAKE</option>
+              </select>
+            </div>
+            <div class="mb-2"><label class="form-label">Nama Lokasi</label><input name="name" class="form-control" required></div>
+            <div class="mb-2"><label class="form-label">Alamat</label><input name="address" class="form-control"></div>
+          </form>
+        `;
+
+        const { overlay, card, close } = createModalShell('Tambah Lokasi Baharu', bodyHtml);
+
+        const footer = document.createElement('div');
+        footer.className = 'admin-modal-footer';
+        footer.innerHTML = `
+          <button type="button" class="btn btn-outline-secondary" id="create-lokasi-cancel">Batal</button>
+          <button type="submit" form="create-lokasi-form" class="btn btn-primary" id="create-lokasi-submit">Simpan</button>
+        `;
+        card.appendChild(footer);
+
+        const form = overlay.querySelector('#create-lokasi-form');
+
+        const finish = (value) => {
+          close();
+          resolve(value);
+        };
+
+        footer.querySelector('#create-lokasi-cancel').addEventListener('click', () => finish(false));
+        form.addEventListener('submit', (event) => {
+          event.preventDefault();
+          const payload = Object.fromEntries(new FormData(form).entries());
+          finish(payload);
+        });
+
+        overlay.addEventListener('click', (e) => {
+          if (e.target === overlay) finish(false);
+        });
+      });
+    }
+
+    function showEditLokasiModal(lokasi) {
+      return new Promise((resolve) => {
+        const bodyHtml = `
+          <form id="edit-lokasi-form">
+            <div class="mb-2">
+              <label class="form-label">Jenis Lokasi</label>
+              <select name="type" class="form-select" required>
+                <option value="LOJI" ${lokasi.type === 'LOJI' ? 'selected' : ''}>LOJI (Loji Rawatan Air)</option>
+                <option value="INTAKE" ${lokasi.type === 'INTAKE' ? 'selected' : ''}>INTAKE</option>
+              </select>
+            </div>
+            <div class="mb-2"><label class="form-label">Nama Lokasi</label><input name="name" class="form-control" value="${lokasi.name || ''}" required></div>
+            <div class="mb-2"><label class="form-label">Alamat</label><input name="address" class="form-control" value="${lokasi.address || ''}"></div>
+          </form>
+        `;
+
+        const { overlay, card, close } = createModalShell('Edit Lokasi', bodyHtml);
+
+        const footer = document.createElement('div');
+        footer.className = 'admin-modal-footer';
+        footer.innerHTML = `
+          <button type="button" class="btn btn-outline-secondary" id="edit-lokasi-cancel">Batal</button>
+          <button type="submit" form="edit-lokasi-form" class="btn btn-primary" id="edit-lokasi-submit">Simpan</button>
+        `;
+        card.appendChild(footer);
+
+        const form = overlay.querySelector('#edit-lokasi-form');
+
+        const finish = (value) => {
+          close();
+          resolve(value);
+        };
+
+        footer.querySelector('#edit-lokasi-cancel').addEventListener('click', () => finish(false));
+        form.addEventListener('submit', (event) => {
+          event.preventDefault();
+          const payload = Object.fromEntries(new FormData(form).entries());
+          finish(payload);
+        });
+
+        overlay.addEventListener('click', (e) => {
+          if (e.target === overlay) finish(false);
+        });
+      });
+    }
+
+    document.addEventListener('DOMContentLoaded', async () => {
+      await loadProfile();
+      await loadUsers();
+      await loadLokasi();
+
+      document.querySelectorAll('.admin-tab-btn').forEach((btn) => {
+        btn.addEventListener('click', () => {
+          document.querySelectorAll('.admin-tab-btn').forEach((b) => b.classList.remove('active'));
+          btn.classList.add('active');
+          document.querySelector('#tab-pengguna').style.display = btn.dataset.tab === 'pengguna' ? '' : 'none';
+          document.querySelector('#tab-lokasi').style.display = btn.dataset.tab === 'lokasi' ? '' : 'none';
+        });
+      });
+
+      document.querySelector('#btn-create-user').addEventListener('click', async () => {
+        const payload = await showCreateModal();
+        if (!payload) return;
+        const response = await fetch('/api/admin/users', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload)
+        });
+        const result = await response.json();
+        if (!response.ok) {
+          await showInfoModal('Ralat', `<p class="mb-0 text-danger">${result.ralat || 'Gagal mencipta pengguna'}</p>`);
+          return;
+        }
+        if (result.password) {
+          await showInfoModal('Pengguna Berjaya Dicipta', `<p class="mb-0">Kata laluan sementara: <strong>${result.password}</strong></p>`);
+        }
+        await loadUsers();
+      });
+
+      document.querySelector('#btn-create-lokasi').addEventListener('click', async () => {
+        const payload = await showCreateLokasiModal();
+        if (!payload) return;
+        const response = await fetch('/api/locations', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload)
+        });
+        const result = await response.json();
+        if (!response.ok) {
+          await showInfoModal('Ralat', `<p class="mb-0 text-danger">${result.ralat || 'Gagal mencipta lokasi'}</p>`);
+          return;
+        }
+        await loadLokasi();
+      });
+    });
+  </script>
+</body>
+</html>
