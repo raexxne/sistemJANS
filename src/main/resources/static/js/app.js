@@ -874,7 +874,7 @@ function renderPengarahTable() {
         <input class="form-check-input row-checkbox" type="checkbox" data-id="${p.id}">
       </td>
       <td>${esc(p.nomborPermohonan)}</td>
-      <td>${esc(p.applicantName)}</td>
+      <td class="text-start">${esc(p.applicantName)}</td>
       <td>${esc(p.reviewedBy?.name || 'Tidak direkodkan')}</td>
       <td>
         <small>
@@ -882,7 +882,7 @@ function renderPengarahTable() {
           ${esc(p.visitDate)}
         </small>
       </td>
-      <td>
+      <td class="text-start">
         <small>${esc(p.purpose || '-')}</small>
       </td>
       <td>
