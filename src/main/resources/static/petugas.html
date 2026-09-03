@@ -10,29 +10,56 @@
   <style>
     .dashboard-stat-card {
       border: 0;
-      border-radius: 18px;
-      box-shadow: 0 10px 25px rgba(0, 0, 0, 0.06);
+      border-radius: 8px;
+      box-shadow: 0 2px 8px rgba(31, 45, 61, 0.18);
       overflow: hidden;
+      border-top: 3px solid var(--kpi-color, #9a4d00);
     }
     .dashboard-stat-card .stat-icon {
-      font-size: 1.75rem;
+      font-size: 1.35rem;
+      color: var(--kpi-color, #9a4d00) !important;
     }
     .dashboard-chart-card {
       border: 0;
-      border-radius: 18px;
-      box-shadow: 0 10px 25px rgba(0, 0, 0, 0.06);
+      border-radius: 8px;
+      box-shadow: 0 2px 8px rgba(31, 45, 61, 0.18);
       overflow: hidden;
     }
     .pie-chart-wrap {
       position: relative;
-      max-width: 280px;
+      max-width: 300px;
       margin: 0 auto;
     }
-    .trend-chart-wrap {
+    .category-chart-wrap {
       position: relative;
-      height: 220px;
-      margin-top: 16px;
+      height: 300px;
+      margin-top: 8px;
     }
+    .dashboard-kpi-row {
+      margin-bottom: 1.25rem;
+    }
+    .dashboard-kpi-card {
+      min-height: 112px;
+    }
+    .dashboard-kpi-card .card-body {
+      padding: 1rem 1.15rem;
+    }
+    .dashboard-kpi-card h3 {
+      color: var(--kpi-color, #8a4300);
+      font-size: 2rem;
+      line-height: 1;
+    }
+    .dashboard-kpi-card .kpi-label {
+      color: var(--kpi-color, #9a4d00);
+      font-size: 0.78rem;
+      font-weight: 700;
+      line-height: 1.2;
+    }
+    .dashboard-kpi-row .col:nth-child(1) { --kpi-color: #7c3aed; }
+    .dashboard-kpi-row .col:nth-child(2) { --kpi-color: #16a34a; }
+    .dashboard-kpi-row .col:nth-child(3) { --kpi-color: #dc2626; }
+    .dashboard-kpi-row .col:nth-child(4) { --kpi-color: #f59e0b; }
+    .dashboard-kpi-row .col:nth-child(5) { --kpi-color: #2563eb; }
     .dashboard-table thead th {
       font-size: 0.8rem;
       text-transform: uppercase;
@@ -516,8 +543,8 @@
       .dashboard-chart-card .card-body {
         padding: 1rem !important;
       }
-      .trend-chart-wrap {
-        height: 180px;
+      .category-chart-wrap {
+        height: 240px;
       }
       .dashboard-table thead th:nth-child(2),
       .dashboard-table tbody td:nth-child(2) {
@@ -617,8 +644,65 @@
 
     <section class="py-4">
       <div class="container-fluid">
+        <div class="row row-cols-2 row-cols-md-3 row-cols-xl-5 g-3 dashboard-kpi-row">
+          <div class="col">
+            <div class="card dashboard-stat-card dashboard-kpi-card h-100">
+              <div class="card-body d-flex flex-column justify-content-center">
+                <div class="d-flex justify-content-between align-items-start gap-2 mb-2">
+                  <span class="kpi-label">Jumlah Permohonan</span>
+                  <i class="fas fa-file-alt stat-icon"></i>
+                </div>
+                <h3 id="stat-total" class="fw-bold mb-0">0</h3>
+              </div>
+            </div>
+          </div>
+          <div class="col">
+            <div class="card dashboard-stat-card dashboard-kpi-card h-100">
+              <div class="card-body d-flex flex-column justify-content-center">
+                <div class="d-flex justify-content-between align-items-start gap-2 mb-2">
+                  <span class="kpi-label">Diluluskan</span>
+                  <i class="fas fa-check-circle stat-icon"></i>
+                </div>
+                <h3 id="stat-approved" class="fw-bold mb-0">0</h3>
+              </div>
+            </div>
+          </div>
+          <div class="col">
+            <div class="card dashboard-stat-card dashboard-kpi-card h-100">
+              <div class="card-body d-flex flex-column justify-content-center">
+                <div class="d-flex justify-content-between align-items-start gap-2 mb-2">
+                  <span class="kpi-label">Tidak Diluluskan</span>
+                  <i class="fas fa-times-circle stat-icon"></i>
+                </div>
+                <h3 id="stat-rejected" class="fw-bold mb-0">0</h3>
+              </div>
+            </div>
+          </div>
+          <div class="col">
+            <div class="card dashboard-stat-card dashboard-kpi-card h-100">
+              <div class="card-body d-flex flex-column justify-content-center">
+                <div class="d-flex justify-content-between align-items-start gap-2 mb-2">
+                  <span class="kpi-label">Menunggu Semakan</span>
+                  <i class="fas fa-clock stat-icon"></i>
+                </div>
+                <h3 id="stat-pending-review" class="fw-bold mb-0">0</h3>
+              </div>
+            </div>
+          </div>
+          <div class="col">
+            <div class="card dashboard-stat-card dashboard-kpi-card h-100">
+              <div class="card-body d-flex flex-column justify-content-center">
+                <div class="d-flex justify-content-between align-items-start gap-2 mb-2">
+                  <span class="kpi-label">Menunggu Pengarah</span>
+                  <i class="fas fa-user-clock stat-icon"></i>
+                </div>
+                <h3 id="stat-waiting-director" class="fw-bold mb-0">0</h3>
+              </div>
+            </div>
+          </div>
+        </div>
+
         <div class="row g-4 mb-4 align-items-stretch">
-          <!-- Carta Ringkasan Permohonan -->
           <div class="col-lg-4">
             <div class="card dashboard-chart-card h-100">
               <div class="card-body p-4 d-flex flex-column">
@@ -631,79 +715,12 @@
             </div>
           </div>
 
-          <!-- Statistik + Graf Tren -->
           <div class="col-lg-8">
-            <div class="row g-3 mb-4">
-              <!-- Jumlah Permohonan (lebih besar, warna sama) -->
-              <div class="col-md-4">
-                <div class="card dashboard-stat-card h-100">
-                  <div class="card-body p-4 d-flex flex-column justify-content-center">
-                    <div class="d-flex justify-content-between align-items-start mb-3">
-                      <span class="text-muted" style="font-size: 0.95rem;">Jumlah Permohonan</span>
-                      <i class="fas fa-file-alt text-primary" style="font-size: 2.1rem;"></i>
-                    </div>
-                    <h3 id="stat-total" class="fw-bold mb-0" style="font-size: 2.6rem;">0</h3>
-                  </div>
-                </div>
-              </div>
-
-              <!-- 4 kad di kanan (2x2) -->
-              <div class="col-md-8">
-                <div class="row g-3 h-100">
-                  <div class="col-6">
-                    <div class="card dashboard-stat-card h-100">
-                      <div class="card-body p-4">
-                        <div class="d-flex justify-content-between align-items-center mb-2">
-                          <span class="text-muted small">Diluluskan</span>
-                          <i class="fas fa-check-circle text-success stat-icon"></i>
-                        </div>
-                        <h3 id="stat-approved" class="display-6 fw-bold mb-0">0</h3>
-                      </div>
-                    </div>
-                  </div>
-                  <div class="col-6">
-                    <div class="card dashboard-stat-card h-100">
-                      <div class="card-body p-4">
-                        <div class="d-flex justify-content-between align-items-center mb-2">
-                          <span class="text-muted small">Tidak Diluluskan</span>
-                          <i class="fas fa-times-circle text-danger stat-icon"></i>
-                        </div>
-                        <h3 id="stat-rejected" class="display-6 fw-bold mb-0">0</h3>
-                      </div>
-                    </div>
-                  </div>
-                  <div class="col-6">
-                    <div class="card dashboard-stat-card h-100">
-                      <div class="card-body p-4">
-                        <div class="d-flex justify-content-between align-items-center mb-2">
-                          <span class="text-muted small">Menunggu Semakan</span>
-                          <i class="fas fa-clock text-primary stat-icon"></i>
-                        </div>
-                        <h3 id="stat-pending-review" class="display-6 fw-bold mb-0">0</h3>
-                      </div>
-                    </div>
-                  </div>
-                  <div class="col-6">
-                    <div class="card dashboard-stat-card h-100">
-                      <div class="card-body p-4">
-                        <div class="d-flex justify-content-between align-items-center mb-2">
-                          <span class="text-muted small">Menunggu Pengarah</span>
-                          <i class="fas fa-user-clock text-warning stat-icon"></i>
-                        </div>
-                        <h3 id="stat-waiting-director" class="display-6 fw-bold mb-0">0</h3>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            <!-- Graf Tren -->
-            <div class="card dashboard-stat-card">
+            <div class="card dashboard-chart-card h-100">
               <div class="card-body p-4">
-                <h4 class="h5 mb-3">Graf Tren Permohonan</h4>
-                <div class="trend-chart-wrap">
-                  <canvas id="trendChart"></canvas>
+                <h4 class="h5 mb-3">Trend Status Permohonan</h4>
+                <div class="category-chart-wrap">
+                  <canvas id="categoryChart"></canvas>
                 </div>
               </div>
             </div>
@@ -811,7 +828,7 @@
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <script>
     let pieChartInstance = null;
-    let trendChartInstance = null;
+    let categoryChartInstance = null;
     let selectedApplicationIds = new Set();
     let allPendingReviewIds = []; // Store all pending review IDs across all pages
     let currentPage = 1;
@@ -895,42 +912,38 @@
         legendEl.innerHTML = '<span>Tiada data permohonan</span>';
       }
 
-      renderTrendChart(pendingReview, waitingDirector, approved, rejected);
     }
 
-    function renderTrendChart(pendingReview, waitingDirector, approved, rejected) {
-      const ctx = document.getElementById('trendChart').getContext('2d');
-      if (trendChartInstance) trendChartInstance.destroy();
+    function renderCategoryChart(applications) {
+      const ctx = document.getElementById('categoryChart').getContext('2d');
+      if (categoryChartInstance) categoryChartInstance.destroy();
 
-      const labels = [
-        'Jumlah Permohonan',
-        'Diluluskan',
-        'Tidak Diluluskan',
-        'Menunggu Semakan',
-        'Menunggu Pengarah'
-      ];
+      const labels = ['Diluluskan', 'Tidak Diluluskan', 'Menunggu Semakan', 'Menunggu Pengarah'];
       const values = [
-        pendingReview + waitingDirector + approved + rejected,
-        approved,
-        rejected,
-        pendingReview,
-        waitingDirector
+        applications.filter((item) => ['DILULUSKAN', 'PAS_DIKELUARKAN'].includes(item.status)).length,
+        applications.filter((item) => item.status === 'DITOLAK').length,
+        applications.filter((item) => ['DIHANTAR', 'SEMAKAN_STAFF'].includes(item.status)).length,
+        applications.filter((item) => item.status === 'MENUNGGU_PENGARAH').length
       ];
+      const colors = ['#16a34a', '#dc2626', '#f59e0b', '#7c3aed'];
 
-      trendChartInstance = new Chart(ctx, {
+      categoryChartInstance = new Chart(ctx, {
         type: 'line',
         data: {
           labels,
           datasets: [{
-            label: 'Statistik',
+            label: 'Jumlah Permohonan',
             data: values,
-            borderColor: '#0d6efd',
-            backgroundColor: 'rgba(13, 110, 253, 0.15)',
-            borderWidth: 2,
+            borderColor: '#2563eb',
+            backgroundColor: 'rgba(37, 99, 235, 0.12)',
+            borderWidth: 3,
             tension: 0.35,
             fill: true,
-            pointRadius: 4,
-            pointBackgroundColor: '#0d6efd'
+            pointRadius: 6,
+            pointHoverRadius: 8,
+            pointBackgroundColor: colors,
+            pointBorderColor: '#ffffff',
+            pointBorderWidth: 2
           }]
         },
         options: {
@@ -938,12 +951,21 @@
           maintainAspectRatio: false,
           plugins: {
             legend: { display: false },
-            tooltip: { enabled: true }
+            tooltip: {
+              callbacks: {
+                label: (context) => ` ${context.raw} permohonan`
+              }
+            }
           },
           scales: {
+            x: {
+              grid: { display: false },
+              ticks: { color: '#343a40', font: { weight: '600' } }
+            },
             y: {
               beginAtZero: true,
-              ticks: { precision: 0 }
+              ticks: { precision: 0, color: '#6c757d' },
+              grid: { color: '#e9ecef' }
             }
           },
           animation: false
@@ -1783,6 +1805,7 @@
           hour: '2-digit', minute: '2-digit'
         });
         renderPieChart(pendingReview, waitingDirector, approved, rejected);
+        renderCategoryChart(applications);
       } catch (error) {
         console.error('Error loading dashboard stats:', error);
       }
