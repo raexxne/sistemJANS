@@ -376,7 +376,7 @@ function showSebabTolakModal() {
             <option value="Tarikh lawatan tidak sesuai">Tarikh lawatan tidak sesuai</option>
             <option value="Lokasi lawatan tidak dibenarkan">Lokasi lawatan tidak dibenarkan</option>
             <option value="Tujuan lawatan tidak memenuhi syarat">Tujuan lawatan tidak memenuhi syarat</option>
-            <option value="Dokumen atau maklumat sokongan tidak mencukupi">Dokumen atau maklumat sokongan tidak mencukupi</option>
+            <option value="Dokumen sokongan tidak mencukupi">Dokumen sokongan tidak mencukupi</option>
             <option value="Lain-lain">Lain-lain</option>
           </select>
           <textarea id="sebab-lain" class="form-control mt-3 d-none" rows="3" placeholder="Nyatakan sebab penolakan"></textarea>
@@ -926,6 +926,13 @@ function bindPengarahPaginationEvents() {
   }
 }
 
+function isNewApplication(item) {
+  const createdAt = item.createdAt || item.tarikhHantar;
+  const createdTime = Date.parse(createdAt || '');
+  const age = Date.now() - createdTime;
+  return Number.isFinite(createdTime) && age >= 0 && age <= 24 * 60 * 60 * 1000;
+}
+
 function renderPengarahTable() {
   const totalPages = Math.max(1, Math.ceil(pengarahAllPermohonan.length / pengarahPageSize));
   if (pengarahCurrentPage > totalPages) {
@@ -936,12 +943,12 @@ function renderPengarahTable() {
   const pageItems = pengarahAllPermohonan.slice(startIndex, startIndex + pengarahPageSize);
 
   document.querySelector('#senarai-pengarah').innerHTML = pageItems.map(p => `
-    <tr>
+    <tr class="${isNewApplication(p) ? 'application-new' : ''}">
       <td>
         <input class="form-check-input row-checkbox" type="checkbox" data-id="${p.id}">
       </td>
       <td>${esc(p.nomborPermohonan)}</td>
-      <td class="text-start">${esc(p.organisation || '-')}</td>
+      <td class="text-start">${esc(p.organisation || '-')} ${isNewApplication(p) ? '<span class="new-application-badge">Baru</span>' : ''}</td>
       <td>${esc(p.reviewedBy?.name || 'Tidak direkodkan')}</td>
       <td>
         <small>

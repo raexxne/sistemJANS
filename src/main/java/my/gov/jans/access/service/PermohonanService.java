@@ -403,8 +403,6 @@ public class PermohonanService {
             tbl.addCell(hc);
 
             addRow(tbl, "No. Permohonan", p.getNomborPermohonan(), fLabel, fValue, lightBlue, white);
-            addRow(tbl, "E-mel Untuk Dihubungi (Wakil)", p.getEmailWakil(), fLabel, fValue, lightBlue, white);
-            addRow(tbl, "No. Telefon (Pejabat)", p.getPhoneOffice(), fLabel, fValue, lightBlue, white);
             addRow(tbl, "Kementerian / Jabatan / Agensi / Universiti / Syarikat",
                     p.getOrganisation(), fLabel, fValue, lightBlue, white);
             addRow(tbl, "Tarikh Permohonan",
@@ -418,6 +416,8 @@ public class PermohonanService {
                     p.getLocationType() != null ? p.getLocationType().toString() : "-",
                     fLabel, fValue, lightBlue, white);
             addRow(tbl, "Nama / Alamat Lokasi", p.getLocationName(), fLabel, fValue, lightBlue, white);
+            addRow(tbl, "No. Telefon (Pejabat)", p.getPhoneOffice(), fLabel, fValue, lightBlue, white);
+            addRow(tbl, "E-mel Untuk Dihubungi (Wakil)", p.getEmailWakil(), fLabel, fValue, lightBlue, white);
             addRow(tbl, "Tujuan Lawatan", p.getPurpose(), fLabel, fValue, lightBlue, white);
             if (includeInternalNotes && p.getStatus() != StatusPermohonan.MENUNGGU_PENGARAH) {
                 addRow(tbl, "Status",
