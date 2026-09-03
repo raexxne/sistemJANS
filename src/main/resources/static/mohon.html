@@ -3,12 +3,22 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Permohonan | JANS</title>
+  <title>Permohonan Kebenaran Masuk | JAS</title>
   
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.6.0/css/all.min.css">
   <link rel="stylesheet" href="/css/style.css">
   <style>
+    .application-form-container {
+      width: 80%;
+    }
+
+    @media (max-width: 576px) {
+      .application-form-container {
+        width: 100%;
+      }
+    }
+
     .persetujuan-peraturan {
       display: flex;
       align-items: flex-start;
@@ -23,6 +33,12 @@
     .persetujuan-peraturan .form-check-label {
       flex: 1;
     }
+
+    .visitor-entry + .visitor-entry {
+      border-top: 1px solid var(--bs-border-color);
+      margin-top: 1.5rem;
+      padding-top: 1.5rem;
+    }
   </style>
 </head>
 <body class="blue-page d-flex flex-column min-vh-100">
@@ -30,7 +46,7 @@
   <main class="flex-grow-1 py-5">
     <div class="container-fluid">
       <div class="row justify-content-center">
-        <div class="col-lg-9">
+        <div class="application-form-container">
           <div class="card shadow border-0 rounded-4 form-card">
             <div class="card-body p-5">
               <div class="mb-4">
@@ -39,9 +55,13 @@
                 </a>
               </div>
               <div class="text-center mb-5">
-                <i class="fas fa-file-alt fa-3x text-primary mb-3"></i>
-                <h1 class="h3 fw-bold">Borang Permohonan Kebenaran Akses</h1>
-                <p class="text-muted">Sila isi semua maklumat dengan lengkap dan tepat.</p>
+                <h1 class="h3 fw-bold">Borang Permohonan Kebenaran Masuk</h1>
+                <div class="alert alert-info text-start mt-3 mb-0" role="note">
+                  <ul class="mb-0 ps-3">
+                    <li>Sila isi semua maklumat dengan lengkap dan tepat.</li>
+                    <li>Tarikh lawatan hendaklah sekurang-kurangnya dua (2) minggu selepas tarikh permohonan.</li>
+                  </ul>
+                </div>
               </div>
 
               <div id="mesej"></div>
@@ -49,45 +69,9 @@
               <form id="borang">
                 <div class="row g-4">
                   <div class="col-md-6">
-                    <label for="applicantName" class="form-label fw-medium">Nama Penuh <span class="text-danger">*</span></label>
-                    <input id="applicantName" name="applicantName" class="form-control" 
-                           placeholder="Contoh: Amanda Lindrus" required>
-                  </div>
-
-                  <div class="col-md-6">
-                    <label for="icNo" class="form-label fw-medium">No. Kad Pengenalan <span class="text-danger">*</span></label>
-                    <input id="icNo" name="icNo" class="form-control" 
-                           placeholder="Contoh: 871234-12-1234" required>
-                  </div>
-
-                  <div class="col-md-6">
-                    <label for="email" class="form-label fw-medium">E-mel <span class="text-danger">*</span></label>
-                    <input id="email" type="email" name="email" class="form-control" 
-                           placeholder="Contoh: amanda@email.com" required>
-                  </div>
-
-                  <div class="col-md-6">
-                    <label for="jawatanGred" class="form-label fw-medium">Jawatan (Gred) <span class="text-danger">*</span></label>
-                    <input id="jawatanGred" name="jawatanGred" class="form-control" 
-                           placeholder="Contoh: Jurutera (J41)" required>
-                  </div>
-
-                  <div class="col-md-6">
-                    <label for="phoneMobile" class="form-label fw-medium">No. Telefon (Bimbit) <span class="text-danger">*</span></label>
-                    <input id="phoneMobile" name="phoneMobile" class="form-control" 
-                           placeholder="Contoh: 012-3456789" required>
-                  </div>
-
-                  <div class="col-md-6">
-                    <label for="phoneOffice" class="form-label fw-medium">No. Telefon (Pejabat) <span class="text-danger">*</span></label>
-                    <input id="phoneOffice" name="phoneOffice" class="form-control" 
-                           placeholder="Contoh: 088-123456" required>
-                  </div>
-
-                  <div class="col-md-6">
                     <label for="organisation" class="form-label fw-medium">Kementerian / Jabatan / Agensi / Universiti / Syarikat <span class="text-danger">*</span></label>
                     <input id="organisation" name="organisation" class="form-control" 
-                           placeholder="Contoh: Jabatan Air Negeri Sabah" required>
+                           placeholder="Contoh: Jabatan Air Sabah" required>
                   </div>
 
                   <div class="col-md-6">
@@ -123,16 +107,37 @@
                     <div class="form-text text-muted" id="locationHint"></div>
                   </div>
 
-                  <div class="col-12">
-                    <label for="vehicleNo" class="form-label fw-medium">No. Pendaftaran Kenderaan <span class="text-danger">*</span></label>
-                    <input id="vehicleNo" name="vehicleNo" class="form-control" 
-                           placeholder="Contoh: SAB 1234 W" required>
+                  <div class="col-md-6">
+                    <label for="phoneOffice" class="form-label fw-medium">No. Telefon (Pejabat) <span class="text-danger">*</span></label>
+                    <input id="phoneOffice" name="phoneOffice" type="tel" class="form-control"
+                           placeholder="Contoh: 088-123456" required>
+                  </div>
+
+                  <div class="col-md-6">
+                    <label for="emailWakil" class="form-label fw-medium">E-mel Untuk Dihubungi (Wakil) <span class="text-danger">*</span></label>
+                    <input id="emailWakil" name="emailWakil" type="email" class="form-control"
+                           placeholder="Contoh: wakil@jabatan.gov.my" required>
                   </div>
 
                   <div class="col-12">
                     <label for="purpose" class="form-label fw-medium">Tujuan Lawatan <span class="text-danger">*</span></label>
                     <textarea id="purpose" name="purpose" class="form-control" rows="4" 
                               placeholder="Contoh: Menjalankan kerja penyelenggaraan sistem paip" required></textarea>
+                  </div>
+
+                  <div class="col-12">
+                    <section class="border rounded-3 p-4 bg-light" aria-labelledby="pelawatHeading">
+                      <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-3">
+                        <div>
+                          <h2 id="pelawatHeading" class="h5 fw-bold mb-1">Maklumat Pelawat</h2>
+                          <p class="text-muted small mb-0">Masukkan maklumat setiap pelawat. Maksimum 10 orang.</p>
+                        </div>
+                        <button type="button" id="tambahPelawat" class="btn btn-outline-primary btn-sm">
+                          <i class="fas fa-plus me-1"></i>Tambah Pelawat
+                        </button>
+                      </div>
+                      <div id="senaraiPelawat"></div>
+                    </section>
                   </div>
 
                   <!-- Ruang Persetujuan / Tick Box -->
@@ -146,8 +151,8 @@
                   </div>
                 </div>
 
-                <button type="submit" class="btn btn-primary btn-lg w-100 mt-4">
-                  <i class="fas fa-paper-plane me-2"></i> Hantar Permohonan
+                <button type="submit" class="btn btn-primary btn-lg px-5 d-block mx-auto mt-4">
+                  Hantar
                 </button>
               </form>
             </div>
@@ -183,15 +188,15 @@
         <div class="modal-body p-4" id="modalRulesBody" style="max-height: 60vh; overflow-y: auto;">
 
           <ol class="lh-lg text-dark">
-            <li class="mb-2">Pelawat perlu membuat surat permohonan kepada Pengarah Jabatan Air Negeri Sabah dan mengisi borang lawatan ke loji rawatan air <strong>DUA (2) minggu sebelum tarikh lawatan</strong> dijalankan.</li>
+            <li class="mb-2">Pelawat perlu membuat surat permohonan kepada Pengarah Jabatan Air Sabah dan mengisi borang lawatan ke loji rawatan air <strong>DUA (2) minggu sebelum tarikh lawatan</strong> dijalankan.</li>
             <li class="mb-2">Jumlah pelawat dihadkan kepada <strong>10 orang sahaja</strong> pada satu masa.</li>
             <li class="mb-2">Pelawat perlu diperiksa secara fizikal terlebih dahulu oleh pengawal keselamatan bagi mengelakkan benda terlarang seperti alkohol, dadah, senjata tajam, senjata api dan bom dibawa masuk ke dalam loji.</li>
             <li class="mb-2">Pelawat perlu memakai pakaian yang bersesuaian dan sentiasa memakai Pas Pelawat semasa berada di dalam kawasan loji.</li>
-            <li class="mb-2">Pelawat <strong>TIDAK dibenarkan sama sekali</strong> membuat salinan bagi sebarang maklumat sulit Jabatan Air Negeri Sabah.</li>
-            <li class="mb-2">Pelawat <strong>TIDAK dibenarkan sama sekali</strong> membuat liputan semasa sesi lawatan dijalankan tanpa kebenaran pihak Jabatan Air Negeri Sabah.</li>
+            <li class="mb-2">Pelawat <strong>TIDAK dibenarkan sama sekali</strong> membuat salinan bagi sebarang maklumat sulit Jabatan Air Sabah.</li>
+            <li class="mb-2">Pelawat <strong>TIDAK dibenarkan sama sekali</strong> membuat liputan semasa sesi lawatan dijalankan tanpa kebenaran pihak Jabatan Air Sabah.</li>
             <li class="mb-2">Pelawat <strong>TIDAK dibenarkan sama sekali</strong> berkeliaran tanpa pengawasan daripada kakitangan Jabatan Air semasa sesi lawatan dijalankan.</li>
             <li class="mb-2">Pas pelawat perlu dikembalikan kepada bahagian keselamatan selepas sesi lawatan dijalankan.</li>
-            <li class="mb-2">Jika berlaku kecemasan, pelawat perlu mematuhi SOP dan arahan yang dikeluarkan dari Bahagian Keselamatan dan Kesihatan Pekerjaan Jabatan Air Negeri Sabah.</li>
+            <li class="mb-2">Jika berlaku kecemasan, pelawat perlu mematuhi SOP dan arahan yang dikeluarkan dari Bahagian Keselamatan dan Kesihatan Pekerjaan Jabatan Air Sabah.</li>
             <li class="mb-2">Kegagalan pelawat mematuhi arahan semasa dan peraturan-peraturan yang ditetapkan akan mengakibatkan sesi lawatan dibatalkan dengan serta-merta.</li>
           </ol>
         </div>
@@ -208,7 +213,7 @@
   <!-- Footer -->
   <footer class="bg-dark text-white py-4 text-center mt-auto">
     <div class="container-fluid">
-      <p class="mb-0">&copy; 2026 Jabatan Air Negeri Sabah (JANS). Semua hak dilindungi.</p>
+      <p class="mb-0">&copy; 2026 Jabatan Air Sabah (JAS). Semua hak dilindungi.</p>
     </div>
   </footer>
 
@@ -262,9 +267,73 @@
 
       // Setup perubahan locationType
       const locationType = document.getElementById('locationType');
+      const borang = document.getElementById('borang');
       locationType.addEventListener('change', (e) => {
         kumakanLokasiBerdasarkanJenis(e.target.value);
       });
+
+      const senaraiPelawat = document.getElementById('senaraiPelawat');
+      const tambahPelawat = document.getElementById('tambahPelawat');
+      const maksimumPelawat = 10;
+
+      const kemasKiniButangPelawat = () => {
+        const jumlahPelawat = senaraiPelawat.querySelectorAll('.visitor-entry').length;
+        tambahPelawat.disabled = jumlahPelawat >= maksimumPelawat;
+        tambahPelawat.setAttribute('aria-disabled', String(tambahPelawat.disabled));
+      };
+
+      const tambahRuangPelawat = () => {
+        const nomborPelawat = senaraiPelawat.querySelectorAll('.visitor-entry').length + 1;
+        if (nomborPelawat > maksimumPelawat) return;
+
+        const ruangPelawat = document.createElement('div');
+        ruangPelawat.className = 'visitor-entry';
+        ruangPelawat.innerHTML = `
+          <div class="d-flex justify-content-between align-items-center mb-3">
+            <h3 class="h6 fw-bold mb-0">Pelawat ${nomborPelawat}</h3>
+            ${nomborPelawat > 1 ? '<button type="button" class="btn btn-outline-danger btn-sm btn-buang-pelawat"><i class="fas fa-trash me-1"></i>Buang</button>' : ''}
+          </div>
+          <div class="row g-3">
+            <div class="col-md-6">
+              <label class="form-label fw-medium">Nama Penuh <span class="text-danger">*</span></label>
+              <input name="visitorName" class="form-control" placeholder="Contoh: Amanda Lindrus" required>
+            </div>
+            <div class="col-md-6">
+              <label class="form-label fw-medium">No. Kad Pengenalan <span class="text-danger">*</span></label>
+              <input name="visitorIcNo" class="form-control" placeholder="Contoh: 871234-12-1234" required>
+            </div>
+            <div class="col-md-6">
+              <label class="form-label fw-medium">E-mel <span class="text-danger">*</span></label>
+              <input type="email" name="visitorEmail" class="form-control" placeholder="Contoh: amanda@email.com" required>
+            </div>
+            <div class="col-md-6">
+              <label class="form-label fw-medium">No. Telefon (Bimbit) <span class="text-danger">*</span></label>
+              <input type="tel" name="visitorPhone" class="form-control" placeholder="Contoh: 012-3456789" required>
+            </div>
+            <div class="col-md-6">
+              <label class="form-label fw-medium">Jawatan <span class="text-danger">*</span></label>
+              <input name="visitorPosition" class="form-control" placeholder="Contoh: Jurutera (J41)" required>
+            </div>
+            <div class="col-md-6">
+              <label class="form-label fw-medium">No. Pendaftaran Kenderaan <span class="text-muted">(jika ada)</span></label>
+              <input name="visitorVehicleNo" class="form-control" placeholder="Contoh: SAB 1234 W">
+            </div>
+          </div>`;
+        senaraiPelawat.appendChild(ruangPelawat);
+        kemasKiniButangPelawat();
+      };
+
+      tambahPelawat.addEventListener('click', tambahRuangPelawat);
+      senaraiPelawat.addEventListener('click', (e) => {
+        const butangBuang = e.target.closest('.btn-buang-pelawat');
+        if (!butangBuang) return;
+        butangBuang.closest('.visitor-entry').remove();
+        senaraiPelawat.querySelectorAll('.visitor-entry').forEach((ruangPelawat, index) => {
+          ruangPelawat.querySelector('h3').textContent = `Pelawat ${index + 1}`;
+        });
+        kemasKiniButangPelawat();
+      });
+      tambahRuangPelawat();
 
       // 1. Set tarikh permohonan ke tarikh hari ini (readonly - tidak boleh diedit oleh pemohon)
       const appDate = document.getElementById('applicationDate');
@@ -273,13 +342,13 @@
         appDate.value = todayStr;
       }
 
-      // 2. Tetapkan had minimum bagi Tarikh Lawatan: sekurang-kurangnya 3 hari selepas Tarikh Permohonan
+      // 2. Tetapkan had minimum bagi Tarikh Lawatan: sekurang-kurangnya 14 hari selepas Tarikh Permohonan
       const visitDate = document.getElementById('visitDate');
       const visitDateHint = document.getElementById('visitDateHint');
 
       const kiraTarikhMinimumLawatan = (tarikhAsas) => {
         const d = new Date(tarikhAsas);
-        d.setDate(d.getDate() + 3);
+        d.setDate(d.getDate() + 14);
         return d.toISOString().slice(0, 10);
       };
 
@@ -287,6 +356,14 @@
       if (visitDate) {
         visitDate.min = minVisitDate;
       }
+
+      borang.addEventListener('reset', () => {
+        window.setTimeout(() => {
+          senaraiPelawat.innerHTML = '';
+          tambahRuangPelawat();
+          visitDate.min = kiraTarikhMinimumLawatan(appDate.value || todayStr);
+        });
+      });
 
       // Element-element utama
       const modalRulesBody = document.getElementById('modalRulesBody');
@@ -320,7 +397,6 @@
       });
 
       // 6. Validasi Penyerahan Borang (SEBELUM app.js menghantar & memaparkan pop-up kejayaan)
-      const borang = document.getElementById('borang');
       const mesejDiv = document.getElementById('mesej');
 
       // Guna capture phase pada document supaya validasi ini berjalan DAHULU
@@ -338,7 +414,7 @@
           return;
         }
 
-        // Semakan tarikh lawatan mesti sekurang-kurangnya 3 hari selepas tarikh permohonan
+        // Semakan tarikh lawatan mesti sekurang-kurangnya 14 hari selepas tarikh permohonan
         if (visitDate.value < visitDate.min) {
           e.preventDefault();
           e.stopImmediatePropagation();

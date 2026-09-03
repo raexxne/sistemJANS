@@ -37,7 +37,7 @@ class PermohonanServiceTest {
         Permohonan permohonan = new Permohonan();
         permohonan.setId(1L);
         permohonan.setStatus(StatusPermohonan.DIHANTAR);
-        permohonan.setNomborPermohonan("JANS-2026-000001");
+        permohonan.setNomborPermohonan("JAS-2026-000001");
         permohonan.setEmail("applicant@example.com");
 
         Pengguna staff = new Pengguna();
@@ -71,19 +71,19 @@ class PermohonanServiceTest {
         PermohonanService service = new PermohonanService(mock(PermohonanRepository.class),
                 mock(PenggunaRepository.class), mock(EmailService.class));
         Permohonan permohonan = new Permohonan();
-        permohonan.setNomborPermohonan("JANS-2026-000002");
+        permohonan.setNomborPermohonan("JAS-2026-000002");
         permohonan.setApplicantName("Ali Bin Abu");
         permohonan.setIcNo("900101-01-0001");
         permohonan.setEmail("applicant@example.com");
         permohonan.setJawatanGred("Pegawai");
         permohonan.setPhoneMobile("0123456789");
         permohonan.setPhoneOffice("088123456");
-        permohonan.setOrganisation("JANS");
+        permohonan.setOrganisation("JAS");
         permohonan.setApplicationDate(LocalDate.of(2026, 8, 3));
         permohonan.setVisitDate(LocalDate.of(2026, 8, 4));
         permohonan.setVisitTime(LocalTime.of(9, 30));
         permohonan.setLocationType(JenisLokasi.LOJI);
-        permohonan.setLocationName("Pejabat JANS");
+        permohonan.setLocationName("Pejabat JAS");
         permohonan.setPurpose("Lawatan");
         permohonan.setStatus(StatusPermohonan.MENUNGGU_PENGARAH);
 
@@ -91,5 +91,18 @@ class PermohonanServiceTest {
         String text = new String(pdf, StandardCharsets.ISO_8859_1);
         assertFalse(text.contains("MENUNGGU PENGARAH"));
         assertFalse(text.contains("Status"));
+    }
+
+    @Test
+    void shouldNormalizeJasApplicationNumberBeforeSearching() {
+        PermohonanRepository repo = mock(PermohonanRepository.class);
+        Permohonan permohonan = new Permohonan();
+        permohonan.setNomborPermohonan("JAS-2026-000001");
+        when(repo.findByNomborPermohonan("JAS-2026-000001")).thenReturn(Optional.of(permohonan));
+
+        PermohonanService service = new PermohonanService(repo, mock(PenggunaRepository.class),
+                mock(EmailService.class));
+
+        assertEquals(permohonan, service.cari(" jas-2026-000001 "));
     }
 }

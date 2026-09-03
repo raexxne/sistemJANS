@@ -53,6 +53,13 @@ public class PermohonanService {
         p.setDirectorNote(null);
         p.setStatus(StatusPermohonan.DIHANTAR);
 
+        if (p.getPelawat().isEmpty()) {
+            throw new IllegalArgumentException("Maklumat sekurang-kurangnya seorang pelawat diperlukan");
+        }
+        if (p.getEmailWakil() == null || p.getEmailWakil().isBlank()) {
+            throw new IllegalArgumentException("E-mel untuk dihubungi diperlukan");
+        }
+
         // Alias: jika phoneMobile diisi tetapi phone kosong (legacy)
         if ((p.getPhone() == null || p.getPhone().isBlank())
                 && p.getPhoneMobile() != null && !p.getPhoneMobile().isBlank()) {
@@ -84,7 +91,7 @@ public class PermohonanService {
     }
 
     private String janaNomborPermohonanSeterusnya() {
-        String prefix = "JANS-" + Year.now().getValue() + "-";
+        String prefix = "JAS-" + Year.now().getValue() + "-";
         long seterusnya = repo.findFirstByNomborPermohonanStartingWithOrderByNomborPermohonanDesc(prefix)
                 .map(p -> Objects.requireNonNull(p).getNomborPermohonan())
                 .map(no -> {
@@ -99,16 +106,16 @@ public class PermohonanService {
     }
 
     private void hantarEmelPengesahanPermohonan(Permohonan p) {
-        if (p.getEmail() == null || p.getEmail().isBlank())
+        if (p.getEmailWakil() == null || p.getEmailWakil().isBlank())
             return;
         try {
             String isi = "<p>Tuan/Puan,</p>"
-                    + "<p>Permohonan akses anda telah <b>berjaya dihantar</b> dan kini menunggu semakan pihak JANS.</p>"
+                    + "<p>Permohonan akses anda telah <b>berjaya dihantar</b> dan kini menunggu semakan pihak JAS.</p>"
                     + "<p><b>No. Permohonan:</b> " + p.getNomborPermohonan() + "</p>"
                     + "<p>Sila simpan nombor permohonan ini untuk semakan status permohonan anda pada bila-bila masa.</p>"
                     + "<p>Terima kasih.</p>";
             emailService.hantarEmail(
-                    p.getEmail(),
+                    p.getEmailWakil(),
                     "Permohonan Berjaya Dihantar - " + p.getNomborPermohonan(),
                     isi,
                     null,
@@ -126,11 +133,11 @@ public class PermohonanService {
             String isi = "<p>Tuan/Puan,</p>"
                     + "<p>Permohonan akses anda <b>tidak berjaya dihantar</b>.</p>"
                     + "<p><b>Sebab:</b> " + (sebab == null || sebab.isBlank() ? "Ralat sistem" : sebab) + "</p>"
-                    + "<p>Sila cuba semula atau hubungi pihak JANS jika masalah berterusan.</p>"
+                    + "<p>Sila cuba semula atau hubungi pihak JAS jika masalah berterusan.</p>"
                     + "<p>Terima kasih.</p>";
             emailService.hantarEmail(
                     email,
-                    "Permohonan Tidak Berjaya Dihantar - JANS",
+                    "Permohonan Tidak Berjaya Dihantar - JAS",
                     isi,
                     null,
                     null);
@@ -141,8 +148,15 @@ public class PermohonanService {
     }
 
     public Permohonan cari(String no) {
-        return repo.findByNomborPermohonan(no)
+        String nomborPermohonan = Objects.requireNonNull(no, "Nombor permohonan diperlukan").trim()
+                .toUpperCase(Locale.ROOT);
+        return repo.findByNomborPermohonan(nomborPermohonan)
                 .orElseThrow(() -> new IllegalArgumentException("Nombor permohonan tidak ditemui"));
+    }
+
+    public Permohonan cari(Long id) {
+        return repo.findById(Objects.requireNonNull(id))
+                .orElseThrow(() -> new IllegalArgumentException("Permohonan tidak ditemui"));
     }
 
     public List<Permohonan> senarai(StatusPermohonan s) {
@@ -229,19 +243,21 @@ public class PermohonanService {
         } else {
             p.setStatus(StatusPermohonan.DITOLAK);
             subjek = "Permohonan Ditolak - " + p.getNomborPermohonan();
+            String sebabPenolakan = catatan == null || catatan.isBlank()
+                    ? "Tiada sebab diberikan"
+                    : catatan;
             isi = "<p>Tuan/Puan,</p>"
                     + "<p>Permohonan akses anda dengan nombor <b>" + p.getNomborPermohonan() + "</b> "
                     + "adalah <b>tidak diluluskan</b> oleh pihak pengarah.</p>"
-                    + "<p>Sila semak status permohonan anda. "
-                    + "<a href=\"" + linkSemak + "\">Klik sini</a> untuk semak permohonan anda.</p>"
-                    + "<p>Untuk sebarang pertanyaan lanjut, sila hubungi pihak JANS.</p>"
+                    + "<p><b>Sebab tidak diluluskan:</b> " + sebabPenolakan + "</p>"
+                    + "<p>Untuk sebarang pertanyaan lanjut, sila hubungi pihak JAS.</p>"
                     + "<p>Terima kasih.</p>";
         }
 
         repo.save(p);
 
         emailService.hantarEmail(
-                p.getEmail(),
+                p.getEmailWakil(),
                 subjek,
                 isi,
                 null,
@@ -257,15 +273,15 @@ public class PermohonanService {
     // PermohonanController.java atau tempat lain, gantikan rujukan itu
     // kepada pdfPermohonan() sebelum deploy.
     public byte[] pdfPermohonan(Permohonan p) {
-        return pdf(p, "BORANG PERMOHONAN KEBENARAN AKSES", false, true);
+        return pdf(p, "BUTIRAN PERMOHONAN KEBENARAN MASUK", false, true);
     }
 
     public byte[] pdfPas(Permohonan p) {
-        return pdf(p, "PAS KEBENARAN AKSES JANS", true, false);
+        return pdf(p, "PAS KEBENARAN AKSES JAS", true, false);
     }
 
     public byte[] pdfPasTanpaQR(Permohonan p) {
-        return pdf(p, "PAS KEBENARAN AKSES JANS", false, false);
+        return pdf(p, "PAS KEBENARAN AKSES JAS", false, false);
     }
 
     public byte[] qrCodeImage(Permohonan p) {
@@ -345,12 +361,12 @@ public class PermohonanService {
                     logo.setAlignment(Element.ALIGN_CENTER);
                     logoCell.addElement(logo);
                 } else {
-                    Paragraph ph = new Paragraph("JANS", FontFactory.getFont(FontFactory.HELVETICA_BOLD, 22, navy));
+                    Paragraph ph = new Paragraph("JAS", FontFactory.getFont(FontFactory.HELVETICA_BOLD, 22, navy));
                     ph.setAlignment(Element.ALIGN_CENTER);
                     logoCell.addElement(ph);
                 }
             } catch (Exception ignored) {
-                Paragraph ph = new Paragraph("JANS", FontFactory.getFont(FontFactory.HELVETICA_BOLD, 22, navy));
+                Paragraph ph = new Paragraph("JAS", FontFactory.getFont(FontFactory.HELVETICA_BOLD, 22, navy));
                 ph.setAlignment(Element.ALIGN_CENTER);
                 logoCell.addElement(ph);
             }
@@ -361,7 +377,7 @@ public class PermohonanService {
             orgCell.setVerticalAlignment(Element.ALIGN_MIDDLE);
             orgCell.setPaddingLeft(10);
 
-            Paragraph orgName = new Paragraph("JABATAN AIR NEGERI SABAH (JANS)", fOrgBig);
+            Paragraph orgName = new Paragraph("JABATAN AIR SABAH (JAS)", fOrgBig);
             orgName.setAlignment(Element.ALIGN_LEFT);
             Paragraph orgMin = new Paragraph("Kementerian Kemudahan Asas Dan Utiliti, Sabah", fOrgSub);
             orgMin.setAlignment(Element.ALIGN_LEFT);
@@ -396,11 +412,7 @@ public class PermohonanService {
             tbl.addCell(hc);
 
             addRow(tbl, "No. Permohonan", p.getNomborPermohonan(), fLabel, fValue, lightBlue, white);
-            addRow(tbl, "Nama Penuh", p.getApplicantName(), fLabel, fValue, lightBlue, white);
-            addRow(tbl, "No. Kad Pengenalan / Pasport", p.getIcNo(), fLabel, fValue, lightBlue, white);
-            addRow(tbl, "E-mel", p.getEmail(), fLabel, fValue, lightBlue, white);
-            addRow(tbl, "Jawatan (Gred)", p.getJawatanGred(), fLabel, fValue, lightBlue, white);
-            addRow(tbl, "No. Telefon (Bimbit)", telefonBimbit(p), fLabel, fValue, lightBlue, white);
+            addRow(tbl, "E-mel Untuk Dihubungi (Wakil)", p.getEmailWakil(), fLabel, fValue, lightBlue, white);
             addRow(tbl, "No. Telefon (Pejabat)", p.getPhoneOffice(), fLabel, fValue, lightBlue, white);
             addRow(tbl, "Kementerian / Jabatan / Agensi / Universiti / Syarikat",
                     p.getOrganisation(), fLabel, fValue, lightBlue, white);
@@ -415,8 +427,6 @@ public class PermohonanService {
                     p.getLocationType() != null ? p.getLocationType().toString() : "-",
                     fLabel, fValue, lightBlue, white);
             addRow(tbl, "Nama / Alamat Lokasi", p.getLocationName(), fLabel, fValue, lightBlue, white);
-            if (p.getVehicleNo() != null && !p.getVehicleNo().isBlank())
-                addRow(tbl, "No. Pendaftaran Kenderaan", p.getVehicleNo(), fLabel, fValue, lightBlue, white);
             addRow(tbl, "Tujuan Lawatan", p.getPurpose(), fLabel, fValue, lightBlue, white);
             if (includeInternalNotes && p.getStatus() != StatusPermohonan.MENUNGGU_PENGARAH) {
                 addRow(tbl, "Status",
@@ -429,6 +439,38 @@ public class PermohonanService {
                 addRow(tbl, "Catatan Pengarah", p.getDirectorNote(), fLabel, fValue, lightBlue, white);
 
             d.add(tbl);
+
+            if (!p.getPelawat().isEmpty()) {
+                Paragraph tajukPelawat = new Paragraph("MAKLUMAT PELAWAT", fTitle);
+                tajukPelawat.setSpacingBefore(4);
+                tajukPelawat.setSpacingAfter(6);
+                d.add(tajukPelawat);
+
+                for (int index = 0; index < p.getPelawat().size(); index++) {
+                    Pelawat pelawat = p.getPelawat().get(index);
+                    PdfPTable jadualPelawat = new PdfPTable(new float[] { 2.2f, 3.8f });
+                    jadualPelawat.setWidthPercentage(100);
+                    jadualPelawat.setSpacingAfter(10);
+
+                    PdfPCell tajukPelawatCell = new PdfPCell(new Phrase("Pelawat " + (index + 1), fHead));
+                    tajukPelawatCell.setColspan(2);
+                    tajukPelawatCell.setBackgroundColor(navy);
+                    tajukPelawatCell.setPadding(7);
+                    tajukPelawatCell.setBorder(Rectangle.NO_BORDER);
+                    jadualPelawat.addCell(tajukPelawatCell);
+
+                    addRow(jadualPelawat, "Nama Penuh", pelawat.getNamaPenuh(), fLabel, fValue, lightBlue, white);
+                    addRow(jadualPelawat, "No. Kad Pengenalan", pelawat.getNoKadPengenalan(), fLabel, fValue, lightBlue,
+                            white);
+                    addRow(jadualPelawat, "E-mel", pelawat.getEmail(), fLabel, fValue, lightBlue, white);
+                    addRow(jadualPelawat, "No. Telefon (Bimbit)", pelawat.getNoTelefonBimbit(), fLabel, fValue,
+                            lightBlue, white);
+                    addRow(jadualPelawat, "Jawatan", pelawat.getJawatan(), fLabel, fValue, lightBlue, white);
+                    addRow(jadualPelawat, "No. Pendaftaran Kenderaan", pelawat.getNoPendaftaranKenderaan(), fLabel,
+                            fValue, lightBlue, white);
+                    d.add(jadualPelawat);
+                }
+            }
 
             // ── KOD QR ──────────────────────────────────────────────────────
             if (includeQr) {
@@ -515,7 +557,7 @@ public class PermohonanService {
                 dirNamePar.setAlignment(Element.ALIGN_CENTER);
                 dirSig.addElement(dirNamePar);
 
-                Paragraph dirPos = new Paragraph("Pengarah, JANS", fSmall);
+                Paragraph dirPos = new Paragraph("Pengarah, JAS", fSmall);
                 dirPos.setAlignment(Element.ALIGN_CENTER);
                 dirSig.addElement(dirPos);
 
@@ -532,7 +574,7 @@ public class PermohonanService {
             d.add(new Chunk(new LineSeparator(1f, 100f, navy, Element.ALIGN_CENTER, -2f)));
 
             Paragraph footer = new Paragraph(
-                    "Dokumen ini dijana secara automatik oleh Sistem Akses JANS. "
+                    "Dokumen ini dijana secara automatik oleh Sistem Akses JAS. "
                             + "Sebarang pemalsuan adalah kesalahan jenayah di bawah Akta Komputer 1997.",
                     fFooter);
             footer.setAlignment(Element.ALIGN_CENTER);
@@ -567,24 +609,24 @@ public class PermohonanService {
 
     public void hantarEmailHubungi(String emailPengirim, String nama, String subjek, String isi) {
         String penerimaSokongan = "jansofficial86@gmail.com";
-        String subjekLengkap = "[Pertanyaan JANS] " + subjek + " - daripada " + nama;
+        String subjekLengkap = "[Pertanyaan JAS] " + subjek + " - daripada " + nama;
         emailService.hantarEmail(penerimaSokongan, subjekLengkap, isi, null, null);
         String isiAck = "<p>Terima kasih, <b>" + nama + "</b>.</p>"
                 + "<p>Mesej anda telah kami terima dan akan ditangani dalam masa 2 hari bekerja.</p>"
                 + "<p>Jika pertanyaan mendesak, sila hubungi kami terus di jansofficial86@gmail.com.</p>"
-                + "<p>Salam hormat,<br>Pasukan JANS</p>";
-        emailService.hantarEmail(emailPengirim, "Pengesahan penerimaan mesej - JANS", isiAck, null, null);
+                + "<p>Salam hormat,<br>Pasukan JAS</p>";
+        emailService.hantarEmail(emailPengirim, "Pengesahan penerimaan mesej - JAS", isiAck, null, null);
     }
 
     public void hantarEmailAduan(String emailPengadu, String nama, String rujukan, String isi) {
         String penerimaSokongan = "jansofficial86@gmail.com";
-        String subjekAdmin = "[Aduan JANS] Rujukan: " + rujukan;
+        String subjekAdmin = "[Aduan JAS] Rujukan: " + rujukan;
         emailService.hantarEmail(penerimaSokongan, subjekAdmin, isi, null, null);
         String isiAck = "<p>Terima kasih, <b>" + nama + "</b>.</p>"
                 + "<p>Aduan anda telah kami terima dengan nombor rujukan: <b>" + rujukan + "</b>.</p>"
                 + "<p>Penyiasatan akan dijalankan dalam masa 3 hari bekerja. "
                 + "Sila simpan nombor rujukan ini untuk semakan susulan.</p>"
-                + "<p>Salam hormat,<br>Pasukan JANS</p>";
-        emailService.hantarEmail(emailPengadu, "Pengesahan aduan " + rujukan + " - JANS", isiAck, null, null);
+                + "<p>Salam hormat,<br>Pasukan JAS</p>";
+        emailService.hantarEmail(emailPengadu, "Pengesahan aduan " + rujukan + " - JAS", isiAck, null, null);
     }
 }

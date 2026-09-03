@@ -361,6 +361,53 @@ function showCatatanModal(title = 'Catatan', placeholder = 'Tulis catatan di sin
   });
 }
 
+function showSebabTolakModal() {
+  return new Promise((resolve) => {
+    const modal = document.createElement('div');
+    modal.style.cssText = 'display:flex;position:fixed;inset:0;background:rgba(0,0,0,.65);backdrop-filter:blur(4px);z-index:10000;justify-content:center;align-items:center;padding:16px;';
+    modal.innerHTML = `
+      <div style="width:100%;max-width:480px;background:#fff;border-radius:10px;overflow:hidden;box-shadow:0 20px 60px rgba(0,0,0,.3);">
+        <div style="padding:18px 24px;background:#dc3545;color:#fff;font-size:18px;font-weight:600;">Sebab Tidak Setuju</div>
+        <div style="padding:24px;">
+          <label for="sebab-tolak" class="form-label fw-semibold">Pilih sebab penolakan</label>
+          <select id="sebab-tolak" class="form-select">
+            <option value="">-- Pilih sebab --</option>
+            <option value="Maklumat permohonan tidak lengkap">Maklumat permohonan tidak lengkap</option>
+            <option value="Tarikh lawatan tidak sesuai">Tarikh lawatan tidak sesuai</option>
+            <option value="Lokasi lawatan tidak dibenarkan">Lokasi lawatan tidak dibenarkan</option>
+            <option value="Tujuan lawatan tidak memenuhi syarat">Tujuan lawatan tidak memenuhi syarat</option>
+            <option value="Dokumen atau maklumat sokongan tidak mencukupi">Dokumen atau maklumat sokongan tidak mencukupi</option>
+            <option value="Lain-lain">Lain-lain</option>
+          </select>
+          <textarea id="sebab-lain" class="form-control mt-3 d-none" rows="3" placeholder="Nyatakan sebab penolakan"></textarea>
+          <div id="sebab-tolak-ralat" class="text-danger small mt-2 d-none">Sila pilih sebab penolakan.</div>
+          <div class="d-flex justify-content-end gap-2 mt-4">
+            <button type="button" class="btn btn-outline-secondary" id="sebab-tolak-batal">Batal</button>
+            <button type="button" class="btn btn-danger" id="sebab-tolak-simpan">OK</button>
+          </div>
+        </div>
+      </div>`;
+    document.body.appendChild(modal);
+
+    const sebab = modal.querySelector('#sebab-tolak');
+    const sebabLain = modal.querySelector('#sebab-lain');
+    const ralat = modal.querySelector('#sebab-tolak-ralat');
+    const close = (value) => { modal.remove(); resolve(value); };
+
+    sebab.onchange = () => sebabLain.classList.toggle('d-none', sebab.value !== 'Lain-lain');
+    modal.querySelector('#sebab-tolak-batal').onclick = () => close(null);
+    modal.querySelector('#sebab-tolak-simpan').onclick = () => {
+      const nilai = sebab.value === 'Lain-lain' ? sebabLain.value.trim() : sebab.value;
+      if (!nilai) {
+        ralat.classList.remove('d-none');
+        return;
+      }
+      close(nilai);
+    };
+    modal.onclick = (event) => { if (event.target === modal) close(null); };
+  });
+}
+
 async function api(url, opt = {}) {
   const r = await fetch(url, {
     ...opt,
@@ -417,6 +464,25 @@ if (form) {
     }
 
     const data = Object.fromEntries(new FormData(form));
+    const pelawat = [...form.querySelectorAll('.visitor-entry')].map((entry) => ({
+      namaPenuh: entry.querySelector('[name="visitorName"]').value.trim(),
+      noKadPengenalan: entry.querySelector('[name="visitorIcNo"]').value.trim(),
+      email: entry.querySelector('[name="visitorEmail"]').value.trim(),
+      noTelefonBimbit: entry.querySelector('[name="visitorPhone"]').value.trim(),
+      jawatan: entry.querySelector('[name="visitorPosition"]').value.trim(),
+      noPendaftaranKenderaan: entry.querySelector('[name="visitorVehicleNo"]').value.trim()
+    }));
+
+    if (pelawat.length) {
+      const pelawatPertama = pelawat[0];
+      data.applicantName = pelawatPertama.namaPenuh;
+      data.icNo = pelawatPertama.noKadPengenalan;
+      data.phoneMobile = pelawatPertama.noTelefonBimbit;
+      data.jawatanGred = pelawatPertama.jawatan;
+      data.vehicleNo = pelawat.find((pelawatItem) => pelawatItem.noPendaftaranKenderaan)
+        ?.noPendaftaranKenderaan || '';
+      data.pelawat = pelawat;
+    }
 
     if (data.phoneMobile && !data.phone) {
       data.phone = data.phoneMobile;
@@ -733,14 +799,15 @@ async function bulkPutus(lulus) {
 
   if (!sahkan) return;
 
-  // NOTA: Ruang catatan sudah dibuang mengikut permintaan.
-  // Terus hantar keputusan tanpa minta catatan lagi.
+  const catatan = lulus ? '' : await showSebabTolakModal();
+  if (!lulus && catatan === null) return;
+
   setBulkPutusLoading(true, lulus);
   try {
     for (const id of ids) {
       await api(`/api/pengarah/permohonan/${id}/keputusan`, {
         method: 'POST',
-        body: JSON.stringify({ lulus, catatan: '' })
+        body: JSON.stringify({ lulus, catatan })
       });
     }
 
@@ -874,7 +941,7 @@ function renderPengarahTable() {
         <input class="form-check-input row-checkbox" type="checkbox" data-id="${p.id}">
       </td>
       <td>${esc(p.nomborPermohonan)}</td>
-      <td class="text-start">${esc(p.applicantName)}</td>
+      <td class="text-start">${esc(p.organisation || '-')}</td>
       <td>${esc(p.reviewedBy?.name || 'Tidak direkodkan')}</td>
       <td>
         <small>
@@ -886,8 +953,8 @@ function renderPengarahTable() {
         <small>${esc(p.purpose || '-')}</small>
       </td>
       <td>
-        <a href="/api/public/permohonan/${p.nomborPermohonan}/pdf" target="_blank" class="btn btn-sm btn-info">
-          Buka PDF
+        <a href="/api/public/permohonan/${encodeURIComponent(p.nomborPermohonan)}/pdf" target="_blank" rel="noopener" class="btn btn-sm btn-outline-primary" title="Cetak PDF permohonan">
+          <i class="fas fa-print me-1"></i>Cetak
         </a>
       </td>
     </tr>
@@ -920,12 +987,13 @@ async function putus(id, lulus) {
 
   if (!sahkan) return;
 
-  // NOTA: Ruang catatan sudah dibuang mengikut permintaan.
-  // Selepas tekan "Ya, Setuju" / "Ya, Tolak", terus hantar keputusan.
+  const catatan = lulus ? '' : await showSebabTolakModal();
+  if (!lulus && catatan === null) return;
+
   try {
     await api(`/api/pengarah/permohonan/${id}/keputusan`, {
       method: 'POST',
-      body: JSON.stringify({ lulus, catatan: '' })
+      body: JSON.stringify({ lulus, catatan })
     });
     director();
 

@@ -70,11 +70,11 @@ public class ApiController {
         try {
             return ResponseEntity.ok(Map.of("nomborPermohonan", s.cipta(p).getNomborPermohonan()));
         } catch (IllegalArgumentException | IllegalStateException e) {
-            s.hantarEmelKegagalanPermohonan(p.getEmail(), e.getMessage());
+            s.hantarEmelKegagalanPermohonan(p.getEmailWakil(), e.getMessage());
             return ResponseEntity.badRequest().body(Map.of("ralat", e.getMessage()));
         } catch (Exception e) {
             String mesejRamah = "Permohonan tidak dapat diproses buat masa ini. Sila semak semula maklumat yang diisi atau cuba beberapa saat lagi.";
-            s.hantarEmelKegagalanPermohonan(p.getEmail(), mesejRamah);
+            s.hantarEmelKegagalanPermohonan(p.getEmailWakil(), mesejRamah);
             return ResponseEntity.badRequest().body(Map.of("ralat", mesejRamah));
         }
     }
@@ -128,6 +128,11 @@ public class ApiController {
     @GetMapping("/staff/permohonan")
     List<Permohonan> staf(@RequestParam(required = false) StatusPermohonan status) {
         return status == null ? s.senaraiSemua() : s.senarai(status);
+    }
+
+    @GetMapping("/staff/permohonan/{id}")
+    Permohonan butiranStaf(@PathVariable Long id) {
+        return s.cari(id);
     }
 
     @PostMapping("/staff/permohonan/{id}/hantar-pengarah")

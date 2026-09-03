@@ -2,6 +2,8 @@ package my.gov.jans.access.domain;
 
 import jakarta.persistence.*;
 import java.time.*;
+import java.util.ArrayList;
+import java.util.List;
 
 @Entity
 @Table(name = "applications")
@@ -17,6 +19,9 @@ public class Permohonan {
     private String applicantName;
     private String icNo;
     private String email;
+
+    @Column(name = "email_wakil")
+    private String emailWakil;
 
     @Column(name = "phone_mobile")
     private String phoneMobile;
@@ -65,6 +70,10 @@ public class Permohonan {
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
     private String passToken;
+
+    @OneToMany(mappedBy = "permohonan", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.EAGER)
+    @OrderBy("id ASC")
+    private List<Pelawat> pelawat = new ArrayList<>();
 
     @PrePersist
     void baru() {
@@ -116,6 +125,14 @@ public class Permohonan {
 
     public void setEmail(String v) {
         email = v;
+    }
+
+    public String getEmailWakil() {
+        return emailWakil;
+    }
+
+    public void setEmailWakil(String v) {
+        emailWakil = v;
     }
 
     public String getPhoneMobile() {
@@ -276,6 +293,22 @@ public class Permohonan {
 
     public void setPassToken(String v) {
         passToken = v;
+    }
+
+    public List<Pelawat> getPelawat() {
+        return pelawat;
+    }
+
+    public void setPelawat(List<Pelawat> pelawat) {
+        this.pelawat.clear();
+        if (pelawat != null) {
+            pelawat.forEach(this::tambahPelawat);
+        }
+    }
+
+    public void tambahPelawat(Pelawat pelawat) {
+        pelawat.setPermohonan(this);
+        this.pelawat.add(pelawat);
     }
 
     public String getPhone() {

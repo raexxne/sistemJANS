@@ -18,7 +18,7 @@ class PermohonanServicePdfTest {
         service.publicUrl = "https://example.test";
 
         Permohonan permohonan = new Permohonan();
-        permohonan.setNomborPermohonan("JANS-2026-000001");
+        permohonan.setNomborPermohonan("JAS-2026-000001");
         permohonan.setApplicantName("Ali Bin Abu");
         permohonan.setStaffNote("Catatan petugas untuk semakan sebelum keputusan");
         permohonan.setDirectorNote("Catatan pengarah untuk keputusan akhir");
@@ -42,7 +42,7 @@ class PermohonanServicePdfTest {
         service.publicUrl = "https://example.test";
 
         Permohonan permohonan = new Permohonan();
-        permohonan.setNomborPermohonan("JANS-2026-000002");
+        permohonan.setNomborPermohonan("JAS-2026-000002");
         permohonan.setApplicantName("Siti Binti Ali");
         permohonan.setStaffNote("Catatan dalaman untuk petugas");
         permohonan.setDirectorNote("Catatan dalaman untuk pengarah");

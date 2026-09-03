@@ -56,14 +56,14 @@ public class AkaunService {
         resetKodStore.put(emel, new ResetKodInfo(kod, Instant.now().plusSeconds(600)));
 
         String isi = "<p>Tuan/Puan,</p>"
-                + "<p>Kod 6 digit untuk reset kata laluan akaun JANS anda ialah:</p>"
+                + "<p>Kod 6 digit untuk reset kata laluan akaun JAS anda ialah:</p>"
                 + "<p style=\"font-size: 1.4rem; font-weight: 700; letter-spacing: 0.12em;\">" + kod + "</p>"
                 + "<p>Kod ini sah selama <b>10 minit</b>.</p>"
                 + "<p>Jika anda tidak meminta reset kata laluan, sila abaikan e-mel ini.</p>";
 
         emailService.hantarEmail(
                 pengguna.getEmail(),
-                "Kod Reset Kata Laluan JANS",
+                "Kod Reset Kata Laluan JAS",
                 isi,
                 null,
                 null);
@@ -92,7 +92,7 @@ public class AkaunService {
         resetKodStore.remove(emel);
 
         String isi = "<p>Tuan/Puan,</p>"
-                + "<p>Kata laluan baharu untuk akaun JANS anda telah dijana.</p>"
+                + "<p>Kata laluan baharu untuk akaun JAS anda telah dijana.</p>"
                 + "<p><b>Kata laluan baharu:</b></p>"
                 + "<p style=\"font-size: 1.2rem; font-weight: 700; letter-spacing: 0.08em;\">" + kataLaluanBaharu
                 + "</p>"
@@ -102,7 +102,7 @@ public class AkaunService {
 
         emailService.hantarEmail(
                 pengguna.getEmail(),
-                "Reset Kata Laluan JANS",
+                "Reset Kata Laluan JAS",
                 isi,
                 null,
                 null);
