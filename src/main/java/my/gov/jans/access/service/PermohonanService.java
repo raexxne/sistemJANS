@@ -277,11 +277,11 @@ public class PermohonanService {
     }
 
     public byte[] pdfPas(Permohonan p) {
-        return pdf(p, "PAS KEBENARAN AKSES JAS", true, false);
+        return pdf(p, "PAS KEBENARAN MASUK JAS", true, false);
     }
 
     public byte[] pdfPasTanpaQR(Permohonan p) {
-        return pdf(p, "PAS KEBENARAN AKSES JAS", false, false);
+        return pdf(p, "PAS KEBENARAN MASUK JAS", false, false);
     }
 
     public byte[] qrCodeImage(Permohonan p) {
@@ -298,15 +298,6 @@ public class PermohonanService {
 
     public Permohonan cariToken(String token) {
         return repo.findByPassToken(token).orElseThrow(() -> new IllegalArgumentException("Pas tidak ditemui"));
-    }
-
-    /** Telefon bimbit (utama) dengan fallback ke phone legacy */
-    private String telefonBimbit(Permohonan p) {
-        if (p.getPhoneMobile() != null && !p.getPhoneMobile().isBlank())
-            return p.getPhoneMobile();
-        if (p.getPhone() != null && !p.getPhone().isBlank())
-            return p.getPhone();
-        return "-";
     }
 
     /** Format masa 24j → 12j AM/PM */

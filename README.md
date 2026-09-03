@@ -1,4 +1,4 @@
-# Sistem Kebenaran Akses JAS
+# Sistem Kebenaran Masuk JAS
 
 Aplikasi Spring Boot + MySQL untuk mengurus permohonan akses loji dan intake.
 
