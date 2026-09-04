@@ -16,21 +16,11 @@ public class Permohonan {
     @Column(name = "application_no")
     private String nomborPermohonan;
 
-    private String applicantName;
-    private String icNo;
-    private String email;
-
     @Column(name = "email_wakil")
     private String emailWakil;
 
-    @Column(name = "phone_mobile")
-    private String phoneMobile;
-
     @Column(name = "phone_office")
     private String phoneOffice;
-
-    @Column(name = "jawatan_gred")
-    private String jawatanGred;
 
     @Column(name = "application_date")
     private LocalDate applicationDate;
@@ -46,8 +36,6 @@ public class Permohonan {
 
     @Column(columnDefinition = "TEXT")
     private String purpose;
-
-    private String vehicleNo;
 
     @Enumerated(EnumType.STRING)
     private StatusPermohonan status;
@@ -104,27 +92,27 @@ public class Permohonan {
     }
 
     public String getApplicantName() {
-        return applicantName;
-    }
-
-    public void setApplicantName(String v) {
-        applicantName = v;
+        return pelawat.isEmpty() ? null : pelawat.get(0).getNamaPenuh();
     }
 
     public String getIcNo() {
-        return icNo;
+        return pelawat.isEmpty() ? null : pelawat.get(0).getNoKadPengenalan();
     }
 
-    public void setIcNo(String v) {
-        icNo = v;
+    public String getPhoneMobile() {
+        return getPhone();
+    }
+
+    public String getJawatanGred() {
+        return pelawat.isEmpty() ? null : pelawat.get(0).getJawatan();
+    }
+
+    public String getVehicleNo() {
+        return pelawat.isEmpty() ? null : pelawat.get(0).getNoPendaftaranKenderaan();
     }
 
     public String getEmail() {
-        return email;
-    }
-
-    public void setEmail(String v) {
-        email = v;
+        return emailWakil != null ? emailWakil : (pelawat.isEmpty() ? null : pelawat.get(0).getEmail());
     }
 
     public String getEmailWakil() {
@@ -135,28 +123,12 @@ public class Permohonan {
         emailWakil = v;
     }
 
-    public String getPhoneMobile() {
-        return phoneMobile;
-    }
-
-    public void setPhoneMobile(String v) {
-        phoneMobile = v;
-    }
-
     public String getPhoneOffice() {
         return phoneOffice;
     }
 
     public void setPhoneOffice(String v) {
         phoneOffice = v;
-    }
-
-    public String getJawatanGred() {
-        return jawatanGred;
-    }
-
-    public void setJawatanGred(String v) {
-        jawatanGred = v;
     }
 
     public LocalDate getApplicationDate() {
@@ -213,14 +185,6 @@ public class Permohonan {
 
     public void setPurpose(String v) {
         purpose = v;
-    }
-
-    public String getVehicleNo() {
-        return vehicleNo;
-    }
-
-    public void setVehicleNo(String v) {
-        vehicleNo = v;
     }
 
     public StatusPermohonan getStatus() {
@@ -312,10 +276,10 @@ public class Permohonan {
     }
 
     public String getPhone() {
-        return phoneMobile;
+        return pelawat.isEmpty() ? null : pelawat.get(0).getNoTelefonBimbit();
     }
 
     public void setPhone(String v) {
-        this.phoneMobile = v;
+        // Telefon pemohon disimpan dalam application_visitors.
     }
 }

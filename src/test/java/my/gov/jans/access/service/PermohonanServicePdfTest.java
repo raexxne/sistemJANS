@@ -2,6 +2,7 @@ package my.gov.jans.access.service;
 
 import com.lowagie.text.pdf.PdfReader;
 import com.lowagie.text.pdf.parser.PdfTextExtractor;
+import my.gov.jans.access.domain.Pelawat;
 import my.gov.jans.access.domain.Permohonan;
 import org.junit.jupiter.api.Test;
 
@@ -19,7 +20,7 @@ class PermohonanServicePdfTest {
 
         Permohonan permohonan = new Permohonan();
         permohonan.setNomborPermohonan("JAS-2026-000001");
-        permohonan.setApplicantName("Ali Bin Abu");
+        tambahPelawat(permohonan, "Ali Bin Abu");
         permohonan.setStaffNote("Catatan petugas untuk semakan sebelum keputusan");
         permohonan.setDirectorNote("Catatan pengarah untuk keputusan akhir");
 
@@ -43,7 +44,7 @@ class PermohonanServicePdfTest {
 
         Permohonan permohonan = new Permohonan();
         permohonan.setNomborPermohonan("JAS-2026-000002");
-        permohonan.setApplicantName("Siti Binti Ali");
+        tambahPelawat(permohonan, "Siti Binti Ali");
         permohonan.setStaffNote("Catatan dalaman untuk petugas");
         permohonan.setDirectorNote("Catatan dalaman untuk pengarah");
 
@@ -57,5 +58,15 @@ class PermohonanServicePdfTest {
         assertFalse(text.contains("Catatan Pengarah"));
         assertFalse(text.contains("Catatan dalaman untuk petugas"));
         assertFalse(text.contains("Catatan dalaman untuk pengarah"));
+    }
+
+    private static void tambahPelawat(Permohonan permohonan, String nama) {
+        Pelawat pelawat = new Pelawat();
+        pelawat.setNamaPenuh(nama);
+        pelawat.setNoKadPengenalan("900101-01-0001");
+        pelawat.setEmail("pelawat@example.com");
+        pelawat.setNoTelefonBimbit("0123456789");
+        pelawat.setJawatan("Pegawai");
+        permohonan.tambahPelawat(pelawat);
     }
 }

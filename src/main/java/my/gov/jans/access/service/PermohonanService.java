@@ -60,17 +60,6 @@ public class PermohonanService {
             throw new IllegalArgumentException("E-mel untuk dihubungi diperlukan");
         }
 
-        // Alias: jika phoneMobile diisi tetapi phone kosong (legacy)
-        if ((p.getPhone() == null || p.getPhone().isBlank())
-                && p.getPhoneMobile() != null && !p.getPhoneMobile().isBlank()) {
-            p.setPhone(p.getPhoneMobile());
-        }
-        // Alias sebaliknya: data lama hanya ada phone
-        if ((p.getPhoneMobile() == null || p.getPhoneMobile().isBlank())
-                && p.getPhone() != null && !p.getPhone().isBlank()) {
-            p.setPhoneMobile(p.getPhone());
-        }
-
         // Tarikh permohonan automatik jika tidak diisi
         if (p.getApplicationDate() == null) {
             p.setApplicationDate(LocalDate.now());

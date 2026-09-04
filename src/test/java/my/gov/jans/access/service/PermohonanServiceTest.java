@@ -2,6 +2,7 @@ package my.gov.jans.access.service;
 
 import my.gov.jans.access.domain.JenisLokasi;
 import my.gov.jans.access.domain.Pengguna;
+import my.gov.jans.access.domain.Pelawat;
 import my.gov.jans.access.domain.Permohonan;
 import my.gov.jans.access.domain.Role;
 import my.gov.jans.access.domain.StatusPermohonan;
@@ -38,7 +39,14 @@ class PermohonanServiceTest {
         permohonan.setId(1L);
         permohonan.setStatus(StatusPermohonan.DIHANTAR);
         permohonan.setNomborPermohonan("JAS-2026-000001");
-        permohonan.setEmail("applicant@example.com");
+        permohonan.setEmailWakil("applicant@example.com");
+        Pelawat pelawat = new Pelawat();
+        pelawat.setNamaPenuh("Ali Bin Abu");
+        pelawat.setNoKadPengenalan("900101-01-0001");
+        pelawat.setEmail("applicant@example.com");
+        pelawat.setNoTelefonBimbit("0123456789");
+        pelawat.setJawatan("Pegawai");
+        permohonan.tambahPelawat(pelawat);
 
         Pengguna staff = new Pengguna();
         staff.setEmail("staff@example.com");
@@ -72,11 +80,6 @@ class PermohonanServiceTest {
                 mock(PenggunaRepository.class), mock(EmailService.class));
         Permohonan permohonan = new Permohonan();
         permohonan.setNomborPermohonan("JAS-2026-000002");
-        permohonan.setApplicantName("Ali Bin Abu");
-        permohonan.setIcNo("900101-01-0001");
-        permohonan.setEmail("applicant@example.com");
-        permohonan.setJawatanGred("Pegawai");
-        permohonan.setPhoneMobile("0123456789");
         permohonan.setPhoneOffice("088123456");
         permohonan.setOrganisation("JAS");
         permohonan.setApplicationDate(LocalDate.of(2026, 8, 3));

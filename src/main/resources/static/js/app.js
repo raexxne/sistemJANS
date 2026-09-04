@@ -363,6 +363,7 @@ function showCatatanModal(title = 'Catatan', placeholder = 'Tulis catatan di sin
 
 function showSebabTolakModal() {
   return new Promise((resolve) => {
+    directorDecisionModalOpen = true;
     const modal = document.createElement('div');
     modal.style.cssText = 'display:flex;position:fixed;inset:0;background:rgba(0,0,0,.65);backdrop-filter:blur(4px);z-index:10000;justify-content:center;align-items:center;padding:16px;';
     modal.innerHTML = `
@@ -392,7 +393,11 @@ function showSebabTolakModal() {
     const sebab = modal.querySelector('#sebab-tolak');
     const sebabLain = modal.querySelector('#sebab-lain');
     const ralat = modal.querySelector('#sebab-tolak-ralat');
-    const close = (value) => { modal.remove(); resolve(value); };
+    const close = (value) => {
+      modal.remove();
+      directorDecisionModalOpen = false;
+      resolve(value);
+    };
 
     sebab.onchange = () => sebabLain.classList.toggle('d-none', sebab.value !== 'Lain-lain');
     modal.querySelector('#sebab-tolak-batal').onclick = () => close(null);
@@ -411,6 +416,7 @@ function showSebabTolakModal() {
 async function api(url, opt = {}) {
   const r = await fetch(url, {
     ...opt,
+    cache: 'no-store',
     headers: {
       'Content-Type': 'application/json',
       // elak halaman amaran ngrok free-tier menggantikan respons JSON sebenar
@@ -686,6 +692,7 @@ if (document.querySelector('#no') && q.get('no')) {
 }
 
 let selectedPermohonanIds = new Set();
+let directorDecisionModalOpen = false;
 
 function updateBulkSelectionUI() {
   const bar = document.querySelector('#bulk-actions-bar');
@@ -926,13 +933,6 @@ function bindPengarahPaginationEvents() {
   }
 }
 
-function isNewApplication(item) {
-  const createdAt = item.createdAt || item.tarikhHantar;
-  const createdTime = Date.parse(createdAt || '');
-  const age = Date.now() - createdTime;
-  return Number.isFinite(createdTime) && age >= 0 && age <= 24 * 60 * 60 * 1000;
-}
-
 function renderPengarahTable() {
   const totalPages = Math.max(1, Math.ceil(pengarahAllPermohonan.length / pengarahPageSize));
   if (pengarahCurrentPage > totalPages) {
@@ -943,12 +943,12 @@ function renderPengarahTable() {
   const pageItems = pengarahAllPermohonan.slice(startIndex, startIndex + pengarahPageSize);
 
   document.querySelector('#senarai-pengarah').innerHTML = pageItems.map(p => `
-    <tr class="${isNewApplication(p) ? 'application-new' : ''}">
+    <tr>
       <td>
         <input class="form-check-input row-checkbox" type="checkbox" data-id="${p.id}">
       </td>
       <td>${esc(p.nomborPermohonan)}</td>
-      <td class="text-start">${esc(p.organisation || '-')} ${isNewApplication(p) ? '<span class="new-application-badge">Baru</span>' : ''}</td>
+      <td class="text-start">${esc(p.organisation || '-')}</td>
       <td>${esc(p.reviewedBy?.name || 'Tidak direkodkan')}</td>
       <td>
         <small>
@@ -975,9 +975,20 @@ function renderPengarahTable() {
 }
 
 async function director() {
-  pengarahAllPermohonan = await api('/api/pengarah/permohonan');
-  selectedPermohonanIds.clear();
-  renderPengarahTable();
+  try {
+    const permohonan = await api('/api/pengarah/permohonan');
+    if (directorDecisionModalOpen) return;
+
+    pengarahAllPermohonan = permohonan;
+    selectedPermohonanIds.clear();
+    renderPengarahTable();
+  } catch (error) {
+    console.error('Gagal memuat permohonan pengarah:', error);
+    const tableBody = document.querySelector('#senarai-pengarah');
+    if (tableBody) {
+      tableBody.innerHTML = `<tr><td colspan="7" class="text-center text-danger">${esc(error.message || 'Gagal memuat senarai permohonan.')}</td></tr>`;
+    }
+  }
 }
 
 async function putus(id, lulus) {
@@ -1022,6 +1033,9 @@ async function putus(id, lulus) {
 
 if (document.querySelector('#senarai-pengarah')) {
   director();
+  setInterval(() => {
+    if (!directorDecisionModalOpen) director();
+  }, 15000);
 }
 
 if (document.querySelector('#sah')) {
