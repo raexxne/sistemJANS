@@ -38,6 +38,7 @@
       padding: 28px clamp(20px, 5vw, 56px);
       color: #fff;
       background: linear-gradient(120deg, #063b66, #0d6efd);
+      text-align: center;
     }
     .verify-header::after {
       content: '';
@@ -48,18 +49,6 @@
       height: 150px;
       border: 20px solid rgba(255,255,255,0.08);
       border-radius: 50%;
-    }
-    .verify-header .header-icon {
-      display: inline-flex;
-      width: 58px;
-      height: 58px;
-      align-items: center;
-      justify-content: center;
-      margin-bottom: 14px;
-      border: 1px solid rgba(255,255,255,0.25);
-      border-radius: 16px;
-      background: rgba(255,255,255,0.14);
-      font-size: 28px;
     }
     .verify-header h1 {
       position: relative;
@@ -72,13 +61,17 @@
     .status-banner {
       display: flex;
       align-items: center;
-      justify-content: space-between;
+      justify-content: center;
       gap: 16px;
       margin-bottom: 24px;
       padding: 18px 20px;
       border: 1px solid #b9e2c4;
       border-radius: 14px;
       background: #f0fbf3;
+      text-align: center;
+    }
+    .status-banner > div {
+      width: 100%;
     }
     .status-title { color: #176b35; font-weight: 700; }
     .status-reference { color: var(--muted); font-size: .9rem; }
@@ -133,15 +126,11 @@
     .visitor-field { min-width: 0; }
     .visitor-field span { display: block; color: var(--muted); font-size: .7rem; }
     .visitor-field strong { display: block; color: var(--ink); font-size: .84rem; overflow-wrap: anywhere; }
-    .action-buttons { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 24px; }
-    .action-buttons .btn { flex: 1 1 190px; margin: 0; border-radius: 10px; }
-    .verification-code { padding: 10px; border: 1px solid var(--line); border-radius: 8px; background: #f8f9fa; font-family: monospace; font-size: 12px; word-break: break-all; }
 
     @media (max-width: 576px) {
       .verify-card { border-radius: 14px; }
       .verify-body { padding: 16px; }
       .verify-header { padding: 22px 18px; }
-      .verify-header .header-icon { width: 48px; height: 48px; font-size: 22px; }
       .status-banner { align-items: flex-start; flex-direction: column; padding: 15px; }
       .data-row {
         grid-template-columns: minmax(0, 1fr);
@@ -150,17 +139,12 @@
       }
       .section-card { padding: 15px; }
       .visitor-grid { grid-template-columns: minmax(0, 1fr); gap: 8px; }
-      .action-buttons { flex-direction: column; }
-      .action-buttons .btn { flex-basis: auto; width: 100%; }
     }
     
     @media print {
       body {
         background: white;
         padding: 0;
-      }
-      .action-buttons {
-        display: none !important;
       }
       .verify-card {
         box-shadow: none;
@@ -173,9 +157,8 @@
 
   <div class="verify-card">
     <div class="verify-header">
-      <span class="header-icon"><i class="fas fa-shield-halved"></i></span>
       <h1 class="mb-0">Verifikasi Pas Kebenaran</h1>
-      <p class="mb-0 mt-2">Sistem Pengesahan Akses JAS</p>
+      <p class="mb-0 mt-2">Pengesahan kebenaran masuk</p>
     </div>
     
     <div class="verify-body">
@@ -293,10 +276,8 @@
         const pass = await apiFetch(apiUrl);
 
         const isValid = pass.status === 'PAS_DIKELUARKAN';
-        const statusClass = isValid ? 'badge-passed' : 'bg-warning text-dark';
         const statusIcon = isValid ? 'fa-check-circle text-success' : 'fa-info-circle';
         const pelawat = Array.isArray(pass.pelawat) ? pass.pelawat : [];
-        const tokenEncoded = encodeURIComponent(token);
         const statusText = isValid ? 'PAS SAH' : 'DALAM PROSES';
         
         document.querySelector('#content').innerHTML = `
@@ -305,23 +286,17 @@
               <div class="status-title"><i class="fas ${statusIcon} me-2"></i>${statusText}</div>
               <div class="status-reference mt-1">No. Permohonan: <strong>${escapeHtml(nilai(pass.nomborPermohonan))}</strong></div>
             </div>
-            <span class="verify-badge ${statusClass}">${escapeHtml((pass.status || '').replace(/_/g, ' '))}</span>
           </div>
 
           <div class="row g-3 text-start">
-            <div class="col-12 col-lg-6">
+            <div class="col-12">
               <section class="section-card">
-                <h2 class="section-title"><i class="fas fa-calendar-check"></i>Ringkasan Lawatan</h2>
+                <h2 class="section-title"><i class="fas fa-file-lines"></i>Maklumat Permohonan</h2>
                 ${medan('Tarikh permohonan', paparanTarikh(pass.applicationDate))}
                 ${medan('Tarikh lawatan', paparanTarikh(pass.visitDate))}
                 ${medan('Masa lawatan', formatMasa(pass.visitTime))}
                 ${medan('Jenis lokasi', labelLokasi(pass.locationType))}
                 ${medan('Nama / alamat lokasi', pass.locationName)}
-              </section>
-            </div>
-            <div class="col-12 col-lg-6">
-              <section class="section-card">
-                <h2 class="section-title"><i class="fas fa-building"></i>Organisasi & Wakil</h2>
                 ${medan('Organisasi', pass.organisation)}
                 ${medan('E-mel wakil', pass.emailWakil || pass.email)}
                 ${medan('Telefon pejabat', pass.phoneOffice)}
@@ -354,10 +329,6 @@
               </div>` : ''}
           </div>
 
-          ${isValid ? `<div class="action-buttons">
-            <a href="/api/pas/${tokenEncoded}/pdf-tanpa-qr" target="_blank" class="btn btn-primary"><i class="fas fa-file-pdf me-2"></i>Muat turun pas PDF</a>
-            <a href="/api/pas/${tokenEncoded}/pdf" target="_blank" class="btn btn-outline-primary"><i class="fas fa-qrcode me-2"></i>Lihat pas dengan QR</a>
-          </div>` : ''}
         `;
       } catch (error) {
         console.error(error);

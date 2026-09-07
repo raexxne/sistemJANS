@@ -729,7 +729,7 @@
                   </div>
                 </div>
                 <div class="col">
-                  <label class="form-label" for="filter-date">Tarikh hantar</label>
+                  <label class="form-label" for="filter-date">Tarikh permohonan</label>
                   <input id="filter-date" type="date" class="form-control" title="Tarikh masuk permohonan">
                 </div>
                 <div class="col">
@@ -783,7 +783,7 @@
                     </th>
                     <th>Nama Syarikat</th>
                     <th>E-mel Wakil</th>
-                    <th class="text-center">Tarikh Hantar</th>
+                    <th class="text-center">Tarikh Permohonan</th>
                     <th class="text-center">Status</th>
                     <th class="text-center">Butiran</th>
                   </tr>
@@ -1091,7 +1091,7 @@
       }
 
       if (filterDate) {
-        const recordDate = item.tarikhHantar || item.createdAt || item.tarikh || item.applicationDate || item.visitDate || '';
+        const recordDate = item.applicationDate || item.tarikhPermohonan || item.tarikhHantar || item.createdAt || item.tarikh || item.visitDate || '';
         if (!recordDate) return false;
         const recordDateString = new Date(recordDate);
         if (isNaN(recordDateString.getTime())) return false;
@@ -1605,7 +1605,7 @@
 
         const all = (await response.json()).map(item => ({
           ...item,
-          _sortDate: new Date(item.tarikhHantar || item.createdAt || item.tarikh || item.visitDate || 0).getTime()
+          _sortDate: new Date(item.applicationDate || item.tarikhPermohonan || item.tarikhHantar || item.createdAt || item.tarikh || item.visitDate || 0).getTime()
         }));
         all.sort((a, b) => b._sortDate - a._sortDate);
 
@@ -1637,7 +1637,7 @@
         pageItems.forEach((item) => {
           const namaSyarikat = getCompanyName(item);
           const emailWakil = item.emailWakil || item.email || item.emel || '-';
-          const tarikh = formatDate(item.tarikhHantar || item.createdAt || item.tarikh || item.applicationDate);
+          const tarikh = formatDate(item.applicationDate || item.tarikhPermohonan || item.tarikhHantar || item.createdAt || item.tarikh);
           const status = item.status || '';
           const id = getApplicationId(item);
           const bolehPilih = isPendingReviewStatus(status);
@@ -1654,7 +1654,7 @@
             </td>
             <td data-label="Nama Syarikat">${namaSyarikat}</td>
             <td data-label="E-mel Wakil">${emailWakil}</td>
-            <td data-label="Tarikh Hantar" class="text-center">${tarikh}</td>
+            <td data-label="Tarikh Permohonan" class="text-center">${tarikh}</td>
             <td data-label="Status" class="text-center">${renderStatusBadge(status)}</td>
             <td data-label="Butiran" class="text-center"></td>
           `;
