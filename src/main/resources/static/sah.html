@@ -8,126 +8,150 @@
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.6.0/css/all.min.css">
   <link rel="stylesheet" href="/css/style.css">
   <style>
+    :root {
+      --navy: #063b66;
+      --blue: #0d6efd;
+      --ink: #172b4d;
+      --muted: #667085;
+      --line: #e5eaf0;
+      --surface: #ffffff;
+      --soft-blue: #f2f7fc;
+    }
     body {
-      background: #f0f2f5;
+      background: radial-gradient(circle at top right, #dceeff 0, transparent 34%), #eef3f8;
       min-height: 100vh;
       display: flex;
-      align-items: center;
+      align-items: flex-start;
       justify-content: center;
-      padding: max(20px, env(safe-area-inset-top)) max(20px, env(safe-area-inset-right)) max(20px, env(safe-area-inset-bottom)) max(20px, env(safe-area-inset-left));
+      padding: max(24px, env(safe-area-inset-top)) max(16px, env(safe-area-inset-right)) max(24px, env(safe-area-inset-bottom)) max(16px, env(safe-area-inset-left));
     }
     .verify-card {
-      border: 3px solid #00467f;
-      border-radius: 12px;
-      background: linear-gradient(135deg, #f8fbff 0%, #ffffff 100%);
-      max-width: 700px;
-      width: 100%;
-      min-width: 0;
-      box-shadow: 0 10px 40px rgba(0,0,0,0.1);
+      width: min(1080px, 100%);
+      overflow: hidden;
+      border: 1px solid #d7e1ec;
+      border-radius: 22px;
+      background: var(--surface);
+      box-shadow: 0 18px 55px rgba(24, 55, 88, 0.14);
     }
     .verify-header {
-      background: linear-gradient(135deg, #00467f 0%, #0d5ba5 100%);
-      color: white;
+      position: relative;
+      padding: 28px clamp(20px, 5vw, 56px);
+      color: #fff;
+      background: linear-gradient(120deg, #063b66, #0d6efd);
+    }
+    .verify-header::after {
+      content: '';
+      position: absolute;
+      right: 7%;
+      bottom: -32px;
+      width: 150px;
+      height: 150px;
+      border: 20px solid rgba(255,255,255,0.08);
+      border-radius: 50%;
+    }
+    .verify-header .header-icon {
+      display: inline-flex;
+      width: 58px;
+      height: 58px;
+      align-items: center;
+      justify-content: center;
+      margin-bottom: 14px;
+      border: 1px solid rgba(255,255,255,0.25);
+      border-radius: 16px;
+      background: rgba(255,255,255,0.14);
+      font-size: 28px;
+    }
+    .verify-header h1 {
+      position: relative;
+      z-index: 1;
+      font-size: clamp(1.35rem, 3vw, 2rem);
+      letter-spacing: 0.01em;
+    }
+    .verify-header p { position: relative; z-index: 1; color: rgba(255,255,255,0.78); }
+    .verify-body { padding: clamp(18px, 4vw, 42px); }
+    .status-banner {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+      margin-bottom: 24px;
+      padding: 18px 20px;
+      border: 1px solid #b9e2c4;
+      border-radius: 14px;
+      background: #f0fbf3;
+    }
+    .status-title { color: #176b35; font-weight: 700; }
+    .status-reference { color: var(--muted); font-size: .9rem; }
+    .verify-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 9px 14px;
+      border-radius: 999px;
+      font-size: .8rem;
+      font-weight: 700;
+      white-space: nowrap;
+    }
+    .badge-passed { background: #d4edda; color: #155724; }
+    .section-card {
+      height: 100%;
       padding: 20px;
-      border-radius: 9px 9px 0 0;
-      text-align: center;
+      border: 1px solid var(--line);
+      border-radius: 15px;
+      background: var(--surface);
     }
-    .verify-header i {
-      font-size: 48px;
-      margin-bottom: 10px;
-      display: block;
+    .section-title {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 16px;
+      color: var(--navy);
+      font-size: 1rem;
+      font-weight: 700;
     }
+    .section-title i { color: var(--blue); }
     .data-row {
       display: grid;
-      grid-template-columns: 200px 1fr;
-      gap: 20px;
-      padding: 12px 0;
-      border-bottom: 1px solid #f0f0f0;
-      align-items: center;
+      grid-template-columns: minmax(150px, .8fr) minmax(0, 1.2fr);
+      gap: 18px;
+      padding: 11px 0;
+      border-bottom: 1px solid #eef1f4;
     }
-    .data-row:last-child {
-      border-bottom: none;
+    .data-row:last-child { border-bottom: 0; padding-bottom: 0; }
+    .data-label { color: var(--muted); font-size: .78rem; font-weight: 600; }
+    .data-value { color: var(--ink); font-size: .92rem; font-weight: 500; overflow-wrap: anywhere; white-space: pre-wrap; }
+    .visitor-card {
+      margin-top: 12px;
+      padding: 14px;
+      border: 1px solid #dce8f3;
+      border-radius: 12px;
+      background: var(--soft-blue);
     }
-    .data-label {
-      font-weight: bold;
-      color: #00467f;
-      font-size: 14px;
-    }
-    .data-value {
-      color: #333;
-      font-size: 15px;
-      min-width: 0;
-      word-break: break-word;
-      overflow-wrap: anywhere;
-    }
-    .verify-badge {
-      display: inline-block;
-      padding: 8px 16px;
-      border-radius: 20px;
-      font-weight: bold;
-      font-size: 13px;
-    }
-    .badge-passed {
-      background-color: #d4edda;
-      color: #155724;
-    }
-    .action-buttons {
-      margin-top: 20px;
-      text-align: center;
-    }
-    .action-buttons button,
-    .action-buttons a {
-      margin: 5px;
-    }
-    .verification-code {
-      background: #f8f9fa;
-      padding: 10px;
-      border-radius: 6px;
-      font-family: monospace;
-      font-size: 12px;
-      word-break: break-all;
-      border: 1px solid #dee2e6;
-    }
+    .visitor-card:first-child { margin-top: 0; }
+    .visitor-name { color: var(--navy); font-weight: 700; }
+    .visitor-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px 18px; margin-top: 10px; }
+    .visitor-field { min-width: 0; }
+    .visitor-field span { display: block; color: var(--muted); font-size: .7rem; }
+    .visitor-field strong { display: block; color: var(--ink); font-size: .84rem; overflow-wrap: anywhere; }
+    .action-buttons { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 24px; }
+    .action-buttons .btn { flex: 1 1 190px; margin: 0; border-radius: 10px; }
+    .verification-code { padding: 10px; border: 1px solid var(--line); border-radius: 8px; background: #f8f9fa; font-family: monospace; font-size: 12px; word-break: break-all; }
 
     @media (max-width: 576px) {
-      body {
-        align-items: flex-start;
-        padding: max(12px, env(safe-area-inset-top)) max(12px, env(safe-area-inset-right)) max(12px, env(safe-area-inset-bottom)) max(12px, env(safe-area-inset-left));
-      }
-      .verify-card {
-        border-width: 2px;
-        border-radius: 10px;
-      }
-      .verify-header {
-        padding: 18px 14px;
-        border-radius: 8px 8px 0 0;
-      }
-      .verify-header i {
-        font-size: 40px;
-      }
-      .verify-header h2 {
-        font-size: 1.25rem;
-        line-height: 1.35;
-      }
-      .card-body.p-4 {
-        padding: 1rem !important;
-      }
+      .verify-card { border-radius: 14px; }
+      .verify-body { padding: 16px; }
+      .verify-header { padding: 22px 18px; }
+      .verify-header .header-icon { width: 48px; height: 48px; font-size: 22px; }
+      .status-banner { align-items: flex-start; flex-direction: column; padding: 15px; }
       .data-row {
         grid-template-columns: minmax(0, 1fr);
-        gap: 4px;
-        padding: 12px 0;
+        gap: 3px;
+        padding: 10px 0;
       }
-      .data-label {
-        font-size: 13px;
-      }
-      .data-value {
-        font-size: 14px;
-      }
-      .verify-badge {
-        max-width: 100%;
-        text-align: center;
-        white-space: normal;
-      }
+      .section-card { padding: 15px; }
+      .visitor-grid { grid-template-columns: minmax(0, 1fr); gap: 8px; }
+      .action-buttons { flex-direction: column; }
+      .action-buttons .btn { flex-basis: auto; width: 100%; }
     }
     
     @media print {
@@ -149,12 +173,12 @@
 
   <div class="verify-card">
     <div class="verify-header">
-      <i class="fas fa-check-circle"></i>
-      <h2 class="mb-0">VERIFIKASI PAS KEBENARAN</h2>
-      <p class="mb-0 mt-2" style="font-size: 14px;">Sistem Pengesahan Akses JAS</p>
+      <span class="header-icon"><i class="fas fa-shield-halved"></i></span>
+      <h1 class="mb-0">Verifikasi Pas Kebenaran</h1>
+      <p class="mb-0 mt-2">Sistem Pengesahan Akses JAS</p>
     </div>
     
-    <div class="card-body p-4">
+    <div class="verify-body">
       <div id="content" class="text-center">
         <div class="spinner-border text-primary" role="status">
           <span class="visually-hidden">Memuatkan...</span>
@@ -195,6 +219,31 @@
       let h12 = h % 12;
       if (h12 === 0) h12 = 12;
       return `${String(h12).padStart(2, '0')}:${String(m).padStart(2, '0')} ${period}`;
+    }
+
+    function nilai(value) {
+      return value !== null && value !== undefined && String(value).trim() ? value : '-';
+    }
+
+    function labelLokasi(type) {
+      const labels = { LOJI: 'Loji', INTAKE: 'Intake' };
+      return labels[type] || nilai(type);
+    }
+
+    function paparanTarikh(date) {
+      if (!date) return '-';
+      const parsed = new Date(`${date}T00:00:00`);
+      return Number.isNaN(parsed.getTime()) ? date : parsed.toLocaleDateString('ms-MY', {
+        day: '2-digit', month: 'long', year: 'numeric'
+      });
+    }
+
+    function medan(label, value) {
+      return `<div class="data-row"><div class="data-label">${label}</div><div class="data-value">${escapeHtml(nilai(value))}</div></div>`;
+    }
+
+    function medanPelawat(label, value) {
+      return `<div class="visitor-field"><span>${label}</span><strong>${escapeHtml(nilai(value))}</strong></div>`;
     }
 
     async function apiFetch(url) {
@@ -246,103 +295,69 @@
         const isValid = pass.status === 'PAS_DIKELUARKAN';
         const statusClass = isValid ? 'badge-passed' : 'bg-warning text-dark';
         const statusIcon = isValid ? 'fa-check-circle text-success' : 'fa-info-circle';
+        const pelawat = Array.isArray(pass.pelawat) ? pass.pelawat : [];
+        const tokenEncoded = encodeURIComponent(token);
+        const statusText = isValid ? 'PAS SAH' : 'DALAM PROSES';
         
         document.querySelector('#content').innerHTML = `
-          <div class="mb-4 p-3 bg-light rounded">
-            <span class="verify-badge ${statusClass}">
-              <i class="fas ${statusIcon} me-2"></i>
-              ${isValid ? 'PAS SAH' : 'DALAM PROSES'}
-            </span>
+          <div class="status-banner">
+            <div>
+              <div class="status-title"><i class="fas ${statusIcon} me-2"></i>${statusText}</div>
+              <div class="status-reference mt-1">No. Permohonan: <strong>${escapeHtml(nilai(pass.nomborPermohonan))}</strong></div>
+            </div>
+            <span class="verify-badge ${statusClass}">${escapeHtml((pass.status || '').replace(/_/g, ' '))}</span>
           </div>
 
-          <div style="text-align: left;">
-            <div class="data-row">
-              <div class="data-label">No. Permohonan:</div>
-              <div class="data-value"><strong>${escapeHtml(pass.nomborPermohonan)}</strong></div>
+          <div class="row g-3 text-start">
+            <div class="col-12 col-lg-6">
+              <section class="section-card">
+                <h2 class="section-title"><i class="fas fa-calendar-check"></i>Ringkasan Lawatan</h2>
+                ${medan('Tarikh permohonan', paparanTarikh(pass.applicationDate))}
+                ${medan('Tarikh lawatan', paparanTarikh(pass.visitDate))}
+                ${medan('Masa lawatan', formatMasa(pass.visitTime))}
+                ${medan('Jenis lokasi', labelLokasi(pass.locationType))}
+                ${medan('Nama / alamat lokasi', pass.locationName)}
+              </section>
             </div>
-
-            <div class="data-row">
-              <div class="data-label">Nama Penuh:</div>
-              <div class="data-value">${escapeHtml(pass.applicantName || '-')}</div>
+            <div class="col-12 col-lg-6">
+              <section class="section-card">
+                <h2 class="section-title"><i class="fas fa-building"></i>Organisasi & Wakil</h2>
+                ${medan('Organisasi', pass.organisation)}
+                ${medan('E-mel wakil', pass.emailWakil || pass.email)}
+                ${medan('Telefon pejabat', pass.phoneOffice)}
+                ${medan('Tujuan lawatan', pass.purpose)}
+              </section>
             </div>
-
-            <div class="data-row">
-              <div class="data-label">No. Kad Pengenalan / Pasport:</div>
-              <div class="data-value">${escapeHtml(pass.icNo || '-')}</div>
+            <div class="col-12">
+              <section class="section-card">
+                <h2 class="section-title"><i class="fas fa-users"></i>Maklumat Pelawat <span class="badge text-bg-primary">${pelawat.length}</span></h2>
+                ${pelawat.length ? pelawat.map((visitor, index) => `
+                  <div class="visitor-card">
+                    <div class="visitor-name"><i class="fas fa-user me-2"></i>Pelawat ${index + 1}: ${escapeHtml(nilai(visitor.namaPenuh))}</div>
+                    <div class="visitor-grid">
+                      ${medanPelawat('No. kad pengenalan', visitor.noKadPengenalan)}
+                      ${medanPelawat('E-mel', visitor.email)}
+                      ${medanPelawat('Telefon bimbit', visitor.noTelefonBimbit)}
+                      ${medanPelawat('Jawatan', visitor.jawatan)}
+                      ${medanPelawat('No. pendaftaran kenderaan', visitor.noPendaftaranKenderaan)}
+                    </div>
+                  </div>`).join('') : '<p class="text-muted mb-0">Tiada maklumat pelawat direkodkan.</p>'}
+              </section>
             </div>
-
-            <div class="data-row">
-              <div class="data-label">E-mel:</div>
-              <div class="data-value">${escapeHtml(pass.email || '-')}</div>
-            </div>
-
-            <div class="data-row">
-              <div class="data-label">Jawatan (Gred):</div>
-              <div class="data-value">${escapeHtml(pass.jawatanGred || '-')}</div>
-            </div>
-
-            <div class="data-row">
-              <div class="data-label">No. Telefon (Bimbit):</div>
-              <div class="data-value">${escapeHtml(telefonBimbit(pass))}</div>
-            </div>
-
-            <div class="data-row">
-              <div class="data-label">No. Telefon (Pejabat):</div>
-              <div class="data-value">${escapeHtml(pass.phoneOffice || '-')}</div>
-            </div>
-
-            <div class="data-row">
-              <div class="data-label">Kementerian / Jabatan / Agensi / Universiti / Syarikat:</div>
-              <div class="data-value">${escapeHtml(pass.organisation || '-')}</div>
-            </div>
-
-            <div class="data-row">
-              <div class="data-label">Tarikh Permohonan:</div>
-              <div class="data-value">${escapeHtml(pass.applicationDate || '-')}</div>
-            </div>
-
-            <div class="data-row">
-              <div class="data-label">Tarikh Lawatan:</div>
-              <div class="data-value">${escapeHtml(pass.visitDate || '-')}</div>
-            </div>
-
-            <div class="data-row">
-              <div class="data-label">Masa Lawatan:</div>
-              <div class="data-value">${escapeHtml(formatMasa(pass.visitTime))}</div>
-            </div>
-
-            <div class="data-row">
-              <div class="data-label">Jenis Lokasi:</div>
-              <div class="data-value">${escapeHtml(pass.locationType || '-')}</div>
-            </div>
-
-            <div class="data-row">
-              <div class="data-label">Nama / Alamat Lokasi:</div>
-              <div class="data-value">${escapeHtml(pass.locationName || '-')}</div>
-            </div>
-
-            ${pass.vehicleNo && String(pass.vehicleNo).trim() ? `
-            <div class="data-row">
-              <div class="data-label">No. Pendaftaran Kenderaan:</div>
-              <div class="data-value">${escapeHtml(pass.vehicleNo)}</div>
-            </div>
-            ` : ''}
-
-            <div class="data-row">
-              <div class="data-label">Tujuan Lawatan:</div>
-              <div class="data-value">${escapeHtml(pass.purpose || '-')}</div>
-            </div>
-
-            <div class="data-row">
-              <div class="data-label">Status:</div>
-              <div class="data-value">
-                <span class="verify-badge ${statusClass}">
-                  ${escapeHtml((pass.status || '').replace(/_/g, ' '))}
-                </span>
-              </div>
-            </div>
-
+            ${(pass.staffNote || pass.directorNote) ? `
+              <div class="col-12 col-lg-6">
+                <section class="section-card">
+                  <h2 class="section-title"><i class="fas fa-clipboard-check"></i>Catatan Proses</h2>
+                  ${pass.staffNote ? medan('Catatan petugas', pass.staffNote) : ''}
+                  ${pass.directorNote ? medan('Catatan pengarah', pass.directorNote) : ''}
+                </section>
+              </div>` : ''}
           </div>
+
+          ${isValid ? `<div class="action-buttons">
+            <a href="/api/pas/${tokenEncoded}/pdf-tanpa-qr" target="_blank" class="btn btn-primary"><i class="fas fa-file-pdf me-2"></i>Muat turun pas PDF</a>
+            <a href="/api/pas/${tokenEncoded}/pdf" target="_blank" class="btn btn-outline-primary"><i class="fas fa-qrcode me-2"></i>Lihat pas dengan QR</a>
+          </div>` : ''}
         `;
       } catch (error) {
         console.error(error);

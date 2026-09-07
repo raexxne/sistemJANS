@@ -362,6 +362,10 @@ textarea.form-control { resize: vertical; }
   text-decoration: underline;
 }
 
+.auth-home-link {
+  color: inherit;
+}
+
 .auth-visual-title {
   font-size: 1.75rem;
   font-weight: 700;
