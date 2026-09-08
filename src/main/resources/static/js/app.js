@@ -105,10 +105,10 @@ function showConfirmModal({
           justify-content: center;
         ">
           ${showCancel ? `
-          <button id="modal-btn-cancel" class="btn btn-outline-secondary px-4 py-2" style="border-radius: 8px; font-weight: 500;">
+          <button id="modal-btn-cancel" type="button" class="btn btn-outline-secondary px-4 py-2" style="border-radius: 8px; font-weight: 500;">
             ${esc(cancelText)}
           </button>` : ''}
-          <button id="modal-btn-confirm" class="btn ${style.btn} px-4 py-2" style="border-radius: 8px; font-weight: 600;">
+          <button id="modal-btn-confirm" type="button" class="btn ${style.btn} px-4 py-2" style="border-radius: 8px; font-weight: 600;">
             ${esc(confirmText)}
           </button>
         </div>
@@ -712,8 +712,9 @@ function updateBulkSelectionUI() {
 
   if (selectAllEl) {
     const totalRows = document.querySelectorAll('.row-checkbox').length;
-    selectAllEl.checked = totalRows > 0 && count === totalRows;
-    selectAllEl.indeterminate = totalRows > 0 && count > 0 && count < totalRows;
+    const checkedRows = document.querySelectorAll('.row-checkbox:checked').length;
+    selectAllEl.checked = totalRows > 0 && checkedRows === totalRows;
+    selectAllEl.indeterminate = checkedRows > 0 && checkedRows < totalRows;
   }
 }
 
@@ -795,22 +796,23 @@ async function bulkPutus(lulus) {
   const ids = [...selectedPermohonanIds];
   if (ids.length === 0) return;
 
-  const sahkan = await showConfirmModal({
-    title: lulus ? 'Sahkan Kelulusan Terpilih' : 'Sahkan Penolakan Terpilih',
-    message: `Anda akan memberi keputusan kepada ${ids.length} permohonan terpilih.`,
-    confirmText: lulus ? 'Ya, Setuju' : 'Ya, Tolak',
-    cancelText: 'Batal',
-    type: lulus ? 'success' : 'danger',
-    icon: lulus ? 'fa-check-circle' : 'fa-times-circle'
-  });
-
-  if (!sahkan) return;
-
-  const catatan = lulus ? '' : await showSebabTolakModal();
-  if (!lulus && catatan === null) return;
-
-  setBulkPutusLoading(true, lulus);
+  directorDecisionModalOpen = true;
   try {
+    const sahkan = await showConfirmModal({
+      title: lulus ? 'Sahkan Kelulusan Terpilih' : 'Sahkan Penolakan Terpilih',
+      message: `Anda akan memberi keputusan kepada ${ids.length} permohonan terpilih.`,
+      confirmText: lulus ? 'Ya, Setuju' : 'Ya, Tolak',
+      cancelText: 'Batal',
+      type: lulus ? 'success' : 'danger',
+      icon: lulus ? 'fa-check-circle' : 'fa-times-circle'
+    });
+
+    if (!sahkan) return;
+
+    const catatan = lulus ? '' : await showSebabTolakModal();
+    if (!lulus && catatan === null) return;
+
+    setBulkPutusLoading(true, lulus);
     for (const id of ids) {
       await api(`/api/pengarah/permohonan/${id}/keputusan`, {
         method: 'POST',
@@ -819,7 +821,7 @@ async function bulkPutus(lulus) {
     }
 
     selectedPermohonanIds.clear();
-    director();
+    await director(true);
 
     // Popover keputusan selepas berjaya proses (hanya SEKALI, selepas gelung selesai)
     showConfirmModal({
@@ -834,6 +836,7 @@ async function bulkPutus(lulus) {
     showErrorPopup('Ralat Keputusan', e.message);
   } finally {
     setBulkPutusLoading(false, lulus);
+    directorDecisionModalOpen = false;
   }
 }
 
@@ -945,7 +948,7 @@ function renderPengarahTable() {
   document.querySelector('#senarai-pengarah').innerHTML = pageItems.map(p => `
     <tr>
       <td>
-        <input class="form-check-input row-checkbox" type="checkbox" data-id="${p.id}">
+        <input class="form-check-input row-checkbox" type="checkbox" data-id="${p.id}" ${selectedPermohonanIds.has(p.id) ? 'checked' : ''}>
       </td>
       <td>${esc(p.nomborPermohonan)}</td>
       <td class="text-start">${esc(p.organisation || '-')}</td>
@@ -974,13 +977,18 @@ function renderPengarahTable() {
   updateBulkSelectionUI();
 }
 
-async function director() {
+async function director(resetSelection = false) {
   try {
     const permohonan = await api('/api/pengarah/permohonan');
     if (directorDecisionModalOpen) return;
 
     pengarahAllPermohonan = permohonan;
-    selectedPermohonanIds.clear();
+    if (resetSelection) {
+      selectedPermohonanIds.clear();
+    } else {
+      const existingIds = new Set(permohonan.map(p => p.id));
+      selectedPermohonanIds = new Set([...selectedPermohonanIds].filter(id => existingIds.has(id)));
+    }
     renderPengarahTable();
   } catch (error) {
     console.error('Gagal memuat permohonan pengarah:', error);
@@ -992,28 +1000,29 @@ async function director() {
 }
 
 async function putus(id, lulus) {
-  const sahkan = await showConfirmModal({
-    title: lulus ? 'Sahkan Kelulusan' : 'Sahkan Penolakan',
-    message: lulus
-      ? 'Adakah anda pasti untuk meluluskan permohonan ini?'
-      : 'Adakah anda pasti untuk menolak permohonan ini?',
-    confirmText: lulus ? 'Ya, Setuju' : 'Ya, Tolak',
-    cancelText: 'Batal',
-    type: lulus ? 'success' : 'danger',
-    icon: lulus ? 'fa-check-circle' : 'fa-times-circle'
-  });
-
-  if (!sahkan) return;
-
-  const catatan = lulus ? '' : await showSebabTolakModal();
-  if (!lulus && catatan === null) return;
-
+  directorDecisionModalOpen = true;
   try {
+    const sahkan = await showConfirmModal({
+      title: lulus ? 'Sahkan Kelulusan' : 'Sahkan Penolakan',
+      message: lulus
+        ? 'Adakah anda pasti untuk meluluskan permohonan ini?'
+        : 'Adakah anda pasti untuk menolak permohonan ini?',
+      confirmText: lulus ? 'Ya, Setuju' : 'Ya, Tolak',
+      cancelText: 'Batal',
+      type: lulus ? 'success' : 'danger',
+      icon: lulus ? 'fa-check-circle' : 'fa-times-circle'
+    });
+
+    if (!sahkan) return;
+
+    const catatan = lulus ? '' : await showSebabTolakModal();
+    if (!lulus && catatan === null) return;
+
     await api(`/api/pengarah/permohonan/${id}/keputusan`, {
       method: 'POST',
       body: JSON.stringify({ lulus, catatan })
     });
-    director();
+    await director(true);
 
     // Popover keputusan selepas berjaya proses
     showConfirmModal({
@@ -1028,13 +1037,17 @@ async function putus(id, lulus) {
     });
   } catch (e) {
     showErrorPopup('Ralat Keputusan', e.message);
+  } finally {
+    directorDecisionModalOpen = false;
   }
 }
 
 if (document.querySelector('#senarai-pengarah')) {
   director();
   setInterval(() => {
-    if (!directorDecisionModalOpen) director();
+    if (!directorDecisionModalOpen && selectedPermohonanIds.size === 0) {
+      director();
+    }
   }, 15000);
 }
 
