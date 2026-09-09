@@ -945,7 +945,11 @@ function renderPengarahTable() {
   const startIndex = (pengarahCurrentPage - 1) * pengarahPageSize;
   const pageItems = pengarahAllPermohonan.slice(startIndex, startIndex + pengarahPageSize);
 
-  document.querySelector('#senarai-pengarah').innerHTML = pageItems.map(p => `
+  document.querySelector('#senarai-pengarah').innerHTML = pageItems.map(p => {
+    const staffNoteText = (p.staffNote && p.staffNote.trim()) ? p.staffNote.trim() : 'Tidak ada catatan';
+    const hasCustomNote = staffNoteText !== 'Tidak ada catatan' && staffNoteText !== '-';
+
+    return `
     <tr>
       <td>
         <input class="form-check-input row-checkbox" type="checkbox" data-id="${p.id}" ${selectedPermohonanIds.has(p.id) ? 'checked' : ''}>
@@ -962,13 +966,23 @@ function renderPengarahTable() {
       <td class="text-start">
         <small>${esc(p.purpose || '-')}</small>
       </td>
+      <td class="text-start">
+        ${hasCustomNote 
+          ? `<div class="d-inline-flex align-items-start gap-1 p-1 px-2 rounded" style="background:#e8f4fd; color:#0056b3; font-size:0.83rem; border:1px solid #b8daff; max-width:260px; word-break:break-word;">
+               <i class="fas fa-comment-dots text-primary mt-1 me-1 flex-shrink-0"></i>
+               <span>${esc(staffNoteText)}</span>
+             </div>`
+          : `<span class="text-muted small fst-italic">${esc(staffNoteText)}</span>`
+        }
+      </td>
       <td>
         <a href="/api/public/permohonan/${encodeURIComponent(p.nomborPermohonan)}/pdf" target="_blank" rel="noopener" class="btn btn-sm btn-outline-primary" title="Cetak PDF permohonan">
           <i class="fas fa-print me-1"></i>Cetak
         </a>
       </td>
     </tr>
-  `).join('') || '<tr><td colspan="8" class="text-center text-muted">Tiada permohonan menunggu.</td></tr>';
+  `;
+  }).join('') || '<tr><td colspan="8" class="text-center text-muted">Tiada permohonan menunggu.</td></tr>';
 
   renderPengarahPaginationControls(pengarahAllPermohonan.length);
   bindBulkSelectionEvents();
@@ -994,7 +1008,7 @@ async function director(resetSelection = false) {
     console.error('Gagal memuat permohonan pengarah:', error);
     const tableBody = document.querySelector('#senarai-pengarah');
     if (tableBody) {
-      tableBody.innerHTML = `<tr><td colspan="7" class="text-center text-danger">${esc(error.message || 'Gagal memuat senarai permohonan.')}</td></tr>`;
+      tableBody.innerHTML = `<tr><td colspan="8" class="text-center text-danger">${esc(error.message || 'Gagal memuat senarai permohonan.')}</td></tr>`;
     }
   }
 }

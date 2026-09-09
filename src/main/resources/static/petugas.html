@@ -60,6 +60,7 @@
     .dashboard-kpi-row .col:nth-child(3) { --kpi-color: #dc2626; }
     .dashboard-kpi-row .col:nth-child(4) { --kpi-color: #0d6efd; }
     .dashboard-kpi-row .col:nth-child(5) { --kpi-color: #ffc107; }
+    .cursor-pointer { cursor: pointer; }
     .dashboard-table thead th {
       font-size: 0.8rem;
       text-transform: uppercase;
@@ -1146,51 +1147,117 @@
       });
     }
 
-    function showCatatanModal({
-      title = 'Catatan Semakan untuk Pengarah',
-      placeholder = 'Contoh: Dokumen lengkap, lokasi sesuai, dicadangkan untuk diluluskan...'
-    } = {}) {
+    function showHantarPengarahModal({ count = 1 } = {}) {
       return new Promise((resolve) => {
-        const old = document.querySelector('.catatan-modal-overlay');
+        const old = document.querySelector('.hantar-pengarah-modal-overlay');
         if (old) old.remove();
 
         const overlay = document.createElement('div');
-        overlay.className = 'catatan-modal-overlay';
+        overlay.className = 'hantar-pengarah-modal-overlay catatan-modal-overlay';
         overlay.innerHTML = `
-          <div class="catatan-modal-card">
-            <div class="catatan-modal-header">
-              <i class="fas fa-comment-dots me-2"></i>${title}
+          <div class="catatan-modal-card" style="max-width: 720px;">
+            <div class="catatan-modal-header d-flex align-items-center justify-content-between">
+              <div class="d-flex align-items-center">
+                <span>Hantar ke Pengarah</span>
+              </div>
             </div>
             <div class="catatan-modal-body">
-              <label class="form-label text-muted small mb-2">Catatan ini akan dibaca oleh pengarah semasa membuat keputusan.</label>
-              <textarea id="catatan-input" placeholder="${placeholder}" rows="5"></textarea>
+              <p class="text-muted mb-3">
+                Sahkan penghantaran <strong>${count > 1 ? count + ' permohonan' : '1 permohonan'}</strong> kepada Pengarah untuk tindakan dan keputusan.
+              </p>
+
+              <label class="form-label fw-bold text-dark mb-2">Adakah anda ingin menambah catatan semakan?</label>
+              <div class="d-flex flex-column gap-2 mb-3">
+                <div class="form-check p-3 border rounded d-flex align-items-center" style="background:#f8f9fa; cursor: pointer;">
+                  <input class="form-check-input ms-0 me-2 mt-0" type="radio" name="optTambahCatatan" id="opt-catatan-tidak" value="tidak" checked style="border-radius: 50%; width: 1em; height: 1em; padding: 0;">
+                  <label class="form-check-label fw-bold text-dark cursor-pointer mb-0" for="opt-catatan-tidak">
+                    Tidak
+                  </label>
+                </div>
+                <div class="form-check p-3 border rounded d-flex align-items-center" style="background:#f8f9fa; cursor: pointer;">
+                  <input class="form-check-input ms-0 me-2 mt-0" type="radio" name="optTambahCatatan" id="opt-catatan-ya" value="ya" style="border-radius: 50%; width: 1em; height: 1em; padding: 0;">
+                  <label class="form-check-label fw-bold text-dark cursor-pointer mb-0" for="opt-catatan-ya">
+                    Ya, tambah catatan
+                  </label>
+                </div>
+              </div>
+
+              <div id="catatan-selection-box" style="display: none;" class="p-3 border rounded bg-light mb-2">
+                <label for="dropdown-pilihan-catatan" class="form-label fw-bold text-dark mb-1">
+                  Pilihan Catatan:
+                </label>
+                <select id="dropdown-pilihan-catatan" class="form-select mb-2">
+                  <option value="">-- Sila pilih catatan anda --</option>
+                  <option value="Dokumen lengkap dan teratur, disyorkan untuk kelulusan">Dokumen lengkap dan teratur, disyorkan untuk kelulusan</option>
+                  <option value="Semakan awal telah dibuat, tiada isu keselamatan dikesan">Semakan awal telah dibuat, tiada isu keselamatan dikesan</option>
+                  <option value="Permohonan mematuhi syarat lawatan loji / fasiliti">Permohonan mematuhi syarat lawatan loji / fasiliti</option>
+                  <option value="Disyorkan untuk pertimbangan dan kelulusan Tuan Pengarah">Disyorkan untuk pertimbangan dan kelulusan Tuan Pengarah</option>
+                  <option value="Memerlukan perhatian khusus bagi permit keselamatan">Memerlukan perhatian khusus bagi permit keselamatan</option>
+                  <option value="__CUSTOM__">Lain-lain</option>
+                </select>
+
+                <label for="textarea-catatan-petugas" class="form-label fw-bold text-dark mb-1">Catatan Petugas:</label>
+                <textarea id="textarea-catatan-petugas" class="form-control" rows="3" placeholder="Taip catatan di sini..."></textarea>
+              </div>
             </div>
             <div class="catatan-modal-actions">
-              <button type="button" class="btn btn-outline-secondary" id="catatan-btn-batal">Batal</button>
-              <button type="button" class="btn btn-primary" id="catatan-btn-hantar">
-                <i class="fas fa-paper-plane me-1"></i> Hantar
+              <button type="button" class="btn btn-outline-secondary" id="hantar-modal-batal">Batal</button>
+              <button type="button" class="btn btn-primary" id="hantar-modal-submit">
+                Hantar
               </button>
             </div>
           </div>
         `;
         document.body.appendChild(overlay);
 
-        const input = overlay.querySelector('#catatan-input');
-        input.focus();
+        const optTidak = overlay.querySelector('#opt-catatan-tidak');
+        const optYa = overlay.querySelector('#opt-catatan-ya');
+        const selectionBox = overlay.querySelector('#catatan-selection-box');
+        const dropdown = overlay.querySelector('#dropdown-pilihan-catatan');
+        const textarea = overlay.querySelector('#textarea-catatan-petugas');
+
+        const updateVisibility = () => {
+          if (optYa.checked) {
+            selectionBox.style.display = 'block';
+            if (!textarea.value.trim() && dropdown.value && dropdown.value !== '__CUSTOM__') {
+              textarea.value = dropdown.value;
+            }
+          } else {
+            selectionBox.style.display = 'none';
+          }
+        };
+
+        optTidak.addEventListener('change', updateVisibility);
+        optYa.addEventListener('change', updateVisibility);
+
+        dropdown.addEventListener('change', () => {
+          if (dropdown.value === '__CUSTOM__') {
+            textarea.value = '';
+            textarea.focus();
+          } else if (dropdown.value) {
+            textarea.value = dropdown.value;
+          }
+        });
 
         const close = (value) => {
           overlay.remove();
           resolve(value);
         };
 
-        overlay.querySelector('#catatan-btn-batal').onclick = () => close(null);
-        overlay.querySelector('#catatan-btn-hantar').onclick = () => close(input.value.trim());
-        overlay.onclick = (e) => { if (e.target === overlay) close(null); };
+        overlay.querySelector('#hantar-modal-batal').onclick = () => close(null);
+        overlay.querySelector('#hantar-modal-submit').onclick = () => {
+          if (optYa.checked) {
+            const text = textarea.value.trim();
+            const note = text || (dropdown.value && dropdown.value !== '__CUSTOM__' ? dropdown.value : 'Tidak ada catatan');
+            close(note);
+          } else {
+            close('Tidak ada catatan');
+          }
+        };
 
-        input.addEventListener('keydown', (e) => {
-          if (e.key === 'Escape') close(null);
-          if (e.key === 'Enter' && e.ctrlKey) close(input.value.trim());
-        });
+        overlay.onclick = (e) => {
+          if (e.target === overlay) close(null);
+        };
       });
     }
 
@@ -1363,7 +1430,7 @@
               ` : ''}
             </div>
           </div>
-          <div class="detail-modal-footer">
+          <div class="detail-modal-footer d-flex justify-content-end align-items-center">
             <button type="button" class="btn btn-secondary px-4" id="btn-tutup-detail">Tutup</button>
           </div>
         </div>
@@ -1437,15 +1504,12 @@
         return;
       }
 
-      const confirmed = await showConfirmActionModal({
-        title: 'Hantar Ke Pengarah',
-        message: `Anda ingin menghantar ${selectedIds.length} permohonan terpilih kepada pengarah?`,
-        confirmText: 'Ya, Hantar',
-        cancelText: 'Batal',
-        icon: 'fa-paper-plane',
-        type: 'primary'
-      });
-      if (!confirmed) return;
+      const catatanResult = await showHantarPengarahModal({ count: selectedIds.length });
+      if (catatanResult === null) return;
+
+      const finalCatatan = (typeof catatanResult === 'string' && catatanResult.trim())
+        ? catatanResult.trim()
+        : 'Tidak ada catatan';
 
       const button = document.querySelector('#bulk-send-director-btn');
       if (button) {
@@ -1461,7 +1525,7 @@
           const res = await fetch(`/api/staff/permohonan/${encodeURIComponent(id)}/hantar-pengarah`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ catatan: '' })
+            body: JSON.stringify({ catatan: finalCatatan })
           });
           if (res.ok) successCount += 1; else failCount += 1;
         } catch (error) {

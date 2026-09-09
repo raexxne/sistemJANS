@@ -66,12 +66,45 @@ class PermohonanServiceTest {
         Permohonan result = service.hantarPengarah(1L, "Catatan semakan", "staff@example.com");
 
         assertEquals(StatusPermohonan.MENUNGGU_PENGARAH, result.getStatus());
+        assertEquals("Catatan semakan", result.getStaffNote());
         verify(emailService).hantarEmail(
                 eq("director@example.com"),
                 contains("Permohonan"),
                 contains("sini"),
                 isNull(),
                 isNull());
+    }
+
+    @Test
+    @SuppressWarnings("null")
+    void shouldDefaultStaffNoteWhenSubmittingToDirectorWithoutNote() {
+        PermohonanRepository repo = mock(PermohonanRepository.class);
+        PenggunaRepository penggunaRepository = mock(PenggunaRepository.class);
+        EmailService emailService = mock(EmailService.class);
+
+        Permohonan permohonan = new Permohonan();
+        permohonan.setId(2L);
+        permohonan.setStatus(StatusPermohonan.DIHANTAR);
+        permohonan.setNomborPermohonan("JAS-2026-000002");
+
+        Pengguna staff = new Pengguna();
+        staff.setEmail("staff@example.com");
+
+        Pengguna director = new Pengguna();
+        director.setEmail("director@example.com");
+        director.setRole(Role.PENGARAH);
+
+        when(repo.findById(2L)).thenReturn(Optional.of(permohonan));
+        when(penggunaRepository.findByEmail("staff@example.com")).thenReturn(Optional.of(staff));
+        when(penggunaRepository.findByRole(Role.PENGARAH)).thenReturn(List.of(director));
+        when(repo.save(any(Permohonan.class))).thenAnswer(invocation -> invocation.getArgument(0));
+
+        PermohonanService service = new PermohonanService(repo, penggunaRepository, emailService);
+
+        Permohonan result = service.hantarPengarah(2L, null, "staff@example.com");
+
+        assertEquals(StatusPermohonan.MENUNGGU_PENGARAH, result.getStatus());
+        assertEquals("Tidak ada catatan", result.getStaffNote());
     }
 
     @Test

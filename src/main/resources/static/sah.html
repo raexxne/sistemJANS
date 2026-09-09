@@ -319,12 +319,11 @@
                   </div>`).join('') : '<p class="text-muted mb-0">Tiada maklumat pelawat direkodkan.</p>'}
               </section>
             </div>
-            ${(pass.staffNote || pass.directorNote) ? `
+            ${pass.directorNote ? `
               <div class="col-12 col-lg-6">
                 <section class="section-card">
-                  <h2 class="section-title"><i class="fas fa-clipboard-check"></i>Catatan Proses</h2>
-                  ${pass.staffNote ? medan('Catatan petugas', pass.staffNote) : ''}
-                  ${pass.directorNote ? medan('Catatan pengarah', pass.directorNote) : ''}
+                  <h2 class="section-title"><i class="fas fa-clipboard-check"></i>Catatan Keputusan</h2>
+                  ${medan('Catatan pengarah', pass.directorNote)}
                 </section>
               </div>` : ''}
           </div>

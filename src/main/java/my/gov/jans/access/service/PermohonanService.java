@@ -163,7 +163,8 @@ public class PermohonanService {
             return p;
         if (p.getStatus() != StatusPermohonan.DIHANTAR && p.getStatus() != StatusPermohonan.SEMAKAN_STAFF)
             throw new IllegalStateException("Status tidak sah");
-        p.setStaffNote(catatan);
+        String finalCatatan = (catatan == null || catatan.trim().isBlank()) ? "Tidak ada catatan" : catatan.trim();
+        p.setStaffNote(finalCatatan);
         p.setReviewedBy(pengguna.findByEmail(email).orElseThrow());
         p.setStatus(StatusPermohonan.MENUNGGU_PENGARAH);
         repo.save(p);
