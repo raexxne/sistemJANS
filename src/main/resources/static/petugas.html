@@ -1122,6 +1122,14 @@
         const old = document.querySelector('.notify-modal-overlay');
         if (old) old.remove();
 
+        const btnClassMap = {
+          success: 'btn-success',
+          error: 'btn-danger',
+          warning: 'btn-warning text-dark',
+          info: 'btn-primary'
+        };
+        const btnClass = btnClassMap[type] || 'btn-primary';
+
         const overlay = document.createElement('div');
         overlay.className = 'notify-modal-overlay';
         overlay.innerHTML = `
@@ -1132,7 +1140,7 @@
               <p>${message}</p>
             </div>
             <div class="notify-modal-actions">
-              <button type="button" class="btn btn-primary" id="notify-btn-ok">OK</button>
+              <button type="button" class="btn ${btnClass}" id="notify-btn-ok">OK</button>
             </div>
           </div>
         `;
@@ -1209,6 +1217,7 @@
           </div>
         `;
         document.body.appendChild(overlay);
+        document.body.classList.add('detail-modal-open');
 
         const optTidak = overlay.querySelector('#opt-catatan-tidak');
         const optYa = overlay.querySelector('#opt-catatan-ya');
@@ -1241,6 +1250,7 @@
 
         const close = (value) => {
           overlay.remove();
+          document.body.classList.remove('detail-modal-open');
           resolve(value);
         };
 

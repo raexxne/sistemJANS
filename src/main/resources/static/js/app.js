@@ -248,7 +248,7 @@ function showSuccessPopup(nomborPermohonan) {
       <p class="mb-3" style="font-size: 22px; font-weight: 700; color: #00467f;">${esc(nomborPermohonan)}</p>
       <p class="text-muted mb-4" style="font-size: 15px;">Sila simpan nombor ini.</p>
       <button id="success-modal-close" class="btn btn-success px-4 py-2" style="border-radius: 8px;">
-        Tutup
+        OK
       </button>
     </div>
   `;
@@ -947,7 +947,6 @@ function renderPengarahTable() {
 
   document.querySelector('#senarai-pengarah').innerHTML = pageItems.map(p => {
     const staffNoteText = (p.staffNote && p.staffNote.trim()) ? p.staffNote.trim() : 'Tidak ada catatan';
-    const hasCustomNote = staffNoteText !== 'Tidak ada catatan' && staffNoteText !== '-';
 
     return `
     <tr>
@@ -958,23 +957,11 @@ function renderPengarahTable() {
       <td class="text-start">${esc(p.organisation || '-')}</td>
       <td>${esc(p.reviewedBy?.name || 'Tidak direkodkan')}</td>
       <td>
-        <small>
-          ${esc(p.locationName)}<br>
-          ${esc(p.visitDate)}
-        </small>
+        ${esc(p.locationName)}<br>
+        ${esc(p.visitDate)}
       </td>
-      <td class="text-start">
-        <small>${esc(p.purpose || '-')}</small>
-      </td>
-      <td class="text-start">
-        ${hasCustomNote 
-          ? `<div class="d-inline-flex align-items-start gap-1 p-1 px-2 rounded" style="background:#e8f4fd; color:#0056b3; font-size:0.83rem; border:1px solid #b8daff; max-width:260px; word-break:break-word;">
-               <i class="fas fa-comment-dots text-primary mt-1 me-1 flex-shrink-0"></i>
-               <span>${esc(staffNoteText)}</span>
-             </div>`
-          : `<span class="text-muted small fst-italic">${esc(staffNoteText)}</span>`
-        }
-      </td>
+      <td class="text-start">${esc(p.purpose || '-')}</td>
+      <td class="text-start">${esc(staffNoteText)}</td>
       <td>
         <a href="/api/public/permohonan/${encodeURIComponent(p.nomborPermohonan)}/pdf" target="_blank" rel="noopener" class="btn btn-sm btn-outline-primary" title="Cetak PDF permohonan">
           <i class="fas fa-print me-1"></i>Cetak
