@@ -1356,12 +1356,12 @@
       overlay.className = 'detail-modal-overlay';
       overlay.innerHTML = `
         <div class="detail-modal">
-          <div class="detail-modal-header d-flex justify-content-between align-items-start gap-3">
+          <div class="detail-modal-header d-flex justify-content-between align-items-center gap-3">
             <div>
               <h5 class="mb-0 fw-bold">Butiran Permohonan</h5>
               <small class="opacity-75">No. Rujukan: ${noRujukan}</small>
             </div>
-            <div class="text-end flex-shrink-0">${renderStatusBadge(status)}</div>
+            <button type="button" class="btn-close btn-close-white flex-shrink-0" id="btn-tutup-detail" aria-label="Tutup"></button>
           </div>
           <div class="detail-modal-body">
             <div class="application-summary-panel">
@@ -1374,7 +1374,13 @@
                 <div class="col-md-6">${field('Nama / Alamat Lokasi', locationName)}</div>
                 <div class="col-md-6">${field('No. Telefon (Pejabat)', phoneOffice)}</div>
                 <div class="col-md-6">${field('E-mel Untuk Dihubungi (Wakil)', emailWakil)}</div>
-                <div class="col-12">${field('Tujuan Lawatan', purpose)}</div>
+                <div class="col-md-6">${field('Tujuan Lawatan', purpose)}</div>
+                <div class="col-md-6">
+                  <div class="detail-field">
+                    <label>Status</label>
+                    <div class="value">${renderStatusBadge(status)}</div>
+                  </div>
+                </div>
               </div>
             </div>
             <div class="row g-3">
@@ -1439,9 +1445,6 @@
                 </div>
               ` : ''}
             </div>
-          </div>
-          <div class="detail-modal-footer d-flex justify-content-end align-items-center">
-            <button type="button" class="btn btn-secondary px-4" id="btn-tutup-detail">Tutup</button>
           </div>
         </div>
       `;
