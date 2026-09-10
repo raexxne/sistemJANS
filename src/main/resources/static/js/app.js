@@ -963,8 +963,8 @@ function renderPengarahTable() {
       <td class="text-start">${esc(p.purpose || '-')}</td>
       <td class="text-start">${esc(staffNoteText)}</td>
       <td>
-        <a href="/api/public/permohonan/${encodeURIComponent(p.nomborPermohonan)}/pdf" target="_blank" rel="noopener" class="btn btn-sm btn-outline-primary" title="Cetak PDF permohonan">
-          <i class="fas fa-print me-1"></i>Cetak
+        <a href="/api/public/permohonan/${encodeURIComponent(p.nomborPermohonan)}/pdf" target="_blank" rel="noopener" class="btn btn-sm btn-outline-primary" title="Cetak PDF">
+          <i class="fas fa-print"></i>
         </a>
       </td>
     </tr>
