@@ -749,6 +749,7 @@ function bindBulkSelectionEvents() {
         selectedPermohonanIds.delete(id);
       }
 
+      event.target.closest('tr')?.classList.toggle('table-active', event.target.checked);
       updateBulkSelectionUI();
     }
   });
@@ -767,6 +768,7 @@ function bindBulkSelectionEvents() {
         } else {
           selectedPermohonanIds.delete(id);
         }
+        checkbox.closest('tr')?.classList.toggle('table-active', checked);
       });
       updateBulkSelectionUI();
     });
@@ -949,11 +951,11 @@ function renderPengarahTable() {
     const staffNoteText = (p.staffNote && p.staffNote.trim()) ? p.staffNote.trim() : 'Tidak ada catatan';
 
     return `
-    <tr>
+    <tr class="${selectedPermohonanIds.has(p.id) ? 'table-active' : ''}">
       <td>
         <input class="form-check-input row-checkbox" type="checkbox" data-id="${p.id}" ${selectedPermohonanIds.has(p.id) ? 'checked' : ''}>
       </td>
-      <td>${esc(p.nomborPermohonan)}</td>
+      <td class="text-nowrap">${esc(p.nomborPermohonan)}</td>
       <td class="text-start">${esc(p.organisation || '-')}</td>
       <td>${esc(p.reviewedBy?.name || 'Tidak direkodkan')}</td>
       <td>
