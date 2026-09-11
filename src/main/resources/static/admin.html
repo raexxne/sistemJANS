@@ -109,6 +109,31 @@
     font-size: 1.05rem;
     font-weight: 600;
     flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+  }
+  .admin-modal-card.admin-modal-danger .admin-modal-header {
+    background: linear-gradient(135deg, #b02a37, #dc3545);
+  }
+  .admin-modal-close {
+    width: 32px;
+    height: 32px;
+    padding: 0;
+    border: 0;
+    border-radius: 6px;
+    background: transparent;
+    color: #fff;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+  }
+  .admin-modal-close:hover,
+  .admin-modal-close:focus-visible {
+    background: rgba(255, 255, 255, 0.16);
+    color: #fff;
   }
   .admin-modal-body {
     padding: 20px 22px;
@@ -491,7 +516,7 @@
 
           const actionsCell = row.querySelector('td:last-child');
           const actions = [
-            createActionButton('fas fa-eye', 'View user info', 'primary', async () => {
+            createActionButton('fas fa-eye', 'Lihat maklumat pengguna', 'primary', async () => {
               const detail = await fetch(`/api/admin/users/${user.id}`);
               const data = await detail.json();
               let daerahHtml = '';
@@ -517,7 +542,7 @@
               `;
               await showInfoModal('Maklumat Pengguna', message);
             }),
-            createActionButton('fas fa-edit', 'Edit user', 'warning', async () => {
+            createActionButton('fas fa-edit', 'Edit pengguna', 'warning', async () => {
               const result = await showEditModal(user);
               if (result) {
                 await fetch(`/api/admin/users/${user.id}`, {
@@ -528,7 +553,7 @@
                 await loadUsers();
               }
             }),
-            createActionButton('fas fa-trash', 'Delete user', 'danger', async () => {
+            createActionButton('fas fa-trash', 'Padam pengguna', 'danger', async () => {
               const confirmed = await showConfirmModal({
                 title: 'Padam pengguna',
                 message: `Padam ${user.name || user.email}?`,
@@ -561,15 +586,18 @@
      *
      * @param {string} title       Tajuk header modal
      * @param {string} bodyHtml    Kandungan HTML badan modal
-     * @param {object} opts        { wide: boolean, closeOnOverlay: boolean }
+    * @param {object} opts        { wide: boolean, danger: boolean, closeButton: boolean, closeOnOverlay: boolean }
      * @returns {{ overlay, card, close }}
      */
     function createModalShell(title, bodyHtml, opts = {}) {
       const overlay = document.createElement('div');
       overlay.className = 'admin-modal-overlay';
       overlay.innerHTML = `
-        <div class="admin-modal-card ${opts.wide ? 'admin-modal-wide' : ''}">
-          <div class="admin-modal-header">${title}</div>
+        <div class="admin-modal-card ${opts.wide ? 'admin-modal-wide' : ''} ${opts.danger ? 'admin-modal-danger' : ''}">
+          <div class="admin-modal-header">
+            <span>${title}</span>
+            ${opts.closeButton ? '<button type="button" class="admin-modal-close" aria-label="Tutup" title="Tutup"><i class="fas fa-xmark"></i></button>' : ''}
+          </div>
           <div class="admin-modal-body">${bodyHtml}</div>
         </div>
       `;
@@ -590,6 +618,8 @@
         }
       };
       document.addEventListener('keydown', onKey);
+
+      overlay.querySelector('.admin-modal-close')?.addEventListener('click', close);
 
       return { overlay, card: overlay.querySelector('.admin-modal-card'), close };
     }
@@ -673,19 +703,14 @@
 
     function showInfoModal(title, message) {
       return new Promise((resolve) => {
-        const { overlay, card, close } = createModalShell(title, message);
-
-        const footer = document.createElement('div');
-        footer.className = 'admin-modal-footer';
-        footer.innerHTML = `<button type="button" class="btn btn-primary" id="info-modal-close">Tutup</button>`;
-        card.appendChild(footer);
+        const { overlay, close } = createModalShell(title, message, { closeButton: true });
 
         const finish = () => {
           close();
           resolve(true);
         };
 
-        footer.querySelector('#info-modal-close').addEventListener('click', finish);
+        overlay.querySelector('.admin-modal-close').addEventListener('click', finish);
         overlay.addEventListener('click', (e) => {
           if (e.target === overlay) finish();
         });
@@ -878,7 +903,7 @@
     function showConfirmModal({ title, message, type = 'primary', confirmText = 'Ya', cancelText = 'Batal' }) {
       return new Promise((resolve) => {
         const bodyHtml = `<p class="mb-0">${message}</p>`;
-        const { overlay, card, close } = createModalShell(title, bodyHtml);
+        const { overlay, card, close } = createModalShell(title, bodyHtml, { danger: type === 'danger' });
 
         const color = type === 'danger' ? 'danger' : 'primary';
         const footer = document.createElement('div');
@@ -955,7 +980,7 @@
                 await loadLokasi();
               }
             }),
-            createActionButton('fas fa-trash', 'Delete lokasi', 'danger', async () => {
+            createActionButton('fas fa-trash', 'Padam lokasi', 'danger', async () => {
               const confirmed = await showConfirmModal({
                 title: 'Padam lokasi',
                 message: `Padam lokasi "${lokasi.name}"?`,

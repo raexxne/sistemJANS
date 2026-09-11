@@ -42,11 +42,11 @@
       font-weight: 700;
       line-height: 1.2;
     }
-    .dashboard-kpi-row .col:nth-child(1) { --kpi-color: #7c3aed; }
+    .dashboard-kpi-row .col:nth-child(1) { --kpi-color: #0d6efd; }
     .dashboard-kpi-row .col:nth-child(2) { --kpi-color: #ffc107; }
-    .dashboard-kpi-row .col:nth-child(3) { --kpi-color: #16a34a; }
+    .dashboard-kpi-row .col:nth-child(3) { --kpi-color: #fd7e14; }
     .dashboard-kpi-row .col:nth-child(4) { --kpi-color: #0d9488; }
-    .dashboard-kpi-row .col:nth-child(5) { --kpi-color: #dc2626; }
+    .dashboard-kpi-row .col:nth-child(5) { --kpi-color: #dc3545; }
     .dashboard-chart-card {
       border: 0;
       border-radius: 8px;
@@ -58,9 +58,45 @@
     }
     .pie-chart-wrap {
       position: relative;
-      width: 190px;
-      height: 190px;
+      width: 145px;
+      height: 145px;
+      flex: 0 0 145px;
       margin: 0 auto;
+    }
+    .pie-chart-wrap canvas {
+      width: 145px !important;
+      height: 145px !important;
+    }
+    #pie-legend {
+      flex: 0 0 auto;
+      margin-top: 12px !important;
+    }
+    .pie-legend-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 7px 14px;
+      width: 100%;
+    }
+    .pie-legend-item {
+      display: grid;
+      grid-template-columns: 12px minmax(0, 1fr) auto;
+      align-items: center;
+      gap: 6px;
+      min-width: 0;
+      line-height: 1.2;
+    }
+    .pie-legend-swatch {
+      width: 12px;
+      height: 12px;
+      border-radius: 3px;
+    }
+    .status-badge-waiting-visit {
+      background-color: #fd7e14;
+      color: #fff;
+    }
+    .status-badge-completed {
+      background-color: #0d9488;
+      color: #fff;
     }
     .status-trend-chart-wrap {
       position: relative;
@@ -218,7 +254,7 @@
             <div class="card dashboard-chart-card h-100">
               <div class="card-body p-4 d-flex flex-column">
                 <h4 class="h5 mb-3">Carta Ringkasan Permohonan</h4>
-                <div class="pie-chart-wrap flex-grow-1 d-flex align-items-center justify-content-center">
+                <div class="pie-chart-wrap d-flex align-items-center justify-content-center">
                   <canvas id="pieChart" width="260" height="260"></canvas>
                 </div>
                 <div id="pie-legend" class="d-flex flex-column gap-2 mt-3 small text-muted"></div>
@@ -318,20 +354,27 @@
         'MENUNGGU_PENGARAH': { label: 'Menunggu Pengarah', color: 'warning' },
         'DILULUSKAN': { label: 'Diluluskan', color: 'success' },
         'DITOLAK': { label: 'Tidak Diluluskan', color: 'danger' },
-        'PAS_DIKELUARKAN': { label: 'Menunggu Lawatan', color: 'info' },
-        'SELESAI': { label: 'Selesai', color: 'dark' }
+        'PAS_DIKELUARKAN': { label: 'Menunggu Lawatan', customClass: 'status-badge-waiting-visit' },
+        'SELESAI': { label: 'Selesai', customClass: 'status-badge-completed' }
       };
       const info = map[normalized] || { label: status || '-', color: 'secondary' };
-      return `<span class="badge bg-${info.color}">${info.label}</span>`;
+      const badgeClass = info.customClass || `bg-${info.color}`;
+      return `<span class="badge ${badgeClass}">${info.label}</span>`;
     }
 
-    function renderPieChart(waitingDirector, pasIssued, completed, rejected) {
+    function renderPieChart(applications) {
       const ctx = document.getElementById('pieChart').getContext('2d');
       if (pieChartInstance) pieChartInstance.destroy();
 
       const labels = ['Menunggu Pengarah', 'Menunggu Lawatan', 'Selesai', 'Tidak Diluluskan'];
-      const values = [waitingDirector, pasIssued, completed, rejected];
-      const colors = ['#ffc107', '#0dcaf0', '#0d9488', '#dc3545'];
+      const statusGroups = [
+        ['MENUNGGU_PENGARAH'],
+        ['PAS_DIKELUARKAN'],
+        ['SELESAI'],
+        ['DITOLAK']
+      ];
+      const values = statusGroups.map((statuses) => applications.filter((item) => statuses.includes(item.status)).length);
+      const colors = ['#ffc107', '#fd7e14', '#0d9488', '#dc3545'];
       const hasData = values.some((v) => v > 0);
 
       pieChartInstance = new Chart(ctx, {
@@ -348,22 +391,31 @@
         options: {
           responsive: true,
           maintainAspectRatio: true,
-          plugins: { legend: { display: false } },
+          plugins: {
+            legend: { display: false },
+            tooltip: {
+              callbacks: {
+                label: (context) => {
+                  if (!hasData) return 'Tiada data';
+                  const total = context.dataset.data.reduce((sum, value) => sum + value, 0);
+                  const percentage = total ? ((context.raw / total) * 100).toFixed(1) : 0;
+                  return `${context.label}: ${context.raw} (${percentage}%)`;
+                }
+              }
+            }
+          },
           animation: false
         }
       });
 
       const legendEl = document.getElementById('pie-legend');
-      if (hasData) {
-        legendEl.innerHTML = `<div class="d-flex flex-wrap justify-content-center gap-3">${labels.map((label, i) => `
-          <span class="d-inline-flex align-items-center gap-1">
-            <span style="width:12px;height:12px;border-radius:3px;background:${colors[i]};display:inline-block;"></span>
-            ${label}: <strong>${values[i]}</strong>
+      legendEl.innerHTML = `<div class="pie-legend-grid">${labels.map((label, i) => `
+          <span class="pie-legend-item">
+            <span class="pie-legend-swatch" style="background:${colors[i]};"></span>
+            <span>${label}</span>
+            <strong>${values[i]}</strong>
           </span>
         `).join('')}</div>`;
-      } else {
-        legendEl.innerHTML = '<span>Tiada data permohonan</span>';
-      }
     }
 
     function renderStatusTrendChart(applications) {
@@ -371,9 +423,15 @@
       if (statusTrendChartInstance) statusTrendChartInstance.destroy();
 
       const labels = ['Menunggu Pengarah', 'Menunggu Lawatan', 'Selesai', 'Tidak Diluluskan'];
-      const statuses = ['MENUNGGU_PENGARAH', 'PAS_DIKELUARKAN', 'SELESAI', 'DITOLAK'];
-      const values = statuses.map((status) => applications.filter((item) => item.status === status).length);
-      const colors = ['#ffc107', '#0dcaf0', '#0d9488', '#dc3545'];
+      const statusGroups = [
+        ['MENUNGGU_PENGARAH'],
+        ['PAS_DIKELUARKAN'],
+        ['SELESAI'],
+        ['DITOLAK']
+      ];
+      const values = statusGroups.map((statuses) => applications.filter((item) => statuses.includes(item.status)).length);
+      const trendColor = '#0d6efd';
+      const pointColors = ['#ffc107', '#fd7e14', '#0d9488', '#dc3545'];
 
       statusTrendChartInstance = new Chart(ctx, {
         type: 'line',
@@ -382,14 +440,14 @@
           datasets: [{
             label: 'Jumlah Permohonan',
             data: values,
-            borderColor: '#2563eb',
-            backgroundColor: 'rgba(37, 99, 235, 0.12)',
+            borderColor: trendColor,
+            backgroundColor: 'rgba(13, 110, 253, 0.08)',
             borderWidth: 3,
             tension: 0,
             fill: true,
             pointRadius: 6,
             pointHoverRadius: 8,
-            pointBackgroundColor: colors,
+            pointBackgroundColor: pointColors,
             pointBorderColor: '#ffffff',
             pointBorderWidth: 2
           }]
@@ -562,7 +620,7 @@
         document.querySelector('#stat-pas-issued').textContent = pasIssued;
         document.querySelector('#stat-completed').textContent = completed;
         document.querySelector('#stat-rejected').textContent = rejected;
-        renderPieChart(waitingDirector, pasIssued, completed, rejected);
+        renderPieChart(applications);
         renderStatusTrendChart(applications);
 
         if (!applications.length) {
