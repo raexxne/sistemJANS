@@ -15,15 +15,15 @@ public class Lokasi {
     private String name;
 
     @Column(columnDefinition = "TEXT")
-    private String address;
+    private String daerah;
 
     public Lokasi() {
     }
 
-    public Lokasi(JenisLokasi type, String name, String address) {
+    public Lokasi(JenisLokasi type, String name, String daerah) {
         this.type = type;
         this.name = name;
-        this.address = address;
+        this.daerah = daerah;
     }
 
     public Long getId() {
@@ -50,11 +50,11 @@ public class Lokasi {
         this.name = name;
     }
 
-    public String getAddress() {
-        return address;
+    public String getDaerah() {
+        return daerah;
     }
 
-    public void setAddress(String address) {
-        this.address = address;
+    public void setDaerah(String daerah) {
+        this.daerah = daerah;
     }
 }

@@ -1,0 +1,609 @@
+<!DOCTYPE html>
+<html lang="ms">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Penyelia Loji | JAS</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.6.0/css/all.min.css">
+  <link rel="stylesheet" href="/css/style.css">
+  <style>
+    body.internal-portal {
+      font-size: 0.9rem;
+    }
+    .dashboard-stat-card {
+      border: 0;
+      border-radius: 8px;
+      box-shadow: 0 2px 8px rgba(31, 45, 61, 0.18);
+      overflow: hidden;
+      border-top: 3px solid var(--kpi-color, #9a4d00);
+    }
+    .dashboard-stat-card .stat-icon {
+      font-size: 1.35rem;
+      color: var(--kpi-color, #9a4d00) !important;
+    }
+    .dashboard-kpi-row {
+      margin-bottom: 1.25rem;
+    }
+    .dashboard-kpi-card {
+      min-height: 112px;
+    }
+    .dashboard-kpi-card .card-body {
+      padding: 1rem 1.15rem;
+    }
+    .dashboard-kpi-card h3 {
+      color: var(--kpi-color, #8a4300);
+      font-size: 2rem;
+      line-height: 1;
+    }
+    .dashboard-kpi-card .kpi-label {
+      color: var(--kpi-color, #9a4d00);
+      font-size: 0.78rem;
+      font-weight: 700;
+      line-height: 1.2;
+    }
+    .dashboard-kpi-row .col:nth-child(1) { --kpi-color: #7c3aed; }
+    .dashboard-kpi-row .col:nth-child(2) { --kpi-color: #ffc107; }
+    .dashboard-kpi-row .col:nth-child(3) { --kpi-color: #16a34a; }
+    .dashboard-kpi-row .col:nth-child(4) { --kpi-color: #0d9488; }
+    .dashboard-kpi-row .col:nth-child(5) { --kpi-color: #dc2626; }
+    .dashboard-chart-card {
+      border: 0;
+      border-radius: 8px;
+      box-shadow: 0 2px 8px rgba(31, 45, 61, 0.18);
+      overflow: hidden;
+    }
+    .dashboard-chart-row .dashboard-chart-card {
+      height: 310px !important;
+    }
+    .pie-chart-wrap {
+      position: relative;
+      width: 190px;
+      height: 190px;
+      margin: 0 auto;
+    }
+    .status-trend-chart-wrap {
+      position: relative;
+      height: 225px;
+    }
+    .dashboard-table {
+      width: 100%;
+      min-width: 1000px;
+      table-layout: fixed;
+    }
+    .dashboard-table thead th {
+      font-size: 0.9rem;
+      letter-spacing: 0.03em;
+      white-space: nowrap;
+      background: #f8fbff;
+    }
+    .dashboard-table th,
+    .dashboard-table td {
+      padding: 0.75rem;
+    }
+    .dashboard-table tbody tr {
+      height: 58px;
+    }
+    .dashboard-table tbody td {
+      vertical-align: middle;
+      overflow-wrap: anywhere;
+    }
+    .catatan-penyelia-column {
+      white-space: normal;
+    }
+    .catatan-penyelia-options {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+    .catatan-penyelia-option {
+      display: grid;
+      grid-template-columns: 18px minmax(0, 1fr);
+      align-items: center;
+      column-gap: 10px;
+      min-height: 32px;
+      font-size: 0.92rem;
+      line-height: 1.35;
+    }
+    .catatan-penyelia-option input[type="radio"] {
+      width: 16px;
+      height: 16px;
+      margin: 0;
+      accent-color: #0d5ba5;
+    }
+    .catatan-penyelia-option label {
+      margin: 0;
+      cursor: pointer;
+    }
+    .catatan-penyelia-legend {
+      margin-bottom: 10px;
+      font-size: 0.9rem;
+      line-height: 1.3;
+    }
+  </style>
+</head>
+<body class="internal-portal d-flex flex-column min-vh-100">
+
+  <nav class="navbar navbar-expand-lg navbar-dark sticky-top internal-nav">
+    <div class="container-fluid">
+      <a class="navbar-brand fw-bold fs-3 d-flex align-items-center" href="/penyelia-loji.html">
+        <img src="/images/logo3.png" alt="Logo JAS" style="height: 60px; width: auto; margin-right: 14px;">
+        <span class="d-flex flex-column align-items-start">
+          <span class="fw-bold" style="font-size: 1.6rem; line-height: 1;">JAS</span>
+          <span class="text-white-50" style="font-size: 0.8rem; line-height: 1.1; letter-spacing: 0.04em; margin-top: 3px;">Jabatan Air Sabah</span>
+        </span>
+      </a>
+      <div class="ms-auto d-flex align-items-center gap-3">
+        <a href="/profile.html" class="d-flex align-items-center gap-2 text-decoration-none" style="cursor: pointer;">
+          <img id="navProfilePic" src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 200 200'%3E%3Crect width='200' height='200' fill='%23e9ecef'/%3E%3Ccircle cx='100' cy='60' r='35' fill='%236c757d'/%3E%3Cellipse cx='100' cy='150' rx='50' ry='45' fill='%236c757d'/%3E%3C/svg%3E" alt="Profil" class="rounded-circle" style="width: 36px; height: 36px; object-fit: cover; border: 2px solid white;">
+          <span id="navUsername" class="text-light fw-500" style="font-size: 14px;"></span>
+        </a>
+        <form method="post" action="/logout" class="d-inline">
+          <button type="submit" class="btn btn-outline-light btn-sm">Log keluar</button>
+        </form>
+      </div>
+    </div>
+  </nav>
+
+  <main class="internal-main flex-grow-1" style="margin-top: 0.5rem;">
+    <section class="pt-2 pb-2">
+      <div class="container-fluid">
+        <h1 class="h4 fw-bold mb-1 text-dark">Dashboard Penyelia Loji</h1>
+        <p class="mb-0 text-muted">Senarai permohonan bagi daerah operasi seliaan anda.</p>
+      </div>
+    </section>
+
+    <section class="py-4">
+      <div class="container-fluid">
+        <div class="row row-cols-2 row-cols-md-3 row-cols-xl-5 g-3 dashboard-kpi-row">
+          <div class="col">
+            <div class="card dashboard-stat-card dashboard-kpi-card h-100">
+              <div class="card-body d-flex flex-column justify-content-center">
+                <div class="d-flex justify-content-between align-items-start gap-2 mb-2">
+                  <span class="kpi-label">Jumlah Permohonan</span>
+                  <i class="fas fa-file-alt stat-icon"></i>
+                </div>
+                <h3 id="stat-total" class="fw-bold mb-0">0</h3>
+              </div>
+            </div>
+          </div>
+          <div class="col">
+            <div class="card dashboard-stat-card dashboard-kpi-card h-100">
+              <div class="card-body d-flex flex-column justify-content-center">
+                <div class="d-flex justify-content-between align-items-start gap-2 mb-2">
+                  <span class="kpi-label">Menunggu Pengarah</span>
+                  <i class="fas fa-user-clock stat-icon"></i>
+                </div>
+                <h3 id="stat-waiting-director" class="fw-bold mb-0">0</h3>
+              </div>
+            </div>
+          </div>
+          <div class="col">
+            <div class="card dashboard-stat-card dashboard-kpi-card h-100">
+              <div class="card-body d-flex flex-column justify-content-center">
+                <div class="d-flex justify-content-between align-items-start gap-2 mb-2">
+                  <span class="kpi-label">Menunggu Lawatan</span>
+                  <i class="fas fa-id-card stat-icon"></i>
+                </div>
+                <h3 id="stat-pas-issued" class="fw-bold mb-0">0</h3>
+              </div>
+            </div>
+          </div>
+          <div class="col">
+            <div class="card dashboard-stat-card dashboard-kpi-card h-100">
+              <div class="card-body d-flex flex-column justify-content-center">
+                <div class="d-flex justify-content-between align-items-start gap-2 mb-2">
+                  <span class="kpi-label">Selesai</span>
+                  <i class="fas fa-flag-checkered stat-icon"></i>
+                </div>
+                <h3 id="stat-completed" class="fw-bold mb-0">0</h3>
+              </div>
+            </div>
+          </div>
+          <div class="col">
+            <div class="card dashboard-stat-card dashboard-kpi-card h-100">
+              <div class="card-body d-flex flex-column justify-content-center">
+                <div class="d-flex justify-content-between align-items-start gap-2 mb-2">
+                  <span class="kpi-label">Tidak Diluluskan</span>
+                  <i class="fas fa-times-circle stat-icon"></i>
+                </div>
+                <h3 id="stat-rejected" class="fw-bold mb-0">0</h3>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="row g-4 mb-4 align-items-stretch dashboard-chart-row">
+          <div class="col-lg-4">
+            <div class="card dashboard-chart-card h-100">
+              <div class="card-body p-4 d-flex flex-column">
+                <h4 class="h5 mb-3">Carta Ringkasan Permohonan</h4>
+                <div class="pie-chart-wrap flex-grow-1 d-flex align-items-center justify-content-center">
+                  <canvas id="pieChart" width="260" height="260"></canvas>
+                </div>
+                <div id="pie-legend" class="d-flex flex-column gap-2 mt-3 small text-muted"></div>
+              </div>
+            </div>
+          </div>
+
+          <div class="col-lg-8">
+            <div class="card dashboard-chart-card h-100">
+              <div class="card-body p-4">
+                <h4 class="h5 mb-3">Trend Status Permohonan</h4>
+                <div class="status-trend-chart-wrap">
+                  <canvas id="statusTrendChart"></canvas>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="card shadow-sm dashboard-card">
+          <div class="card-header bg-info text-white py-3">
+            <h2 class="h5 mb-0"><i class="fas fa-list me-2"></i>Senarai Permohonan Daerah Seliaan</h2>
+          </div>
+          <div class="card-body">
+            <p class="text-muted small mb-3">Tambah "Catatan Penyelia" apabila pelawat selesai urusan di lokasi. Status permohonan akan bertukar kepada <strong>Selesai</strong> secara automatik.</p>
+            <div class="table-responsive">
+              <table class="table table-bordered table-hover align-middle dashboard-table">
+                <colgroup>
+                  <col style="width: 19%;">
+                  <col style="width: 18%;">
+                  <col style="width: 14%;">
+                  <col style="width: 14%;">
+                  <col style="width: 25%;">
+                  <col style="width: 10%;">
+                </colgroup>
+                <thead class="table-light">
+                  <tr>
+                    <th>Nama Syarikat</th>
+                    <th>Lokasi</th>
+                    <th class="text-center">Tarikh Lawatan</th>
+                    <th class="text-center">Status</th>
+                    <th class="catatan-penyelia-column">Catatan Penyelia</th>
+                    <th class="text-center">Tindakan</th>
+                  </tr>
+                </thead>
+                <tbody id="penyelia-list">
+                  <tr>
+                    <td colspan="6" class="text-center text-muted">Memuatkan...</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer class="bg-dark text-white py-4 mt-auto">
+    <div class="container-fluid text-center">
+      <p class="mb-1 fw-semibold">Jabatan Air Sabah (JAS)</p>
+      <p class="mb-0 text-white-50 small">Portal Dalaman Penyelia Loji</p>
+    </div>
+  </footer>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script src="/js/app.js"></script>
+  <script>
+    let pieChartInstance = null;
+    let statusTrendChartInstance = null;
+
+    async function loadProfile() {
+      try {
+        const response = await fetch('/api/profile');
+        if (!response.ok) return;
+        const data = await response.json();
+        document.querySelector('#navUsername').textContent = data.name;
+        loadNavProfilePicture();
+      } catch (error) {
+        console.error('Error:', error);
+      }
+    }
+
+    function loadNavProfilePicture() {
+      const img = document.querySelector('#navProfilePic');
+      fetch('/api/profile/picture')
+        .then(response => {
+          if (response.ok) img.src = '/api/profile/picture?t=' + Date.now();
+        })
+        .catch(() => {});
+    }
+
+    function penyeliaStatusBadge(status) {
+      const normalized = (status || '').toUpperCase();
+      const map = {
+        'DIHANTAR': { label: 'Menunggu Semakan', color: 'primary' },
+        'SEMAKAN_STAFF': { label: 'Menunggu Semakan', color: 'secondary' },
+        'MENUNGGU_PENGARAH': { label: 'Menunggu Pengarah', color: 'warning' },
+        'DILULUSKAN': { label: 'Diluluskan', color: 'success' },
+        'DITOLAK': { label: 'Tidak Diluluskan', color: 'danger' },
+        'PAS_DIKELUARKAN': { label: 'Menunggu Lawatan', color: 'info' },
+        'SELESAI': { label: 'Selesai', color: 'dark' }
+      };
+      const info = map[normalized] || { label: status || '-', color: 'secondary' };
+      return `<span class="badge bg-${info.color}">${info.label}</span>`;
+    }
+
+    function renderPieChart(waitingDirector, pasIssued, completed, rejected) {
+      const ctx = document.getElementById('pieChart').getContext('2d');
+      if (pieChartInstance) pieChartInstance.destroy();
+
+      const labels = ['Menunggu Pengarah', 'Menunggu Lawatan', 'Selesai', 'Tidak Diluluskan'];
+      const values = [waitingDirector, pasIssued, completed, rejected];
+      const colors = ['#ffc107', '#0dcaf0', '#0d9488', '#dc3545'];
+      const hasData = values.some((v) => v > 0);
+
+      pieChartInstance = new Chart(ctx, {
+        type: 'pie',
+        data: {
+          labels: hasData ? labels : ['Tiada data'],
+          datasets: [{
+            data: hasData ? values : [1],
+            backgroundColor: hasData ? colors : ['#e9ecef'],
+            borderColor: '#ffffff',
+            borderWidth: 2
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: true,
+          plugins: { legend: { display: false } },
+          animation: false
+        }
+      });
+
+      const legendEl = document.getElementById('pie-legend');
+      if (hasData) {
+        legendEl.innerHTML = `<div class="d-flex flex-wrap justify-content-center gap-3">${labels.map((label, i) => `
+          <span class="d-inline-flex align-items-center gap-1">
+            <span style="width:12px;height:12px;border-radius:3px;background:${colors[i]};display:inline-block;"></span>
+            ${label}: <strong>${values[i]}</strong>
+          </span>
+        `).join('')}</div>`;
+      } else {
+        legendEl.innerHTML = '<span>Tiada data permohonan</span>';
+      }
+    }
+
+    function renderStatusTrendChart(applications) {
+      const ctx = document.getElementById('statusTrendChart').getContext('2d');
+      if (statusTrendChartInstance) statusTrendChartInstance.destroy();
+
+      const labels = ['Menunggu Pengarah', 'Menunggu Lawatan', 'Selesai', 'Tidak Diluluskan'];
+      const statuses = ['MENUNGGU_PENGARAH', 'PAS_DIKELUARKAN', 'SELESAI', 'DITOLAK'];
+      const values = statuses.map((status) => applications.filter((item) => item.status === status).length);
+      const colors = ['#ffc107', '#0dcaf0', '#0d9488', '#dc3545'];
+
+      statusTrendChartInstance = new Chart(ctx, {
+        type: 'line',
+        data: {
+          labels,
+          datasets: [{
+            label: 'Jumlah Permohonan',
+            data: values,
+            borderColor: '#2563eb',
+            backgroundColor: 'rgba(37, 99, 235, 0.12)',
+            borderWidth: 3,
+            tension: 0,
+            fill: true,
+            pointRadius: 6,
+            pointHoverRadius: 8,
+            pointBackgroundColor: colors,
+            pointBorderColor: '#ffffff',
+            pointBorderWidth: 2
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            legend: { display: false },
+            tooltip: {
+              callbacks: {
+                label: (context) => ` ${context.raw} permohonan`
+              }
+            }
+          },
+          scales: {
+            x: {
+              grid: { display: false },
+              ticks: { color: '#343a40', font: { weight: '600' } }
+            },
+            y: {
+              beginAtZero: true,
+              ticks: { precision: 0, color: '#6c757d' },
+              grid: { color: '#e9ecef' }
+            }
+          },
+          animation: false
+        }
+      });
+    }
+
+    function showCatatanPenyeliaModal() {
+      return new Promise((resolve) => {
+        const modal = document.createElement('div');
+        modal.style.cssText = 'display:flex;position:fixed;inset:0;background:rgba(0,0,0,.65);backdrop-filter:blur(4px);z-index:10000;justify-content:center;align-items:center;padding:16px;';
+        modal.innerHTML = `
+          <div style="width:100%;max-width:620px;min-height:350px;background:#fff;border-radius:12px;overflow:hidden;box-shadow:0 20px 60px rgba(0,0,0,.3);display:flex;flex-direction:column;">
+            <div style="padding:18px 24px;background:linear-gradient(135deg,#00467f,#0d5ba5);color:#fff;font-size:18px;font-weight:600;">
+              <i class="fas fa-comment-dots me-2"></i>Catatan Penyelia
+            </div>
+            <div style="padding:24px;display:flex;flex:1;flex-direction:column;">
+              <fieldset>
+                <legend class="catatan-penyelia-legend fw-semibold">Pilih catatan</legend>
+                <div class="catatan-penyelia-options">
+                  <div class="catatan-penyelia-option">
+                    <input type="radio" name="catatan-penyelia-pilihan" id="catatan-selesai" value="Lawatan selesai tanpa sebarang isu">
+                    <label for="catatan-selesai">Lawatan selesai tanpa sebarang isu</label>
+                  </div>
+                  <div class="catatan-penyelia-option">
+                    <input type="radio" name="catatan-penyelia-pilihan" id="catatan-tidak-hadir" value="Pelawat tidak hadir">
+                    <label for="catatan-tidak-hadir">Pelawat tidak hadir</label>
+                  </div>
+                  <div class="catatan-penyelia-option">
+                    <input type="radio" name="catatan-penyelia-pilihan" id="catatan-lewat" value="Pelawat hadir lewat">
+                    <label for="catatan-lewat">Pelawat hadir lewat</label>
+                  </div>
+                  <div class="catatan-penyelia-option">
+                    <input type="radio" name="catatan-penyelia-pilihan" id="catatan-keselamatan" value="Pelawat tidak mematuhi peraturan keselamatan">
+                    <label for="catatan-keselamatan">Pelawat tidak mematuhi peraturan keselamatan</label>
+                  </div>
+                  <div class="catatan-penyelia-option">
+                    <input type="radio" name="catatan-penyelia-pilihan" id="catatan-lain" value="Lain-lain">
+                    <label for="catatan-lain">Lain-lain</label>
+                  </div>
+                </div>
+              </fieldset>
+              <div id="catatan-penyelia-lain-wrap" class="d-none mt-3">
+                <label for="catatan-penyelia-lain" class="form-label fw-semibold">Catatan lain</label>
+                <textarea id="catatan-penyelia-lain" class="form-control" rows="4" placeholder="Taip catatan penyelia..."></textarea>
+              </div>
+              <div id="catatan-penyelia-ralat" class="text-danger small mt-2 d-none"></div>
+              <div class="d-flex justify-content-end gap-2 mt-auto pt-4">
+                <button type="button" class="btn btn-outline-secondary px-4" id="catatan-penyelia-batal">Batal</button>
+                <button type="button" class="btn btn-primary px-4" id="catatan-penyelia-simpan">
+                  <i class="fas fa-paper-plane me-1"></i>Hantar
+                </button>
+              </div>
+            </div>
+          </div>
+        `;
+        document.body.appendChild(modal);
+
+        const pilihanRadio = Array.from(modal.querySelectorAll('input[name="catatan-penyelia-pilihan"]'));
+        const lainWrap = modal.querySelector('#catatan-penyelia-lain-wrap');
+        const lainInput = modal.querySelector('#catatan-penyelia-lain');
+        const ralat = modal.querySelector('#catatan-penyelia-ralat');
+        const close = (value) => {
+          document.removeEventListener('keydown', onKey);
+          modal.remove();
+          resolve(value);
+        };
+
+        pilihanRadio.forEach((radio) => {
+          radio.addEventListener('change', () => {
+            const pilihLain = radio.value === 'Lain-lain';
+            lainWrap.classList.toggle('d-none', !pilihLain);
+            ralat.classList.add('d-none');
+            if (pilihLain) lainInput.focus();
+          });
+        });
+
+        modal.querySelector('#catatan-penyelia-batal').addEventListener('click', () => close(null));
+        modal.querySelector('#catatan-penyelia-simpan').addEventListener('click', () => {
+          const pilihan = modal.querySelector('input[name="catatan-penyelia-pilihan"]:checked');
+          const catatan = pilihan?.value === 'Lain-lain' ? lainInput.value.trim() : pilihan?.value;
+          if (!pilihan || !catatan) {
+            ralat.textContent = pilihan?.value === 'Lain-lain' ? 'Sila taip catatan anda.' : 'Sila pilih catatan.';
+            ralat.classList.remove('d-none');
+            return;
+          }
+          close(catatan);
+        });
+
+        const onKey = (event) => {
+          if (event.key === 'Escape') close(null);
+        };
+        document.addEventListener('keydown', onKey);
+        modal.addEventListener('click', (event) => {
+          if (event.target === modal) close(null);
+        });
+        pilihanRadio[0].focus();
+      });
+    }
+
+    async function tambahCatatanPelawat(id) {
+      const catatan = await showCatatanPenyeliaModal();
+      if (catatan === null) return;
+
+      try {
+        const response = await fetch(`/api/penyelia/permohonan/${id}/catatan`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ catatan })
+        });
+        const data = await response.json();
+        if (!response.ok) {
+          showErrorPopup('Ralat', data.ralat || 'Gagal menyimpan catatan pelawat.');
+          return;
+        }
+        await showConfirmModal({
+          title: 'Catatan Disimpan',
+          message: 'Permohonan ini telah ditandakan sebagai Selesai.',
+          confirmText: 'OK',
+          type: 'success',
+          icon: 'fa-check-circle',
+          showCancel: false
+        });
+        await loadPenyeliaTable();
+      } catch (error) {
+        showErrorPopup('Ralat', 'Gagal menghubungi pelayan.');
+      }
+    }
+
+    async function loadPenyeliaTable() {
+      const tbody = document.querySelector('#penyelia-list');
+      tbody.innerHTML = '<tr><td colspan="6" class="text-center text-muted">Memuatkan...</td></tr>';
+
+      try {
+        const response = await fetch('/api/penyelia/permohonan');
+        if (!response.ok) throw new Error('Gagal memuat senarai permohonan');
+        const applications = await response.json();
+
+        const waitingDirector = applications.filter((item) => item.status === 'MENUNGGU_PENGARAH').length;
+        const pasIssued = applications.filter((item) => item.status === 'PAS_DIKELUARKAN').length;
+        const completed = applications.filter((item) => item.status === 'SELESAI').length;
+        const rejected = applications.filter((item) => item.status === 'DITOLAK').length;
+
+        document.querySelector('#stat-total').textContent = applications.length;
+        document.querySelector('#stat-waiting-director').textContent = waitingDirector;
+        document.querySelector('#stat-pas-issued').textContent = pasIssued;
+        document.querySelector('#stat-completed').textContent = completed;
+        document.querySelector('#stat-rejected').textContent = rejected;
+        renderPieChart(waitingDirector, pasIssued, completed, rejected);
+        renderStatusTrendChart(applications);
+
+        if (!applications.length) {
+          tbody.innerHTML = '<tr><td colspan="6" class="text-center text-muted">Tiada permohonan bagi daerah seliaan anda.</td></tr>';
+          return;
+        }
+
+        applications.sort((a, b) => new Date(b.visitDate || 0) - new Date(a.visitDate || 0));
+
+        tbody.innerHTML = applications.map((item) => {
+          const bolehCatat = item.status === 'PAS_DIKELUARKAN';
+          return `
+            <tr>
+              <td>${esc(item.organisation || '-')}</td>
+              <td>${esc(item.locationName || '-')}</td>
+              <td class="text-center">${esc(item.visitDate || '-')}</td>
+              <td class="text-center">${penyeliaStatusBadge(item.status)}</td>
+              <td class="catatan-penyelia-column">${esc(item.penyeliaNote || '-')}</td>
+              <td class="text-center">
+                ${bolehCatat
+                  ? `<button type="button" class="btn btn-sm btn-outline-primary" data-action="catatan" data-id="${item.id}"><i class="fas fa-plus me-1"></i>Catatan</button>`
+                  : '<span class="text-muted small">-</span>'}
+              </td>
+            </tr>
+          `;
+        }).join('');
+
+        tbody.querySelectorAll('button[data-action="catatan"]').forEach((btn) => {
+          btn.addEventListener('click', () => tambahCatatanPelawat(btn.dataset.id));
+        });
+      } catch (error) {
+        console.error(error);
+        tbody.innerHTML = '<tr><td colspan="6" class="text-center text-danger">Gagal memuat senarai permohonan.</td></tr>';
+      }
+    }
+
+    document.addEventListener('DOMContentLoaded', () => {
+      loadProfile();
+      loadPenyeliaTable();
+    });
+  </script>
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

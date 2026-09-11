@@ -3,6 +3,8 @@ package my.gov.jans.access.web;
 import my.gov.jans.access.domain.*;
 import my.gov.jans.access.repo.PenggunaRepository;
 import my.gov.jans.access.repo.LokasRepository;
+import my.gov.jans.access.repo.PermohonanRepository;
+import my.gov.jans.access.repo.PenyeliaLojiRepository;
 import my.gov.jans.access.service.AkaunService;
 import my.gov.jans.access.service.PermohonanService;
 import org.springframework.http.*;
@@ -10,10 +12,12 @@ import org.springframework.security.authentication.UsernamePasswordAuthenticatio
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 import java.security.SecureRandom;
 import java.util.*;
+import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/api")
@@ -22,15 +26,20 @@ public class ApiController {
     private final AkaunService akaunService;
     private final PenggunaRepository penggunaRepository;
     private final LokasRepository lokasRepository;
+    private final PermohonanRepository permohonanRepository;
+    private final PenyeliaLojiRepository penyeliaLojiRepository;
     private final PasswordEncoder passwordEncoder;
     private final SecureRandom random = new SecureRandom();
 
     public ApiController(PermohonanService x, AkaunService akaunService, PenggunaRepository penggunaRepository,
-            LokasRepository lokasRepository, PasswordEncoder passwordEncoder) {
+            LokasRepository lokasRepository, PermohonanRepository permohonanRepository,
+            PenyeliaLojiRepository penyeliaLojiRepository, PasswordEncoder passwordEncoder) {
         s = x;
         this.akaunService = akaunService;
         this.penggunaRepository = penggunaRepository;
         this.lokasRepository = lokasRepository;
+        this.permohonanRepository = permohonanRepository;
+        this.penyeliaLojiRepository = penyeliaLojiRepository;
         this.passwordEncoder = passwordEncoder;
     }
 
@@ -168,6 +177,38 @@ public class ApiController {
     @PostMapping("/pengarah/permohonan/{id}/keputusan")
     Permohonan putus(@PathVariable Long id, @RequestBody Map<String, Object> b, Authentication a) {
         return s.keputusan(id, Boolean.TRUE.equals(b.get("lulus")), (String) b.get("catatan"), a.getName());
+    }
+
+    @GetMapping("/penyelia/permohonan")
+    List<Permohonan> penyeliaSenarai(Authentication a) {
+        Pengguna user = penggunaRepository.findByEmail(a.getName()).orElseThrow();
+        PenyeliaLoji penyelia = penyeliaLojiRepository.findByPengguna(user).orElse(null);
+        List<String> daerahSeliaan = penyelia != null ? penyelia.getDaerahSeliaan() : List.of();
+        if (daerahSeliaan.isEmpty()) {
+            return List.of();
+        }
+        Set<String> namaLokasiDalamDaerah = lokasRepository.findAll().stream()
+                .filter(l -> l.getDaerah() != null && daerahSeliaan.contains(l.getDaerah()))
+            .map(lokasi -> lokasi.getName())
+                .collect(Collectors.toSet());
+        return s.senaraiSemua().stream()
+                .filter(p -> namaLokasiDalamDaerah.contains(p.getLocationName()))
+                .toList();
+    }
+
+    @PostMapping("/penyelia/permohonan/{id}/catatan")
+    ResponseEntity<?> penyeliaCatatan(@PathVariable Long id, @RequestBody Map<String, String> b, Authentication a) {
+        try {
+            return ResponseEntity.ok(s.catatanPenyelia(id, b.get("catatan"), a.getName()));
+        } catch (NoSuchElementException e) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                    .body(Map.of("ralat", "Permohonan atau pengguna tidak ditemui"));
+        } catch (IllegalStateException e) {
+            return ResponseEntity.badRequest().body(Map.of("ralat", e.getMessage()));
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(Map.of("ralat", "Ralat semasa menyimpan catatan penyelia loji"));
+        }
     }
 
     @GetMapping("/pas/{token}")
@@ -328,12 +369,56 @@ public class ApiController {
     }
 
     @DeleteMapping("/admin/users/{id}")
+    @Transactional
     ResponseEntity<?> padamPenggunaAdmin(@PathVariable Long id) {
         if (!penggunaRepository.existsById(Objects.requireNonNull(id))) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of("ralat", "Pengguna tidak ditemui"));
         }
+        permohonanRepository.clearReviewedBy(id);
+        permohonanRepository.clearDecidedBy(id);
+        permohonanRepository.clearCompletedBy(id);
+        penyeliaLojiRepository.deleteByPengguna_Id(id);
         penggunaRepository.deleteById(id);
         return ResponseEntity.ok(Map.of("berjaya", true));
+    }
+
+    @GetMapping("/admin/penyelia/{userId}/daerah")
+    ResponseEntity<?> senaraiDaerahSeliaan(@PathVariable Long userId) {
+        Pengguna user = penggunaRepository.findById(Objects.requireNonNull(userId)).orElse(null);
+        if (user == null) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of("ralat", "Pengguna tidak ditemui"));
+        }
+        PenyeliaLoji penyelia = penyeliaLojiRepository.findByPengguna(user).orElse(null);
+        return ResponseEntity.ok(Map.of("daerah", penyelia != null ? penyelia.getDaerahSeliaan() : List.of()));
+    }
+
+    @PostMapping("/admin/penyelia/{userId}/daerah")
+    @Transactional
+    ResponseEntity<?> tetapkanDaerahSeliaan(@PathVariable Long userId, @RequestBody Map<String, Object> body) {
+        Pengguna user = penggunaRepository.findById(Objects.requireNonNull(userId)).orElse(null);
+        if (user == null) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of("ralat", "Pengguna tidak ditemui"));
+        }
+        if (user.getRole() != Role.PENYELIA_LOJI) {
+            return ResponseEntity.badRequest().body(Map.of("ralat", "Pengguna bukan Penyelia Loji"));
+        }
+        Object daerahRaw = body.get("daerah");
+        List<String> daerahList = new ArrayList<>();
+        if (daerahRaw instanceof List<?> list) {
+            for (Object item : list) {
+                if (item != null && !item.toString().isBlank()) {
+                    daerahList.add(item.toString().trim());
+                }
+            }
+        }
+        PenyeliaLoji penyelia = penyeliaLojiRepository.findByPengguna(user).orElseGet(() -> {
+            PenyeliaLoji baru = new PenyeliaLoji();
+            baru.setPengguna(user);
+            return baru;
+        });
+        penyelia.setDaerahSeliaan(daerahList);
+        penyeliaLojiRepository.save(penyelia);
+        return ResponseEntity.ok(Map.of("berjaya", true, "daerah", penyelia.getDaerahSeliaan()));
     }
 
     @GetMapping("/profile")
@@ -483,7 +568,7 @@ public class ApiController {
             item.put("id", l.getId());
             item.put("type", l.getType().name());
             item.put("name", l.getName());
-            item.put("address", l.getAddress() != null ? l.getAddress() : "");
+            item.put("daerah", l.getDaerah() != null ? l.getDaerah() : "");
             payload.add(item);
         }
         return ResponseEntity.ok(payload);
@@ -500,7 +585,7 @@ public class ApiController {
                 item.put("id", l.getId());
                 item.put("type", l.getType().name());
                 item.put("name", l.getName());
-                item.put("address", l.getAddress() != null ? l.getAddress() : "");
+                item.put("daerah", l.getDaerah() != null ? l.getDaerah() : "");
                 payload.add(item);
             }
             return ResponseEntity.ok(payload);
@@ -514,7 +599,7 @@ public class ApiController {
         try {
             String typeStr = Objects.requireNonNull(body.get("type"), "Jenis lokasi diperlukan").trim().toUpperCase();
             String name = Objects.requireNonNull(body.get("name"), "Nama lokasi diperlukan").trim();
-            String address = body.getOrDefault("address", "").trim();
+            String daerah = body.getOrDefault("daerah", "").trim();
 
             if (name.isEmpty()) {
                 return ResponseEntity.badRequest().body(Map.of("ralat", "Nama lokasi tidak boleh kosong"));
@@ -531,7 +616,7 @@ public class ApiController {
             Lokasi lokasi = new Lokasi();
             lokasi.setType(jenisLokasi);
             lokasi.setName(name);
-            lokasi.setAddress(address);
+            lokasi.setDaerah(daerah);
             lokasRepository.save(lokasi);
 
             return ResponseEntity.ok(Map.of(
@@ -540,7 +625,7 @@ public class ApiController {
                             "id", lokasi.getId(),
                             "type", lokasi.getType().name(),
                             "name", lokasi.getName(),
-                            "address", lokasi.getAddress() != null ? lokasi.getAddress() : "")));
+                            "daerah", lokasi.getDaerah() != null ? lokasi.getDaerah() : "")));
         } catch (NullPointerException e) {
             return ResponseEntity.badRequest().body(Map.of("ralat", e.getMessage()));
         } catch (Exception e) {
@@ -571,8 +656,8 @@ public class ApiController {
                 }
                 lokasi.setName(name);
             }
-            if (body.containsKey("address") && body.get("address") != null) {
-                lokasi.setAddress(body.get("address"));
+            if (body.containsKey("daerah") && body.get("daerah") != null) {
+                lokasi.setDaerah(body.get("daerah"));
             }
             lokasRepository.save(lokasi);
             return ResponseEntity.ok(Map.of("berjaya", true));

@@ -3,6 +3,8 @@ package my.gov.jans.access.web;
 import my.gov.jans.access.domain.Pengguna;
 import my.gov.jans.access.repo.PenggunaRepository;
 import my.gov.jans.access.repo.LokasRepository;
+import my.gov.jans.access.repo.PermohonanRepository;
+import my.gov.jans.access.repo.PenyeliaLojiRepository;
 import my.gov.jans.access.service.AkaunService;
 import my.gov.jans.access.service.PermohonanService;
 import org.junit.jupiter.api.Test;
@@ -32,10 +34,12 @@ class ApiControllerTest {
         AkaunService akaunService = mock(AkaunService.class);
         PenggunaRepository penggunaRepository = mock(PenggunaRepository.class);
         LokasRepository lokasRepository = mock(LokasRepository.class);
+        PermohonanRepository permohonanRepository = mock(PermohonanRepository.class);
+        PenyeliaLojiRepository penyeliaLojiRepository = mock(PenyeliaLojiRepository.class);
         PasswordEncoder passwordEncoder = mock(PasswordEncoder.class);
 
         ApiController controller = new ApiController(permohonanService, akaunService, penggunaRepository,
-                lokasRepository, passwordEncoder);
+            lokasRepository, permohonanRepository, penyeliaLojiRepository, passwordEncoder);
         controller.staf(null);
 
         verify(permohonanService).senaraiSemua();
@@ -48,6 +52,8 @@ class ApiControllerTest {
         AkaunService akaunService = mock(AkaunService.class);
         PenggunaRepository penggunaRepository = mock(PenggunaRepository.class);
         LokasRepository lokasRepository = mock(LokasRepository.class);
+        PermohonanRepository permohonanRepository = mock(PermohonanRepository.class);
+        PenyeliaLojiRepository penyeliaLojiRepository = mock(PenyeliaLojiRepository.class);
         PasswordEncoder passwordEncoder = mock(PasswordEncoder.class);
 
         Pengguna pengguna = new Pengguna();
@@ -56,7 +62,7 @@ class ApiControllerTest {
         when(penggunaRepository.save(any(Pengguna.class))).thenAnswer(invocation -> invocation.getArgument(0));
 
         ApiController controller = new ApiController(permohonanService, akaunService, penggunaRepository,
-                lokasRepository, passwordEncoder);
+            lokasRepository, permohonanRepository, penyeliaLojiRepository, passwordEncoder);
         Authentication auth = new TestingAuthenticationToken(
                 "old@example.com",
                 "password",
@@ -70,5 +76,29 @@ class ApiControllerTest {
         assertEquals(HttpStatus.OK, response.getStatusCode());
         assertEquals("new@example.com", pengguna.getEmail());
         verify(penggunaRepository).save(pengguna);
+    }
+
+    @Test
+    void shouldClearUserReferencesBeforeDeletingUser() {
+        PermohonanService permohonanService = mock(PermohonanService.class);
+        AkaunService akaunService = mock(AkaunService.class);
+        PenggunaRepository penggunaRepository = mock(PenggunaRepository.class);
+        LokasRepository lokasRepository = mock(LokasRepository.class);
+        PermohonanRepository permohonanRepository = mock(PermohonanRepository.class);
+        PenyeliaLojiRepository penyeliaLojiRepository = mock(PenyeliaLojiRepository.class);
+        PasswordEncoder passwordEncoder = mock(PasswordEncoder.class);
+        when(penggunaRepository.existsById(7L)).thenReturn(true);
+
+        ApiController controller = new ApiController(permohonanService, akaunService, penggunaRepository,
+                lokasRepository, permohonanRepository, penyeliaLojiRepository, passwordEncoder);
+
+        ResponseEntity<?> response = controller.padamPenggunaAdmin(7L);
+
+        assertEquals(HttpStatus.OK, response.getStatusCode());
+        verify(permohonanRepository).clearReviewedBy(7L);
+        verify(permohonanRepository).clearDecidedBy(7L);
+        verify(permohonanRepository).clearCompletedBy(7L);
+        verify(penyeliaLojiRepository).deleteByPengguna_Id(7L);
+        verify(penggunaRepository).deleteById(7L);
     }
 }

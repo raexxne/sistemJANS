@@ -204,6 +204,19 @@ public class PermohonanService {
     }
 
     @Transactional
+    public Permohonan catatanPenyelia(Long id, String catatan, String email) {
+        Permohonan p = repo.findById(Objects.requireNonNull(id)).orElseThrow();
+        if (p.getStatus() != StatusPermohonan.PAS_DIKELUARKAN)
+            throw new IllegalStateException("Hanya permohonan yang telah dikeluarkan pas boleh dikemaskini");
+        String finalCatatan = (catatan == null || catatan.isBlank()) ? "Tiada catatan" : catatan.trim();
+        p.setPenyeliaNote(finalCatatan);
+        p.setCompletedBy(pengguna.findByEmail(email).orElseThrow());
+        p.setCompletedAt(LocalDateTime.now());
+        p.setStatus(StatusPermohonan.SELESAI);
+        return repo.save(p);
+    }
+
+    @Transactional
     public Permohonan keputusan(Long id, boolean lulus, String catatan, String email) {
         Permohonan p = repo.findById(Objects.requireNonNull(id)).orElseThrow();
         if (p.getStatus() != StatusPermohonan.MENUNGGU_PENGARAH)

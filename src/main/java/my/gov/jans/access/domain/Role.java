@@ -1,5 +1,5 @@
 package my.gov.jans.access.domain;
 
 public enum Role {
-    STAFF, PENGARAH, ADMIN
+    STAFF, PENGARAH, ADMIN, PENYELIA_LOJI
 }

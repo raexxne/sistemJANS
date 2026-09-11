@@ -60,6 +60,7 @@
     .dashboard-kpi-row .col:nth-child(3) { --kpi-color: #dc2626; }
     .dashboard-kpi-row .col:nth-child(4) { --kpi-color: #0d6efd; }
     .dashboard-kpi-row .col:nth-child(5) { --kpi-color: #ffc107; }
+    .dashboard-kpi-row .col:nth-child(6) { --kpi-color: #0d9488; }
     .cursor-pointer { cursor: pointer; }
     .dashboard-table thead th {
       font-size: 0.95rem;
@@ -142,92 +143,62 @@
       background: #f8f9fa;
     }
     .detail-field {
-      margin-bottom: 16px;
+      margin-bottom: 10px;
     }
     .detail-field label {
       display: block;
-      font-size: 0.8rem;
+      font-size: 0.72rem;
       text-transform: uppercase;
-      letter-spacing: 0.04em;
-      color: #6c757d;
-      margin-bottom: 4px;
+      letter-spacing: 0.03em;
+      color: #64748b;
+      font-weight: 600;
+      margin-bottom: 2px;
     }
     .detail-field .value {
-      font-size: 1.05rem;
-      color: #212529;
+      font-size: 0.9rem;
+      color: #1e293b;
       font-weight: 500;
     }
     .application-summary-panel {
-      margin-bottom: 22px;
-      padding: 18px;
+      margin-bottom: 16px;
+      padding: 14px;
       border: 1px solid #dbe5ef;
-      border-radius: 14px;
+      border-radius: 12px;
       background: linear-gradient(135deg, #f8fbff 0%, #ffffff 100%);
       box-shadow: 0 5px 16px rgba(15, 23, 42, 0.05);
     }
-    .visitor-details-list {
-      display: grid;
-      gap: 14px;
-    }
-    .visitor-detail-card {
-      overflow: hidden;
+    .visitor-simple-list {
+      display: flex;
+      flex-direction: column;
       border: 1px solid #dbe5ef;
-      border-radius: 12px;
-      background: #fff;
-      box-shadow: 0 4px 12px rgba(15, 23, 42, 0.05);
+      border-radius: 10px;
+      overflow: hidden;
     }
-    .visitor-detail-card-header {
+    .visitor-simple-item {
       display: flex;
       align-items: center;
-      gap: 10px;
-      padding: 11px 14px;
-      background: #eef6ff;
-      border-bottom: 1px solid #dbe5ef;
+      flex-wrap: wrap;
+      gap: 6px 10px;
+      padding: 10px 14px;
+      font-size: 0.9rem;
+      background: #fff;
+    }
+    .visitor-simple-item:nth-child(even) {
+      background: #f8fafc;
+    }
+    .visitor-simple-index {
       color: #00467f;
       font-weight: 700;
     }
-    .visitor-detail-card-header i {
-      width: 28px;
-      height: 28px;
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
-      border-radius: 50%;
-      background: #d8ebff;
-      color: #0d5ba5;
-    }
-    .visitor-detail-card-body {
-      display: grid;
-      grid-template-columns: repeat(2, minmax(0, 1fr));
-      gap: 10px;
-      padding: 14px;
-    }
-    .visitor-detail-item {
-      min-width: 0;
-      padding: 10px 12px;
-      border: 1px solid #edf1f5;
-      border-radius: 8px;
-      background: #f8fafc;
-    }
-    .visitor-detail-item-label {
-      display: block;
-      margin-bottom: 3px;
-      color: #64748b;
-      font-size: 0.72rem;
+    .visitor-simple-name {
       font-weight: 600;
-      text-transform: uppercase;
-      letter-spacing: 0.03em;
-    }
-    .visitor-detail-item-value {
-      overflow-wrap: anywhere;
       color: #1e293b;
-      font-size: 0.88rem;
-      font-weight: 500;
     }
-    @media (max-width: 576px) {
-      .visitor-detail-card-body {
-        grid-template-columns: minmax(0, 1fr);
-      }
+    .visitor-simple-sep {
+      color: #94a3b8;
+    }
+    .visitor-simple-value {
+      color: #475569;
     }
 
     .catatan-modal-overlay {
@@ -628,7 +599,7 @@
 
     <section class="py-4">
       <div class="container-fluid">
-        <div class="row row-cols-2 row-cols-md-3 row-cols-xl-5 g-3 dashboard-kpi-row">
+        <div class="row row-cols-2 row-cols-md-3 row-cols-xl-6 g-3 dashboard-kpi-row">
           <div class="col">
             <div class="card dashboard-stat-card dashboard-kpi-card h-100">
               <div class="card-body d-flex flex-column justify-content-center">
@@ -681,6 +652,17 @@
                   <i class="fas fa-user-clock stat-icon"></i>
                 </div>
                 <h3 id="stat-waiting-director" class="fw-bold mb-0">0</h3>
+              </div>
+            </div>
+          </div>
+          <div class="col">
+            <div class="card dashboard-stat-card dashboard-kpi-card h-100">
+              <div class="card-body d-flex flex-column justify-content-center">
+                <div class="d-flex justify-content-between align-items-start gap-2 mb-2">
+                  <span class="kpi-label">Selesai</span>
+                  <i class="fas fa-flag-checkered stat-icon"></i>
+                </div>
+                <h3 id="stat-completed" class="fw-bold mb-0">0</h3>
               </div>
             </div>
           </div>
@@ -740,6 +722,7 @@
                     <option value="MENUNGGU_PENGARAH">Menunggu Pengarah</option>
                     <option value="DILULUSKAN">Diluluskan</option>
                     <option value="DITOLAK">Tidak Diluluskan</option>
+                    <option value="SELESAI">Selesai</option>
                   </select>
                 </div>
                 <div class="col-auto">
@@ -785,12 +768,13 @@
                     <th>E-mel Wakil</th>
                     <th class="text-center">Tarikh Permohonan</th>
                     <th class="text-center">Status</th>
+                    <th>Catatan Penyelia Loji</th>
                     <th class="text-center">Butiran</th>
                   </tr>
                 </thead>
                 <tbody id="permohonan-list">
                   <tr>
-                    <td colspan="6" class="text-center text-muted">Memuatkan...</td>
+                    <td colspan="7" class="text-center text-muted">Memuatkan...</td>
                   </tr>
                 </tbody>
               </table>
@@ -840,13 +824,13 @@
     }
 
 
-    function renderPieChart(pendingReview, waitingDirector, approved, rejected) {
+    function renderPieChart(pendingReview, waitingDirector, approved, rejected, completed) {
       const ctx = document.getElementById('pieChart').getContext('2d');
       if (pieChartInstance) pieChartInstance.destroy();
 
-      const labels = ['Menunggu Semakan', 'Menunggu Pengarah', 'Diluluskan', 'Tidak Diluluskan'];
-      const values = [pendingReview, waitingDirector, approved, rejected];
-      const colors = ['#0d6efd', '#ffc107', '#198754', '#dc3545'];
+      const labels = ['Menunggu Semakan', 'Menunggu Pengarah', 'Diluluskan', 'Tidak Diluluskan', 'Selesai'];
+      const values = [pendingReview, waitingDirector, approved, rejected, completed];
+      const colors = ['#0d6efd', '#ffc107', '#198754', '#dc3545', '#0d9488'];
       const hasData = values.some(v => v > 0);
 
       pieChartInstance = new Chart(ctx, {
@@ -889,7 +873,7 @@
           </span>
         `;
         const legendRow = (indices) => `<div class="d-flex flex-wrap justify-content-center gap-3">${indices.map(i => legendItem(labels[i], i)).join('')}</div>`;
-        legendEl.innerHTML = legendRow([0, 2]) + legendRow([1, 3]);
+        legendEl.innerHTML = legendRow([0, 2, 4]) + legendRow([1, 3]);
       } else {
         legendEl.innerHTML = '<span>Tiada data permohonan</span>';
       }
@@ -900,14 +884,15 @@
       const ctx = document.getElementById('categoryChart').getContext('2d');
       if (categoryChartInstance) categoryChartInstance.destroy();
 
-      const labels = ['Diluluskan', 'Tidak Diluluskan', 'Menunggu Semakan', 'Menunggu Pengarah'];
+      const labels = ['Diluluskan', 'Tidak Diluluskan', 'Menunggu Semakan', 'Menunggu Pengarah', 'Selesai'];
       const values = [
         applications.filter((item) => ['DILULUSKAN', 'PAS_DIKELUARKAN'].includes(item.status)).length,
         applications.filter((item) => item.status === 'DITOLAK').length,
         applications.filter((item) => ['DIHANTAR', 'SEMAKAN_STAFF'].includes(item.status)).length,
-        applications.filter((item) => item.status === 'MENUNGGU_PENGARAH').length
+        applications.filter((item) => item.status === 'MENUNGGU_PENGARAH').length,
+        applications.filter((item) => item.status === 'SELESAI').length
       ];
-      const colors = ['#16a34a', '#dc2626', '#0d6efd', '#ffc107'];
+      const colors = ['#16a34a', '#dc2626', '#0d6efd', '#ffc107', '#0d9488'];
 
       categoryChartInstance = new Chart(ctx, {
         type: 'line',
@@ -979,7 +964,8 @@
         'MENUNGGU_PENGARAH': { label: 'Menunggu Pengarah', color: 'warning' },
         'DILULUSKAN': { label: 'Diluluskan', color: 'success' },
         'DITOLAK': { label: 'Tidak Diluluskan', color: 'danger' },
-        'PAS_DIKELUARKAN': { label: 'Diluluskan', color: 'success' }
+        'PAS_DIKELUARKAN': { label: 'Diluluskan', color: 'success' },
+        'SELESAI': { label: 'Selesai', color: 'dark' }
       };
       const info = map[normalized] || { label: status || '-', color: 'secondary' };
       return `<span class="badge bg-${info.color}">${info.label}</span>`;
@@ -1070,7 +1056,8 @@
       'DIHANTAR': ['DIHANTAR', 'SEMAKAN_STAFF'],
       'MENUNGGU_PENGARAH': ['MENUNGGU_PENGARAH'],
       'DILULUSKAN': ['DILULUSKAN', 'PAS_DIKELUARKAN'],
-      'DITOLAK': ['DITOLAK']
+      'DITOLAK': ['DITOLAK'],
+      'SELESAI': ['SELESAI']
     };
 
     function matchesSearchFilters(item, filters) {
@@ -1364,17 +1351,17 @@
           </div>
           <div class="detail-modal-body">
             <div class="application-summary-panel">
-              <div class="row g-3">
-                <div class="col-md-6">${field('Kementerian / Jabatan / Agensi / Universiti / Syarikat', organisation)}</div>
-                <div class="col-md-6">${field('Tarikh Permohonan', applicationDate)}</div>
-                <div class="col-md-6">${field('Tarikh Lawatan', visitDate)}</div>
-                <div class="col-md-6">${field('Masa Lawatan', visitTime)}</div>
-                <div class="col-md-6">${field('Jenis Lokasi', locationType)}</div>
-                <div class="col-md-6">${field('Nama / Alamat Lokasi', locationName)}</div>
-                <div class="col-md-6">${field('No. Telefon (Pejabat)', phoneOffice)}</div>
-                <div class="col-md-6">${field('E-mel Untuk Dihubungi (Wakil)', emailWakil)}</div>
-                <div class="col-md-6">${field('Tujuan Lawatan', purpose)}</div>
-                <div class="col-md-6">
+              <div class="row g-2">
+                <div class="col-md-4">${field('Kementerian / Jabatan / Agensi / Universiti / Syarikat', organisation)}</div>
+                <div class="col-md-4">${field('Tarikh Permohonan', applicationDate)}</div>
+                <div class="col-md-4">${field('Tarikh Lawatan', visitDate)}</div>
+                <div class="col-md-4">${field('Masa Lawatan', visitTime)}</div>
+                <div class="col-md-4">${field('Jenis Lokasi', locationType)}</div>
+                <div class="col-md-4">${field('Nama / Alamat Lokasi', locationName)}</div>
+                <div class="col-md-4">${field('No. Telefon (Pejabat)', phoneOffice)}</div>
+                <div class="col-md-4">${field('E-mel Untuk Dihubungi (Wakil)', emailWakil)}</div>
+                <div class="col-md-4">${field('Tujuan Lawatan', purpose)}</div>
+                <div class="col-md-4">
                   <div class="detail-field">
                     <label>Status</label>
                     <div class="value">${renderStatusBadge(status)}</div>
@@ -1385,21 +1372,23 @@
             <div class="row g-3">
               <div class="col-12">
                 <div class="detail-field">
-                  <label>Maklumat Pelawat</label>
-                  <div class="visitor-details-list">
-                    ${pelawat.length ? pelawat.map((pelawatItem, index) => `
-                      <div class="visitor-detail-card">
-                        <div class="visitor-detail-card-header"><i class="fas fa-user"></i><span>Pelawat ${index + 1}</span></div>
-                        <div class="visitor-detail-card-body">
-                          <div class="visitor-detail-item"><span class="visitor-detail-item-label">Nama</span><span class="visitor-detail-item-value">${escapeHtml(pelawatItem.namaPenuh || '-')}</span></div>
-                          <div class="visitor-detail-item"><span class="visitor-detail-item-label">No. Kad Pengenalan</span><span class="visitor-detail-item-value">${escapeHtml(pelawatItem.noKadPengenalan || '-')}</span></div>
-                          <div class="visitor-detail-item"><span class="visitor-detail-item-label">E-mel</span><span class="visitor-detail-item-value">${escapeHtml(pelawatItem.email || '-')}</span></div>
-                          <div class="visitor-detail-item"><span class="visitor-detail-item-label">Telefon</span><span class="visitor-detail-item-value">${escapeHtml(pelawatItem.noTelefonBimbit || '-')}</span></div>
-                          <div class="visitor-detail-item"><span class="visitor-detail-item-label">Jawatan</span><span class="visitor-detail-item-value">${escapeHtml(pelawatItem.jawatan || '-')}</span></div>
-                          <div class="visitor-detail-item"><span class="visitor-detail-item-label">No. Kenderaan</span><span class="visitor-detail-item-value">${escapeHtml(pelawatItem.noPendaftaranKenderaan || '-')}</span></div>
-                        </div>
-                      </div>`).join('') : '<div class="p-3 text-muted">Tiada maklumat pelawat direkodkan.</div>'}
+                  <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-2">
+                    <label class="mb-0">Maklumat Pelawat</label>
+                    <button type="button" class="btn btn-sm btn-outline-primary" onclick="sessionStorage.setItem('petugasReopenId', '${id}'); sessionStorage.setItem('petugasScrollY', String(window.scrollY)); location.href='/pelawat.html?no=${encodeURIComponent(noRujukan)}&from=petugas'">
+                      Lihat Butiran
+                    </button>
                   </div>
+                  <ul class="visitor-simple-list list-unstyled mb-0">
+                    ${pelawat.length ? pelawat.map((pelawatItem, index) => `
+                      <li class="visitor-simple-item">
+                        <span class="visitor-simple-index">${index + 1}.</span>
+                        <span class="visitor-simple-name">${escapeHtml(pelawatItem.namaPenuh || '-')}</span>
+                        <span class="visitor-simple-sep">•</span>
+                        <span class="visitor-simple-value">${escapeHtml(pelawatItem.noKadPengenalan || '-')}</span>
+                        <span class="visitor-simple-sep">•</span>
+                        <span class="visitor-simple-value">${escapeHtml(pelawatItem.noPendaftaranKenderaan || '-')}</span>
+                      </li>`).join('') : '<li class="p-3 text-muted">Tiada maklumat pelawat direkodkan.</li>'}
+                  </ul>
                 </div>
               </div>
               ${directorNote && String(directorNote).trim() && String(directorNote).trim() !== '-' ? `
@@ -1671,7 +1660,7 @@
     async function loadPermohonanTable() {
       const tbody = document.querySelector('#permohonan-list');
       const summary = document.querySelector('#search-summary');
-      tbody.innerHTML = '<tr><td colspan="6" class="text-center text-muted">Memuatkan...</td></tr>';
+      tbody.innerHTML = '<tr><td colspan="7" class="text-center text-muted">Memuatkan...</td></tr>';
 
       const filters = getFilterValues();
 
@@ -1703,7 +1692,7 @@
         const pageItems = filtered.slice(startIndex, startIndex + pageSize);
 
         if (!filtered.length) {
-          tbody.innerHTML = '<tr><td colspan="6" class="text-center text-muted">Tiada permohonan dipadankan dengan kriteria carian.</td></tr>';
+          tbody.innerHTML = '<tr><td colspan="7" class="text-center text-muted">Tiada permohonan dipadankan dengan kriteria carian.</td></tr>';
           if (summary) summary.textContent = '';
           renderPaginationControls(0);
           return;
@@ -1732,6 +1721,7 @@
             <td data-label="E-mel Wakil">${emailWakil}</td>
             <td data-label="Tarikh Permohonan" class="text-center">${tarikh}</td>
             <td data-label="Status" class="text-center">${renderStatusBadge(status)}</td>
+            <td data-label="Catatan Penyelia Loji">${escapeHtml(item.penyeliaNote || '-')}</td>
             <td data-label="Butiran" class="text-center"></td>
           `;
 
@@ -1768,7 +1758,7 @@
         if (summary) summary.textContent = '';
       } catch (error) {
         console.error('Error loading permohonan table:', error);
-        tbody.innerHTML = `<tr><td colspan="6" class="text-center text-danger">Gagal memuat senarai permohonan.</td></tr>`;
+        tbody.innerHTML = `<tr><td colspan="7" class="text-center text-danger">Gagal memuat senarai permohonan.</td></tr>`;
         if (summary) {
           summary.textContent = 'Gagal memuatkan senarai. Sila cuba sebentar lagi.';
         }
@@ -1785,18 +1775,20 @@
         const waitingDirector = applications.filter((item) => item.status === 'MENUNGGU_PENGARAH').length;
         const approved = applications.filter((item) => ['DILULUSKAN', 'PAS_DIKELUARKAN'].includes(item.status)).length;
         const rejected = applications.filter((item) => item.status === 'DITOLAK').length;
+        const completed = applications.filter((item) => item.status === 'SELESAI').length;
         document.querySelector('#stat-total').textContent = applications.length;
         document.querySelector('#stat-approved').textContent = approved;
         document.querySelector('#stat-rejected').textContent = rejected;
         document.querySelector('#stat-pending-review').textContent = pendingReview;
         document.querySelector('#stat-waiting-director').textContent = waitingDirector;
+        document.querySelector('#stat-completed').textContent = completed;
         document.querySelector('#dashboard-today').textContent = new Date().toLocaleDateString('ms-MY', {
           day: '2-digit', month: 'long', year: 'numeric'
         });
         document.querySelector('#dashboard-updated').textContent = new Date().toLocaleTimeString('ms-MY', {
           hour: '2-digit', minute: '2-digit'
         });
-        renderPieChart(pendingReview, waitingDirector, approved, rejected);
+        renderPieChart(pendingReview, waitingDirector, approved, rejected, completed);
         renderCategoryChart(applications);
       } catch (error) {
         console.error('Error loading dashboard stats:', error);
@@ -1852,13 +1844,25 @@
       });
     }
 
-    document.addEventListener('DOMContentLoaded', () => {
+    document.addEventListener('DOMContentLoaded', async () => {
       loadDashboardProfile();
       loadDashboardStats();
       bindFilterEvents();
       bindBulkSelectionEvents();
       bindPaginationEvents();
-      loadPermohonanTable();
+      await loadPermohonanTable();
+
+      const reopenId = sessionStorage.getItem('petugasReopenId');
+      if (reopenId) {
+        sessionStorage.removeItem('petugasReopenId');
+        await showDetailModal({ id: reopenId });
+      }
+
+      const scrollY = sessionStorage.getItem('petugasScrollY');
+      if (scrollY !== null) {
+        sessionStorage.removeItem('petugasScrollY');
+        window.scrollTo(0, parseInt(scrollY, 10) || 0);
+      }
     });
   </script>
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>

@@ -92,7 +92,7 @@
     background: #fff;
     border-radius: 14px;
     width: 100%;
-    max-width: 440px;
+    max-width: 560px;
     max-height: 85vh;
     display: flex;
     flex-direction: column;
@@ -100,7 +100,7 @@
     box-shadow: 0 20px 50px rgba(0, 0, 0, 0.3);
   }
   .admin-modal-card.admin-modal-wide {
-    max-width: 520px;
+    max-width: 720px;
   }
   .admin-modal-header {
     background: linear-gradient(135deg, #00467f, #0d5ba5);
@@ -181,6 +181,35 @@
   .admin-page-main {
     margin-top: 0.4rem;
   }
+
+  .daerah-checkbox-list {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+  .daerah-checkbox-list .form-check {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding-left: 0;
+    margin-bottom: 0;
+  }
+  .daerah-checkbox-list .form-check-input {
+    margin: 0;
+    flex-shrink: 0;
+  }
+  .daerah-checkbox-list .form-check-label {
+    margin: 0;
+    line-height: 1.2;
+  }
+  .admin-daerah-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  .admin-daerah-row.is-hidden {
+    display: none;
+  }
 </style>
 
 <body class="internal-portal d-flex flex-column min-vh-100">
@@ -213,7 +242,7 @@
 
     <div id="tab-pengguna">
     <div class="row g-4 mb-4">
-      <div class="col-lg-4">
+      <div class="col-lg-3">
         <div class="card admin-card h-100">
           <div class="card-body">
             <div class="d-flex align-items-center justify-content-between mb-2">
@@ -224,7 +253,7 @@
           </div>
         </div>
       </div>
-      <div class="col-lg-4">
+      <div class="col-lg-3">
         <div class="card admin-card h-100">
           <div class="card-body">
             <div class="d-flex align-items-center justify-content-between mb-2">
@@ -235,7 +264,7 @@
           </div>
         </div>
       </div>
-      <div class="col-lg-4">
+      <div class="col-lg-3">
         <div class="card admin-card h-100">
           <div class="card-body">
             <div class="d-flex align-items-center justify-content-between mb-2">
@@ -243,6 +272,17 @@
               <i class="fas fa-user-shield text-info"></i>
             </div>
             <div id="admin-director-count" class="display-6 fw-bold text-dark">0</div>
+          </div>
+        </div>
+      </div>
+      <div class="col-lg-3">
+        <div class="card admin-card h-100">
+          <div class="card-body">
+            <div class="d-flex align-items-center justify-content-between mb-2">
+              <span class="text-muted small">Penyelia Loji</span>
+              <i class="fas fa-user-hard-hat text-warning"></i>
+            </div>
+            <div id="admin-penyelia-count" class="display-6 fw-bold text-dark">0</div>
           </div>
         </div>
       </div>
@@ -331,7 +371,7 @@
               <tr>
                 <th>Jenis</th>
                 <th>Nama Lokasi</th>
-                <th>Alamat</th>
+                <th>Daerah</th>
                 <th>Tindakan</th>
               </tr>
             </thead>
@@ -377,10 +417,11 @@
       const map = {
         ADMIN: 'danger',
         PENGARAH: 'info',
-        STAFF: 'secondary'
+        STAFF: 'secondary',
+        PENYELIA_LOJI: 'success'
       };
       const color = map[normalized] || 'secondary';
-      return `<span class="badge bg-${color}">${normalized}</span>`;
+      return `<span class="badge bg-${color}">${normalized.replaceAll('_', ' ')}</span>`;
     }
 
     function createActionButton(icon, title, color, handler) {
@@ -397,6 +438,7 @@
       document.querySelector('#admin-user-count').textContent = users.length;
       document.querySelector('#admin-staff-count').textContent = users.filter((user) => user.role === 'STAFF').length;
       document.querySelector('#admin-director-count').textContent = users.filter((user) => user.role === 'PENGARAH').length;
+      document.querySelector('#admin-penyelia-count').textContent = users.filter((user) => user.role === 'PENYELIA_LOJI').length;
     }
 
     /**
@@ -452,14 +494,26 @@
             createActionButton('fas fa-eye', 'View user info', 'primary', async () => {
               const detail = await fetch(`/api/admin/users/${user.id}`);
               const data = await detail.json();
+              let daerahHtml = '';
+              if ((data.role || '').toUpperCase() === 'PENYELIA_LOJI') {
+                const daerahRes = await fetch(`/api/admin/penyelia/${user.id}/daerah`);
+                const daerahData = daerahRes.ok ? await daerahRes.json() : { daerah: [] };
+                const daerahList = Array.isArray(daerahData.daerah) ? daerahData.daerah : [];
+                daerahHtml = `
+                  <hr>
+                  <strong>Daerah Seliaan</strong>
+                  <div class="mt-2">${daerahList.length ? daerahList.map((d) => `<span class="badge bg-success me-1 mb-1">${d}</span>`).join('') : '<span class="text-muted">Tiada daerah ditetapkan.</span>'}</div>
+                `;
+              }
               const message = `
                 <div class="admin-info-list">
                   <strong>Nama:</strong> ${data.name || '-'}<br>
                   <strong>E-mel:</strong> ${data.email || '-'}<br>
-                  <strong>Role:</strong> ${data.role || '-'}<br>
+                  <strong>Peranan:</strong> ${(data.role || '-').replaceAll('_', ' ')}<br>
                   <strong>Telefon:</strong> ${data.phone || '-'}<br>
                   <strong>Alamat:</strong> ${data.address || '-'}
                 </div>
+                ${daerahHtml}
               `;
               await showInfoModal('Maklumat Pengguna', message);
             }),
@@ -483,7 +537,12 @@
                 cancelText: 'Batal'
               });
               if (!confirmed) return;
-              await fetch(`/api/admin/users/${user.id}`, { method: 'DELETE' });
+              const response = await fetch(`/api/admin/users/${user.id}`, { method: 'DELETE' });
+              const result = await response.json();
+              if (!response.ok) {
+                await showInfoModal('Ralat', `<p class="mb-0 text-danger">${result.ralat || 'Gagal memadam pengguna'}</p>`);
+                return;
+              }
               await loadUsers();
             })
           ];
@@ -537,18 +596,25 @@
 
     function showCreateModal() {
       return new Promise((resolve) => {
+        let pendingDaerah = [];
+
         const bodyHtml = `
           <form id="create-user-form">
             <div class="mb-2"><label class="form-label">Nama</label><input name="name" class="form-control" required></div>
             <div class="mb-2"><label class="form-label">E-mel</label><input type="email" name="email" class="form-control" required></div>
             <div class="mb-2"><label class="form-label">Kata Laluan</label><input type="password" name="password" class="form-control" placeholder="Biarkan kosong untuk jana automatik"></div>
             <div class="mb-2">
-              <label class="form-label">Role</label>
-              <select name="role" class="form-select">
+              <label class="form-label">Peranan</label>
+              <select name="role" id="create-user-role" class="form-select">
                 <option value="STAFF">STAFF</option>
                 <option value="PENGARAH">PENGARAH</option>
+                <option value="PENYELIA_LOJI">PENYELIA LOJI</option>
                 <option value="ADMIN">ADMIN</option>
               </select>
+            </div>
+            <div class="mb-2 admin-daerah-row is-hidden" id="create-user-daerah-row">
+              <label class="form-label mb-0">Daerah Seliaan</label>
+              <button type="button" class="btn btn-sm btn-outline-primary" id="btn-create-tetapkan-daerah">Tetapkan Daerah</button>
             </div>
             <div class="mb-2"><label class="form-label">Telefon</label><input name="phone" class="form-control"></div>
             <div class="mb-2"><label class="form-label">Alamat</label><input name="address" class="form-control"></div>
@@ -566,6 +632,22 @@
         card.appendChild(footer);
 
         const form = overlay.querySelector('#create-user-form');
+        const roleSelect = overlay.querySelector('#create-user-role');
+        const daerahRow = overlay.querySelector('#create-user-daerah-row');
+        const btnTetapkanDaerah = overlay.querySelector('#btn-create-tetapkan-daerah');
+
+        const updateDaerahRowVisibility = () => {
+          daerahRow.classList.toggle('is-hidden', roleSelect.value !== 'PENYELIA_LOJI');
+        };
+        updateDaerahRowVisibility();
+        roleSelect.addEventListener('change', updateDaerahRowVisibility);
+
+        btnTetapkanDaerah.addEventListener('click', async () => {
+          const dipilih = await showPilihDaerahModal(pendingDaerah);
+          if (dipilih === false) return;
+          pendingDaerah = dipilih;
+          btnTetapkanDaerah.textContent = pendingDaerah.length ? `Tetapkan Daerah (${pendingDaerah.length} dipilih)` : 'Tetapkan Daerah';
+        });
 
         const finish = (value) => {
           close();
@@ -576,6 +658,9 @@
         form.addEventListener('submit', (event) => {
           event.preventDefault();
           const payload = Object.fromEntries(new FormData(form).entries());
+          if (payload.role === 'PENYELIA_LOJI') {
+            payload.daerah = pendingDaerah;
+          }
           finish(payload);
         });
 
@@ -616,12 +701,17 @@
             <div class="mb-2"><label class="form-label">Telefon</label><input name="phone" class="form-control" value="${user.phone || ''}"></div>
             <div class="mb-2"><label class="form-label">Alamat</label><input name="address" class="form-control" value="${user.address || ''}"></div>
             <div class="mb-2">
-              <label class="form-label">Role</label>
-              <select name="role" class="form-select">
+              <label class="form-label">Peranan</label>
+              <select name="role" id="edit-user-role" class="form-select">
                 <option value="STAFF" ${user.role === 'STAFF' ? 'selected' : ''}>STAFF</option>
                 <option value="PENGARAH" ${user.role === 'PENGARAH' ? 'selected' : ''}>PENGARAH</option>
+                <option value="PENYELIA_LOJI" ${user.role === 'PENYELIA_LOJI' ? 'selected' : ''}>PENYELIA LOJI</option>
                 <option value="ADMIN" ${user.role === 'ADMIN' ? 'selected' : ''}>ADMIN</option>
               </select>
+            </div>
+            <div class="mb-2 admin-daerah-row ${user.role === 'PENYELIA_LOJI' ? '' : 'is-hidden'}" id="edit-user-daerah-row">
+              <label class="form-label mb-0">Daerah Seliaan</label>
+              <button type="button" class="btn btn-sm btn-outline-primary" id="btn-tetapkan-daerah">Tetapkan Daerah</button>
             </div>
           </form>
         `;
@@ -637,17 +727,146 @@
         card.appendChild(footer);
 
         const form = overlay.querySelector('#edit-user-form');
+        const roleSelect = overlay.querySelector('#edit-user-role');
+        const daerahRow = overlay.querySelector('#edit-user-daerah-row');
+
+        roleSelect.addEventListener('change', () => {
+          daerahRow.classList.toggle('is-hidden', roleSelect.value !== 'PENYELIA_LOJI');
+        });
 
         const finish = (value) => {
           close();
           resolve(value);
         };
 
+        overlay.querySelector('#btn-tetapkan-daerah')?.addEventListener('click', async () => {
+          await showTetapkanDaerahModal(user.id);
+        });
+
         footer.querySelector('#edit-user-cancel').addEventListener('click', () => finish(false));
         form.addEventListener('submit', (event) => {
           event.preventDefault();
           const payload = Object.fromEntries(new FormData(form).entries());
           finish(payload);
+        });
+
+        overlay.addEventListener('click', (e) => {
+          if (e.target === overlay) finish(false);
+        });
+      });
+    }
+
+    async function showTetapkanDaerahModal(userId) {
+      const [daerahRes, lokasiRes] = await Promise.all([
+        fetch(`/api/admin/penyelia/${userId}/daerah`),
+        fetch('/api/public/locations')
+      ]);
+      const daerahData = daerahRes.ok ? await daerahRes.json() : { daerah: [] };
+      const semuaLokasi = lokasiRes.ok ? await lokasiRes.json() : [];
+      const daerahSediaAda = Array.isArray(daerahData.daerah) ? daerahData.daerah : [];
+      const senaraiDaerah = [...new Set(semuaLokasi.map((l) => l.daerah).filter((d) => d && d.trim()))].sort();
+
+      return new Promise((resolve) => {
+        const checkboxesHtml = renderDaerahCheckboxesHtml(senaraiDaerah, daerahSediaAda);
+
+        const bodyHtml = `
+          <form id="tetapkan-daerah-form">
+            <label class="form-label">Pilih daerah operasi yang diselia:</label>
+            <div class="mb-2">${checkboxesHtml}</div>
+          </form>
+        `;
+
+        const { overlay, card, close } = createModalShell('Tetapkan Daerah Seliaan', bodyHtml);
+
+        const footer = document.createElement('div');
+        footer.className = 'admin-modal-footer';
+        footer.innerHTML = `
+          <button type="button" class="btn btn-outline-secondary" id="tetapkan-daerah-cancel">Batal</button>
+          <button type="submit" form="tetapkan-daerah-form" class="btn btn-primary" id="tetapkan-daerah-submit">Simpan</button>
+        `;
+        card.appendChild(footer);
+
+        const form = overlay.querySelector('#tetapkan-daerah-form');
+
+        const finish = (value) => {
+          close();
+          resolve(value);
+        };
+
+        footer.querySelector('#tetapkan-daerah-cancel').addEventListener('click', () => finish(false));
+        form.addEventListener('submit', async (event) => {
+          event.preventDefault();
+          const daerahFinal = Array.from(form.querySelectorAll('input[type="checkbox"]:checked')).map((cb) => cb.value);
+
+          const response = await fetch(`/api/admin/penyelia/${userId}/daerah`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ daerah: daerahFinal })
+          });
+          const data = await response.json();
+          if (!response.ok) {
+            await showInfoModal('Ralat', `<p class="mb-0 text-danger">${data.ralat || 'Gagal menetapkan daerah'}</p>`);
+            finish(false);
+            return;
+          }
+          finish(true);
+        });
+
+        overlay.addEventListener('click', (e) => {
+          if (e.target === overlay) finish(false);
+        });
+      });
+    }
+
+    function renderDaerahCheckboxesHtml(senaraiDaerah, daerahSediaAda) {
+      if (!senaraiDaerah.length) {
+        return '<p class="text-muted small mb-0">Tiada daerah tersedia daripada senarai lokasi.</p>';
+      }
+      return `<div class="daerah-checkbox-list">${senaraiDaerah.map((d) => `
+        <div class="form-check">
+          <input class="form-check-input" type="checkbox" value="${d}" id="daerah-${d}" ${daerahSediaAda.includes(d) ? 'checked' : ''}>
+          <label class="form-check-label" for="daerah-${d}">${d}</label>
+        </div>
+      `).join('')}</div>`;
+    }
+
+    async function showPilihDaerahModal(daerahSediaAda) {
+      const lokasiRes = await fetch('/api/public/locations');
+      const semuaLokasi = lokasiRes.ok ? await lokasiRes.json() : [];
+      const senaraiDaerah = [...new Set(semuaLokasi.map((l) => l.daerah).filter((d) => d && d.trim()))].sort();
+
+      return new Promise((resolve) => {
+        const checkboxesHtml = renderDaerahCheckboxesHtml(senaraiDaerah, daerahSediaAda);
+
+        const bodyHtml = `
+          <form id="pilih-daerah-form">
+            <label class="form-label">Pilih daerah operasi yang diselia:</label>
+            <div class="mb-2">${checkboxesHtml}</div>
+          </form>
+        `;
+
+        const { overlay, card, close } = createModalShell('Tetapkan Daerah Seliaan', bodyHtml);
+
+        const footer = document.createElement('div');
+        footer.className = 'admin-modal-footer';
+        footer.innerHTML = `
+          <button type="button" class="btn btn-outline-secondary" id="pilih-daerah-cancel">Batal</button>
+          <button type="submit" form="pilih-daerah-form" class="btn btn-primary" id="pilih-daerah-submit">Simpan</button>
+        `;
+        card.appendChild(footer);
+
+        const form = overlay.querySelector('#pilih-daerah-form');
+
+        const finish = (value) => {
+          close();
+          resolve(value);
+        };
+
+        footer.querySelector('#pilih-daerah-cancel').addEventListener('click', () => finish(false));
+        form.addEventListener('submit', (event) => {
+          event.preventDefault();
+          const daerahFinal = Array.from(form.querySelectorAll('input[type="checkbox"]:checked')).map((cb) => cb.value);
+          finish(daerahFinal);
         });
 
         overlay.addEventListener('click', (e) => {
@@ -714,7 +933,7 @@
           row.innerHTML = `
             <td>${renderJenisLokasiBadge(lokasi.type)}</td>
             <td>${lokasi.name || '-'}</td>
-            <td>${lokasi.address || '-'}</td>
+            <td>${lokasi.daerah || '-'}</td>
             <td></td>
           `;
 
@@ -769,7 +988,7 @@
               </select>
             </div>
             <div class="mb-2"><label class="form-label">Nama Lokasi</label><input name="name" class="form-control" required></div>
-            <div class="mb-2"><label class="form-label">Alamat</label><input name="address" class="form-control"></div>
+            <div class="mb-2"><label class="form-label">Daerah</label><input name="daerah" class="form-control"></div>
           </form>
         `;
 
@@ -815,7 +1034,7 @@
               </select>
             </div>
             <div class="mb-2"><label class="form-label">Nama Lokasi</label><input name="name" class="form-control" value="${lokasi.name || ''}" required></div>
-            <div class="mb-2"><label class="form-label">Alamat</label><input name="address" class="form-control" value="${lokasi.address || ''}"></div>
+            <div class="mb-2"><label class="form-label">Daerah</label><input name="daerah" class="form-control" value="${lokasi.daerah || ''}"></div>
           </form>
         `;
 
@@ -866,6 +1085,8 @@
       document.querySelector('#btn-create-user').addEventListener('click', async () => {
         const payload = await showCreateModal();
         if (!payload) return;
+        const daerahTerpilih = Array.isArray(payload.daerah) ? payload.daerah : [];
+        delete payload.daerah;
         const response = await fetch('/api/admin/users', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
@@ -875,6 +1096,13 @@
         if (!response.ok) {
           await showInfoModal('Ralat', `<p class="mb-0 text-danger">${result.ralat || 'Gagal mencipta pengguna'}</p>`);
           return;
+        }
+        if (payload.role === 'PENYELIA_LOJI' && daerahTerpilih.length && result.user?.id) {
+          await fetch(`/api/admin/penyelia/${result.user.id}/daerah`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ daerah: daerahTerpilih })
+          });
         }
         if (result.password) {
           await showInfoModal('Pengguna Berjaya Dicipta', `<p class="mb-0">Kata laluan sementara: <strong>${result.password}</strong></p>`);

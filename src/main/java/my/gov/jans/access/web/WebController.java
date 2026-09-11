@@ -14,6 +14,9 @@ public class WebController {
         if (a.getAuthorities().stream().anyMatch(x -> x.getAuthority().equals("ROLE_PENGARAH"))) {
             return "redirect:/pengarah.html";
         }
+        if (a.getAuthorities().stream().anyMatch(x -> x.getAuthority().equals("ROLE_PENYELIA_LOJI"))) {
+            return "redirect:/penyelia-loji.html";
+        }
         return "redirect:/petugas.html";
     }
 }

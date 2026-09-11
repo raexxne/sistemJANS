@@ -951,7 +951,7 @@ function renderPengarahTable() {
     const staffNoteText = (p.staffNote && p.staffNote.trim()) ? p.staffNote.trim() : 'Tidak ada catatan';
 
     return `
-    <tr class="${selectedPermohonanIds.has(p.id) ? 'table-active' : ''}">
+    <tr class="pengarah-row ${selectedPermohonanIds.has(p.id) ? 'table-active' : ''}" data-id="${p.id}">
       <td>
         <input class="form-check-input row-checkbox" type="checkbox" data-id="${p.id}" ${selectedPermohonanIds.has(p.id) ? 'checked' : ''}>
       </td>
@@ -965,9 +965,14 @@ function renderPengarahTable() {
       <td class="text-start">${esc(p.purpose || '-')}</td>
       <td class="text-start">${esc(staffNoteText)}</td>
       <td>
-        <a href="/api/public/permohonan/${encodeURIComponent(p.nomborPermohonan)}/pdf" target="_blank" rel="noopener" class="btn btn-sm btn-outline-primary" title="Cetak PDF">
-          <i class="fas fa-print"></i>
-        </a>
+        <div class="d-flex gap-1 justify-content-center">
+          <button type="button" class="btn btn-sm btn-success" data-action="setuju" data-id="${p.id}" title="Setuju">
+            <i class="fas fa-check"></i>
+          </button>
+          <a href="/api/public/permohonan/${encodeURIComponent(p.nomborPermohonan)}/pdf" target="_blank" rel="noopener" class="btn btn-sm btn-outline-primary" title="Cetak PDF">
+            <i class="fas fa-print"></i>
+          </a>
+        </div>
       </td>
     </tr>
   `;
@@ -977,7 +982,214 @@ function renderPengarahTable() {
   bindBulkSelectionEvents();
   bindBulkActionButtons();
   bindPengarahPaginationEvents();
+  bindPengarahRowClickEvents();
   updateBulkSelectionUI();
+}
+
+function bindPengarahRowClickEvents() {
+  const tableBody = document.querySelector('#senarai-pengarah');
+  if (!tableBody || tableBody.dataset.rowClickBound) return;
+  tableBody.dataset.rowClickBound = 'true';
+
+  tableBody.addEventListener('click', (event) => {
+    const setujuBtn = event.target.closest('button[data-action="setuju"]');
+    if (setujuBtn) {
+      const id = Number(setujuBtn.dataset.id);
+      if (!Number.isNaN(id)) putus(id, true);
+      return;
+    }
+
+    if (event.target.closest('input, a, button')) return;
+
+    const row = event.target.closest('tr[data-id]');
+    if (!row) return;
+    const id = Number(row.dataset.id);
+    const item = pengarahAllPermohonan.find((permohonan) => permohonan.id === id);
+    if (item) showPengarahDetailModal(item);
+  });
+}
+
+function pengarahLocationTypeLabel(value) {
+  const map = { LOJI: 'Loji Rawatan Air', INTAKE: 'Intake' };
+  return map[String(value || '').toUpperCase()] || value || '-';
+}
+
+function pengarahFormatDate(value) {
+  if (!value) return '-';
+  const d = new Date(value);
+  if (isNaN(d.getTime())) return esc(value);
+  return d.toLocaleDateString('ms-MY', { day: '2-digit', month: 'short', year: 'numeric' });
+}
+
+function pengarahFormatTime(value) {
+  if (!value) return '-';
+  const str = String(value).trim();
+  let hours, minutes;
+  if (str.includes('T') || str.includes(' ')) {
+    const d = new Date(str);
+    if (!isNaN(d.getTime())) {
+      hours = d.getHours();
+      minutes = d.getMinutes();
+    }
+  }
+  if (hours === undefined) {
+    const parts = str.split(':');
+    if (parts.length < 2) return esc(str);
+    hours = parseInt(parts[0], 10);
+    minutes = parseInt(parts[1], 10);
+  }
+  if (isNaN(hours) || isNaN(minutes)) return esc(str);
+  const period = hours >= 12 ? 'PM' : 'AM';
+  let h12 = hours % 12;
+  if (h12 === 0) h12 = 12;
+  return `${String(h12).padStart(2, '0')}:${String(minutes).padStart(2, '0')} ${period}`;
+}
+
+function pengarahField(label, value) {
+  return `
+    <div class="detail-field">
+      <label>${esc(label)}</label>
+      <div class="value">${value != null && value !== '' ? value : '-'}</div>
+    </div>
+  `;
+}
+
+async function showPengarahDetailModal(p) {
+  const pelawatList = Array.isArray(p.pelawat) ? p.pelawat : [];
+  const staffNoteText = (p.staffNote && p.staffNote.trim()) ? p.staffNote.trim() : 'Tidak ada catatan';
+  const directorNoteText = (p.directorNote && p.directorNote.trim()) ? p.directorNote.trim() : '';
+
+  let auditTrailEntries = [];
+  if (p.nomborPermohonan) {
+    try {
+      const auditRes = await fetch(`/api/public/permohonan/${encodeURIComponent(p.nomborPermohonan)}/audit-trail`);
+      if (auditRes.ok) {
+        auditTrailEntries = await auditRes.json();
+      }
+    } catch (e) {
+      console.warn('Gagal memuat audit trail permohonan.', e);
+    }
+  }
+
+  const overlay = document.createElement('div');
+  overlay.className = 'detail-modal-overlay';
+  overlay.innerHTML = `
+    <div class="detail-modal">
+      <div class="detail-modal-header d-flex justify-content-between align-items-center gap-3">
+        <div>
+          <h5 class="mb-0 fw-bold">Butiran Permohonan</h5>
+          <small class="opacity-75">No. Rujukan: ${esc(p.nomborPermohonan)}</small>
+        </div>
+        <button type="button" class="btn-close btn-close-white flex-shrink-0" id="btn-tutup-pengarah-detail" aria-label="Tutup"></button>
+      </div>
+      <div class="detail-modal-body">
+        <div class="application-summary-panel">
+          <div class="row g-2">
+            <div class="col-md-4">${pengarahField('Kementerian / Jabatan / Agensi / Universiti / Syarikat', esc(p.organisation || '-'))}</div>
+            <div class="col-md-4">${pengarahField('Tarikh Permohonan', pengarahFormatDate(p.applicationDate || p.createdAt))}</div>
+            <div class="col-md-4">${pengarahField('Tarikh Lawatan', pengarahFormatDate(p.visitDate))}</div>
+            <div class="col-md-4">${pengarahField('Masa Lawatan', pengarahFormatTime(p.visitTime))}</div>
+            <div class="col-md-4">${pengarahField('Jenis Lokasi', esc(pengarahLocationTypeLabel(p.locationType)))}</div>
+            <div class="col-md-4">${pengarahField('Nama / Alamat Lokasi', esc(p.locationName || '-'))}</div>
+            <div class="col-md-4">${pengarahField('No. Telefon (Pejabat)', esc(p.phoneOffice || '-'))}</div>
+            <div class="col-md-4">${pengarahField('E-mel Untuk Dihubungi (Wakil)', esc(p.emailWakil || p.email || '-'))}</div>
+            <div class="col-md-4">${pengarahField('Dikemukakan Oleh', esc(p.reviewedBy?.name || 'Tidak direkodkan'))}</div>
+            <div class="col-md-4">${pengarahField('Tujuan Lawatan', esc(p.purpose || '-'))}</div>
+            <div class="col-md-8">${pengarahField('Catatan Petugas', esc(staffNoteText))}</div>
+          </div>
+        </div>
+        <div class="row g-3">
+          <div class="col-12">
+            <div class="detail-field">
+              <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-2">
+                <label class="mb-0">Maklumat Pelawat</label>
+                <button type="button" class="btn btn-sm btn-outline-primary" onclick="sessionStorage.setItem('pengarahReopenId', '${p.id}'); sessionStorage.setItem('pengarahScrollY', String(window.scrollY)); location.href='/pelawat.html?no=${encodeURIComponent(p.nomborPermohonan)}&from=pengarah'">
+                  Lihat Butiran
+                </button>
+              </div>
+              <ul class="visitor-simple-list list-unstyled mb-0">
+                ${pelawatList.length ? pelawatList.map((v, index) => `
+                  <li class="visitor-simple-item">
+                    <span class="visitor-simple-index">${index + 1}.</span>
+                    <span class="visitor-simple-name">${esc(v.namaPenuh || '-')}</span>
+                    <span class="visitor-simple-sep">•</span>
+                    <span class="visitor-simple-value">${esc(v.noKadPengenalan || '-')}</span>
+                    <span class="visitor-simple-sep">•</span>
+                    <span class="visitor-simple-value">${esc(v.noPendaftaranKenderaan || '-')}</span>
+                  </li>`).join('') : '<li class="p-3 text-muted">Tiada maklumat pelawat direkodkan.</li>'}
+              </ul>
+            </div>
+          </div>
+          ${directorNoteText ? `
+            <div class="col-12">
+              <div class="detail-field">
+                <label>Catatan Pengarah</label>
+                <div class="value" style="background:#fff3cd;padding:10px 12px;border-radius:8px;border:1px solid #ffe69c;white-space:pre-wrap;">${esc(directorNoteText)}</div>
+              </div>
+            </div>
+          ` : ''}
+          ${auditTrailEntries.length ? `
+            <div class="col-12">
+              <div class="detail-field">
+                <label>Jejak Audit</label>
+                <div class="value" style="padding:0;">
+                  <div class="d-flex flex-column gap-3">
+                    ${auditTrailEntries.map((entry) => {
+                      const eventType = String(entry.eventType || 'Perubahan status').toLowerCase();
+                      let badgeClass = 'bg-secondary';
+                      if (eventType.includes('lulus') || eventType.includes('approve') || eventType.includes('pas')) badgeClass = 'bg-success';
+                      else if (eventType.includes('tolak') || eventType.includes('reject')) badgeClass = 'bg-danger';
+                      else if (eventType.includes('semak') || eventType.includes('review')) badgeClass = 'bg-warning text-dark';
+                      else if (eventType.includes('hantar') || eventType.includes('submit')) badgeClass = 'bg-primary';
+                      return `
+                        <div class="position-relative ps-3">
+                          <span class="position-absolute top-2 start-0 translate-middle rounded-circle border border-2 border-primary" style="width: 12px; height: 12px; background: #fff;"></span>
+                          <div class="border-start border-2 border-primary ps-3 pb-2">
+                            <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-2">
+                              <span class="badge ${badgeClass}">${esc(entry.eventType || 'Perubahan status')}</span>
+                              <span class="small text-muted">${pengarahFormatDate(entry.createdAt)}</span>
+                            </div>
+                            <div class="fw-semibold text-dark">${esc(String(entry.fromStatus || '-').replaceAll('_', ' '))} → ${esc(String(entry.toStatus || '-').replaceAll('_', ' '))}</div>
+                            ${entry.actor ? `<div class="small text-muted mt-1">Oleh: ${esc(entry.actor)}</div>` : ''}
+                            ${entry.note ? `<div class="small text-muted mt-2" style="white-space: pre-wrap;">${esc(entry.note)}</div>` : ''}
+                          </div>
+                        </div>
+                      `;
+                    }).join('')}
+                  </div>
+                </div>
+              </div>
+            </div>
+          ` : ''}
+        </div>
+      </div>
+      <div class="detail-modal-footer">
+        <button type="button" class="btn btn-danger" id="btn-tolak-pengarah-detail">Tidak Setuju</button>
+        <button type="button" class="btn btn-success" id="btn-setuju-pengarah-detail">Setuju</button>
+      </div>
+    </div>
+  `;
+
+  document.body.appendChild(overlay);
+  document.body.classList.add('detail-modal-open');
+
+  const closeDetail = () => {
+    overlay.remove();
+    document.body.classList.remove('detail-modal-open');
+  };
+
+  overlay.querySelector('#btn-tutup-pengarah-detail').addEventListener('click', closeDetail);
+  overlay.addEventListener('click', (event) => {
+    if (event.target === overlay) closeDetail();
+  });
+  overlay.querySelector('#btn-setuju-pengarah-detail').addEventListener('click', () => {
+    closeDetail();
+    putus(p.id, true);
+  });
+  overlay.querySelector('#btn-tolak-pengarah-detail').addEventListener('click', () => {
+    closeDetail();
+    putus(p.id, false);
+  });
 }
 
 async function director(resetSelection = false) {
@@ -993,6 +1205,19 @@ async function director(resetSelection = false) {
       selectedPermohonanIds = new Set([...selectedPermohonanIds].filter(id => existingIds.has(id)));
     }
     renderPengarahTable();
+
+    const reopenId = sessionStorage.getItem('pengarahReopenId');
+    if (reopenId) {
+      sessionStorage.removeItem('pengarahReopenId');
+      const item = pengarahAllPermohonan.find((permohonan) => String(permohonan.id) === reopenId);
+      if (item) showPengarahDetailModal(item);
+    }
+
+    const scrollY = sessionStorage.getItem('pengarahScrollY');
+    if (scrollY !== null) {
+      sessionStorage.removeItem('pengarahScrollY');
+      window.scrollTo(0, parseInt(scrollY, 10) || 0);
+    }
   } catch (error) {
     console.error('Gagal memuat permohonan pengarah:', error);
     const tableBody = document.querySelector('#senarai-pengarah');

@@ -46,6 +46,9 @@ public class Permohonan {
     @Column(columnDefinition = "TEXT")
     private String directorNote;
 
+    @Column(columnDefinition = "TEXT")
+    private String penyeliaNote;
+
     @ManyToOne
     @JoinColumn(name = "reviewed_by")
     private Pengguna reviewedBy;
@@ -54,7 +57,13 @@ public class Permohonan {
     @JoinColumn(name = "decided_by")
     private Pengguna decidedBy;
 
+    @ManyToOne
+    @JoinColumn(name = "completed_by")
+    private Pengguna completedBy;
+
     private LocalDateTime decisionAt;
+
+    private LocalDateTime completedAt;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
     private String passToken;
@@ -209,6 +218,30 @@ public class Permohonan {
 
     public void setDirectorNote(String v) {
         directorNote = v;
+    }
+
+    public String getPenyeliaNote() {
+        return penyeliaNote;
+    }
+
+    public void setPenyeliaNote(String v) {
+        penyeliaNote = v;
+    }
+
+    public Pengguna getCompletedBy() {
+        return completedBy;
+    }
+
+    public void setCompletedBy(Pengguna v) {
+        completedBy = v;
+    }
+
+    public LocalDateTime getCompletedAt() {
+        return completedAt;
+    }
+
+    public void setCompletedAt(LocalDateTime v) {
+        completedAt = v;
     }
 
     public Pengguna getReviewedBy() {

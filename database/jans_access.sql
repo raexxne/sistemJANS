@@ -39,12 +39,15 @@ CREATE TABLE `applications` (
   `location_type` enum('LOJI','INTAKE') NOT NULL,
   `location_name` varchar(255) DEFAULT NULL,
   `purpose` text NOT NULL,
-  `status` enum('DIHANTAR','SEMAKAN_STAFF','MENUNGGU_PENGARAH','DILULUSKAN','DITOLAK','PAS_DIKELUARKAN') NOT NULL,
+  `status` enum('DIHANTAR','SEMAKAN_STAFF','MENUNGGU_PENGARAH','DILULUSKAN','DITOLAK','PAS_DIKELUARKAN','SELESAI') NOT NULL,
   `staff_note` text DEFAULT NULL,
   `director_note` text DEFAULT NULL,
+  `penyelia_note` text DEFAULT NULL,
   `reviewed_by` bigint(20) DEFAULT NULL,
   `decided_by` bigint(20) DEFAULT NULL,
+  `completed_by` bigint(20) DEFAULT NULL,
   `decision_at` datetime DEFAULT NULL,
+  `completed_at` datetime DEFAULT NULL,
   `pass_token` varchar(255) DEFAULT NULL,
   `created_at` datetime NOT NULL,
   `updated_at` datetime NOT NULL
@@ -232,7 +235,7 @@ CREATE TABLE `lokasi` (
   `id` bigint(20) NOT NULL,
   `type` varchar(20) NOT NULL,
   `name` varchar(255) NOT NULL,
-  `address` text DEFAULT NULL,
+  `daerah` text DEFAULT NULL,
   `created_at` timestamp NOT NULL DEFAULT current_timestamp()
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
@@ -240,7 +243,7 @@ CREATE TABLE `lokasi` (
 -- Dumping data for table `lokasi`
 --
 
-INSERT INTO `lokasi` (`id`, `type`, `name`, `address`, `created_at`) VALUES
+INSERT INTO `lokasi` (`id`, `type`, `name`, `daerah`, `created_at`) VALUES
 (1, 'LOJI', 'LRA Telibong I', '', '2026-08-21 01:40:17'),
 (2, 'INTAKE', 'Intake Bandau', '', '2026-08-21 01:44:16'),
 (3, 'INTAKE', 'Intake Kimolohing', '', '2026-08-21 01:44:44'),
@@ -259,7 +262,7 @@ CREATE TABLE `users` (
   `name` varchar(255) DEFAULT NULL,
   `email` varchar(255) DEFAULT NULL,
   `password_hash` varchar(255) DEFAULT NULL,
-  `role` enum('STAFF','PENGARAH','ADMIN') NOT NULL,
+  `role` enum('STAFF','PENGARAH','ADMIN','PENYELIA_LOJI') NOT NULL,
   `enabled` tinyint(1) NOT NULL DEFAULT 1,
   `phone` varchar(255) DEFAULT NULL,
   `address` varchar(255) DEFAULT NULL,
@@ -347,17 +350,50 @@ ALTER TABLE `users`
 --
 
 --
+-- Table structure for table `penyelia_loji`
+--
+
+CREATE TABLE `penyelia_loji` (
+  `id` bigint(20) NOT NULL,
+  `user_id` bigint(20) NOT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `penyelia_loji_daerah`
+--
+
+CREATE TABLE `penyelia_loji_daerah` (
+  `penyelia_loji_id` bigint(20) NOT NULL,
+  `daerah` varchar(255) NOT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+--
 -- Constraints for table `applications`
 --
 ALTER TABLE `applications`
   ADD CONSTRAINT `fk_decided_by` FOREIGN KEY (`decided_by`) REFERENCES `users` (`id`),
-  ADD CONSTRAINT `fk_reviewed_by` FOREIGN KEY (`reviewed_by`) REFERENCES `users` (`id`);
+  ADD CONSTRAINT `fk_reviewed_by` FOREIGN KEY (`reviewed_by`) REFERENCES `users` (`id`),
+  ADD CONSTRAINT `fk_applications_completed_by` FOREIGN KEY (`completed_by`) REFERENCES `users` (`id`);
 
 --
 -- Constraints for table `application_visitors`
 --
 ALTER TABLE `application_visitors`
   ADD CONSTRAINT `fk_visitor_application` FOREIGN KEY (`application_id`) REFERENCES `applications` (`id`) ON DELETE CASCADE;
+
+--
+-- Constraints for table `penyelia_loji`
+--
+ALTER TABLE `penyelia_loji`
+  ADD CONSTRAINT `fk_penyelia_loji_user` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`);
+
+--
+-- Constraints for table `penyelia_loji_daerah`
+--
+ALTER TABLE `penyelia_loji_daerah`
+  ADD CONSTRAINT `fk_penyelia_loji_daerah` FOREIGN KEY (`penyelia_loji_id`) REFERENCES `penyelia_loji` (`id`);
 COMMIT;
 
 /*!40101 SET CHARACTER_SET_CLIENT=@OLD_CHARACTER_SET_CLIENT */;
