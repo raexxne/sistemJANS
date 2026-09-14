@@ -799,6 +799,23 @@
     let currentPage = 1;
     let pageSize = 20;
 
+    function showLoadingPopover() {
+      document.querySelector('#processing-popover')?.remove();
+
+      const popover = document.createElement('div');
+      popover.id = 'processing-popover';
+      popover.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.65);backdrop-filter:blur(4px);z-index:3000;display:flex;align-items:center;justify-content:center;padding:16px;';
+      popover.innerHTML = `
+        <div class="bg-white text-center p-4 shadow" style="width:100%;max-width:360px;border-radius:12px;">
+          <div class="spinner-border text-primary mb-3" role="status" aria-label="Memuatkan"></div>
+          <p class="mb-0 fw-semibold text-dark">Memuatkan, sila tunggu...</p>
+        </div>
+      `;
+      document.body.appendChild(popover);
+
+      return () => popover.remove();
+    }
+
     async function loadDashboardProfile() {
       try {
         const response = await fetch('/api/profile');
@@ -1523,43 +1540,49 @@
       const button = document.querySelector('#bulk-send-director-btn');
       if (button) {
         button.disabled = true;
-        button.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
       }
+      const closeLoading = showLoadingPopover();
+
+      await new Promise((resolve) => requestAnimationFrame(resolve));
 
       let successCount = 0;
       let failCount = 0;
 
-      for (const id of selectedIds) {
-        try {
-          const res = await fetch(`/api/staff/permohonan/${encodeURIComponent(id)}/hantar-pengarah`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ catatan: finalCatatan })
-          });
-          if (res.ok) successCount += 1; else failCount += 1;
-        } catch (error) {
-          console.error(error);
-          failCount += 1;
+      try {
+        for (const id of selectedIds) {
+          try {
+            const res = await fetch(`/api/staff/permohonan/${encodeURIComponent(id)}/hantar-pengarah`, {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ catatan: finalCatatan })
+            });
+            if (res.ok) successCount += 1; else failCount += 1;
+          } catch (error) {
+            console.error(error);
+            failCount += 1;
+          }
         }
-      }
 
-      selectedApplicationIds.clear();
-      updateBulkSelectionUI();
-      await loadDashboardStats();
-      await loadPermohonanTable();
+        selectedApplicationIds.clear();
+        updateBulkSelectionUI();
+        await loadDashboardStats();
+        await loadPermohonanTable();
 
-      await showNotifyModal({
-        title: successCount > 0 ? 'Berjaya Dihantar' : 'Gagal Menghantar',
-        message: successCount > 0
-          ? `${successCount} permohonan berjaya dihantar kepada pengarah.${failCount ? ` ${failCount} permohonan gagal.` : ''}`
-          : 'Tiada permohonan berjaya dihantar kepada pengarah.',
-        icon: successCount > 0 ? 'fa-check-circle' : 'fa-circle-exclamation',
-        type: successCount > 0 ? 'success' : 'error'
-      });
+        closeLoading();
+        await showNotifyModal({
+          title: successCount > 0 ? 'Berjaya Dihantar' : 'Gagal Menghantar',
+          message: successCount > 0
+            ? `${successCount} permohonan berjaya dihantar kepada pengarah.${failCount ? ` ${failCount} permohonan gagal.` : ''}`
+            : 'Tiada permohonan berjaya dihantar kepada pengarah.',
+          icon: successCount > 0 ? 'fa-check-circle' : 'fa-circle-exclamation',
+          type: successCount > 0 ? 'success' : 'error'
+        });
+      } finally {
+        document.querySelector('#processing-popover')?.remove();
 
-      if (button) {
-        button.disabled = false;
-        button.innerHTML = '<i class="fas fa-paper-plane"></i>';
+        if (button) {
+          button.disabled = false;
+        }
       }
     }
 

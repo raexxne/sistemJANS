@@ -145,6 +145,34 @@ function showConfirmModal({
   });
 }
 
+function showLoadingPopover(message = 'Memuatkan, sila tunggu...') {
+  const old = document.querySelector('#processing-popover');
+  if (old) old.remove();
+
+  const popover = document.createElement('div');
+  popover.id = 'processing-popover';
+  popover.style.cssText = `
+    display: flex;
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.65);
+    backdrop-filter: blur(4px);
+    z-index: 10001;
+    justify-content: center;
+    align-items: center;
+    padding: 16px;
+  `;
+  popover.innerHTML = `
+    <div class="bg-white text-center p-4 shadow" style="width: 100%; max-width: 360px; border-radius: 12px;">
+      <div class="spinner-border text-primary mb-3" role="status" aria-label="Memproses"></div>
+      <p class="mb-0 fw-semibold text-dark">${esc(message)}</p>
+    </div>
+  `;
+  document.body.appendChild(popover);
+
+  return () => popover.remove();
+}
+
 /**
  * Show error popup modal
  */
@@ -559,6 +587,8 @@ async function semak() {
     let statusPaparan;
     if (p.status === 'DITOLAK') {
       statusPaparan = { label: 'Tidak Diluluskan', warna: 'danger' };
+    } else if (p.status === 'SELESAI') {
+      statusPaparan = { label: 'Selesai', warna: 'dark' };
     } else if (p.status === 'DILULUSKAN' || p.status === 'PAS_DIKELUARKAN') {
       statusPaparan = { label: 'Pas Dikeluarkan', warna: 'success' };
     } else {
@@ -1272,11 +1302,16 @@ async function putus(id, lulus) {
     const catatan = lulus ? '' : await showSebabTolakModal();
     if (!lulus && catatan === null) return;
 
-    await api(`/api/pengarah/permohonan/${id}/keputusan`, {
-      method: 'POST',
-      body: JSON.stringify({ lulus, catatan })
-    });
-    await director(true);
+    const closeLoading = showLoadingPopover();
+    try {
+      await api(`/api/pengarah/permohonan/${id}/keputusan`, {
+        method: 'POST',
+        body: JSON.stringify({ lulus, catatan })
+      });
+      await director(true);
+    } finally {
+      closeLoading();
+    }
 
     // Popover keputusan selepas berjaya proses
     showConfirmModal({
