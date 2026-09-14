@@ -60,7 +60,7 @@
     .dashboard-kpi-row .col:nth-child(3) { --kpi-color: #dc2626; }
     .dashboard-kpi-row .col:nth-child(4) { --kpi-color: #0d6efd; }
     .dashboard-kpi-row .col:nth-child(5) { --kpi-color: #ffc107; }
-    .dashboard-kpi-row .col:nth-child(6) { --kpi-color: #0d9488; }
+    .dashboard-kpi-row .col:nth-child(6) { --kpi-color: #495057; }
     .cursor-pointer { cursor: pointer; }
     .dashboard-table thead th {
       font-size: 0.95rem;
@@ -768,13 +768,12 @@
                     <th>E-mel Wakil</th>
                     <th class="text-center">Tarikh Permohonan</th>
                     <th class="text-center">Status</th>
-                    <th>Catatan Penyelia Loji</th>
                     <th class="text-center">Butiran</th>
                   </tr>
                 </thead>
                 <tbody id="permohonan-list">
                   <tr>
-                    <td colspan="7" class="text-center text-muted">Memuatkan...</td>
+                    <td colspan="6" class="text-center text-muted">Memuatkan...</td>
                   </tr>
                 </tbody>
               </table>
@@ -830,7 +829,7 @@
 
       const labels = ['Menunggu Semakan', 'Menunggu Pengarah', 'Diluluskan', 'Tidak Diluluskan', 'Selesai'];
       const values = [pendingReview, waitingDirector, approved, rejected, completed];
-      const colors = ['#0d6efd', '#ffc107', '#198754', '#dc3545', '#0d9488'];
+      const colors = ['#0d6efd', '#ffc107', '#198754', '#dc3545', '#495057'];
       const hasData = values.some(v => v > 0);
 
       pieChartInstance = new Chart(ctx, {
@@ -892,7 +891,7 @@
         applications.filter((item) => item.status === 'MENUNGGU_PENGARAH').length,
         applications.filter((item) => item.status === 'SELESAI').length
       ];
-      const colors = ['#16a34a', '#dc2626', '#0d6efd', '#ffc107', '#0d9488'];
+      const colors = ['#16a34a', '#dc2626', '#0d6efd', '#ffc107', '#495057'];
 
       categoryChartInstance = new Chart(ctx, {
         type: 'line',
@@ -1323,6 +1322,7 @@
       const locationName = data.locationName || data.lokasi || data.namaLokasi || '-';
       const purpose = data.purpose || data.tujuan || data.keterangan || '-';
       const directorNote = data.directorNote || data.catatanPengarah || data.catatan || '-';
+      const penyeliaNote = data.penyeliaNote || data.catatanPenyelia || '-';
       const status = (data.status || '').toUpperCase();
       const noRujukan = data.nomborPermohonan || data.noRujukan || data.rujukan || data.referenceNo || id || '-';
       const auditTrailReference = data.nomborPermohonan || data.noRujukan || data.rujukan || data.referenceNo || noRujukan || '';
@@ -1396,6 +1396,14 @@
                   <div class="detail-field">
                     <label>Catatan Pengarah</label>
                     <div class="value" style="background:#fff3cd;padding:10px 12px;border-radius:8px;border:1px solid #ffe69c;white-space:pre-wrap;">${escapeHtml(directorNote)}</div>
+                  </div>
+                </div>
+              ` : ''}
+              ${status === 'SELESAI' && penyeliaNote && String(penyeliaNote).trim() && String(penyeliaNote).trim() !== '-' ? `
+                <div class="col-12">
+                  <div class="detail-field">
+                    <label>Catatan Penyelia Loji</label>
+                    <div class="value" style="background:#e7f1ff;padding:10px 12px;border-radius:8px;border:1px solid #b6d4fe;white-space:pre-wrap;">${escapeHtml(penyeliaNote)}</div>
                   </div>
                 </div>
               ` : ''}
@@ -1660,7 +1668,7 @@
     async function loadPermohonanTable() {
       const tbody = document.querySelector('#permohonan-list');
       const summary = document.querySelector('#search-summary');
-      tbody.innerHTML = '<tr><td colspan="7" class="text-center text-muted">Memuatkan...</td></tr>';
+      tbody.innerHTML = '<tr><td colspan="6" class="text-center text-muted">Memuatkan...</td></tr>';
 
       const filters = getFilterValues();
 
@@ -1692,7 +1700,7 @@
         const pageItems = filtered.slice(startIndex, startIndex + pageSize);
 
         if (!filtered.length) {
-          tbody.innerHTML = '<tr><td colspan="7" class="text-center text-muted">Tiada permohonan dipadankan dengan kriteria carian.</td></tr>';
+          tbody.innerHTML = '<tr><td colspan="6" class="text-center text-muted">Tiada permohonan dipadankan dengan kriteria carian.</td></tr>';
           if (summary) summary.textContent = '';
           renderPaginationControls(0);
           return;
@@ -1721,7 +1729,6 @@
             <td data-label="E-mel Wakil">${emailWakil}</td>
             <td data-label="Tarikh Permohonan" class="text-center">${tarikh}</td>
             <td data-label="Status" class="text-center">${renderStatusBadge(status)}</td>
-            <td data-label="Catatan Penyelia Loji">${escapeHtml(item.penyeliaNote || '-')}</td>
             <td data-label="Butiran" class="text-center"></td>
           `;
 
@@ -1758,7 +1765,7 @@
         if (summary) summary.textContent = '';
       } catch (error) {
         console.error('Error loading permohonan table:', error);
-        tbody.innerHTML = `<tr><td colspan="7" class="text-center text-danger">Gagal memuat senarai permohonan.</td></tr>`;
+        tbody.innerHTML = `<tr><td colspan="6" class="text-center text-danger">Gagal memuat senarai permohonan.</td></tr>`;
         if (summary) {
           summary.textContent = 'Gagal memuatkan senarai. Sila cuba sebentar lagi.';
         }

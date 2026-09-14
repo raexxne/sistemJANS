@@ -370,16 +370,35 @@ function showSebabTolakModal() {
       <div style="width:100%;max-width:480px;background:#fff;border-radius:10px;overflow:hidden;box-shadow:0 20px 60px rgba(0,0,0,.3);">
         <div style="padding:18px 24px;background:#dc3545;color:#fff;font-size:18px;font-weight:600;">Sebab Tidak Setuju</div>
         <div style="padding:24px;">
-          <label for="sebab-tolak" class="form-label fw-semibold">Pilih sebab penolakan</label>
-          <select id="sebab-tolak" class="form-select">
-            <option value="">-- Pilih sebab --</option>
-            <option value="Maklumat permohonan tidak lengkap">Maklumat permohonan tidak lengkap</option>
-            <option value="Tarikh lawatan tidak sesuai">Tarikh lawatan tidak sesuai</option>
-            <option value="Lokasi lawatan tidak dibenarkan">Lokasi lawatan tidak dibenarkan</option>
-            <option value="Tujuan lawatan tidak memenuhi syarat">Tujuan lawatan tidak memenuhi syarat</option>
-            <option value="Dokumen sokongan tidak mencukupi">Dokumen sokongan tidak mencukupi</option>
-            <option value="Lain-lain">Lain-lain</option>
-          </select>
+          <fieldset>
+            <legend class="fw-semibold" style="font-size:0.9rem;line-height:1.3;margin-bottom:10px;">Pilih sebab penolakan</legend>
+            <div style="display:flex;flex-direction:column;gap:10px;">
+              <div style="display:grid;grid-template-columns:18px minmax(0,1fr);align-items:center;column-gap:10px;min-height:32px;font-size:0.92rem;line-height:1.35;">
+                <input type="radio" name="sebab-tolak" id="sebab-tolak-1" value="Maklumat permohonan tidak lengkap" style="width:16px;height:16px;margin:0;accent-color:#0d5ba5;">
+                <label for="sebab-tolak-1" style="margin:0;cursor:pointer;">Maklumat permohonan tidak lengkap</label>
+              </div>
+              <div style="display:grid;grid-template-columns:18px minmax(0,1fr);align-items:center;column-gap:10px;min-height:32px;font-size:0.92rem;line-height:1.35;">
+                <input type="radio" name="sebab-tolak" id="sebab-tolak-2" value="Tarikh lawatan tidak sesuai" style="width:16px;height:16px;margin:0;accent-color:#0d5ba5;">
+                <label for="sebab-tolak-2" style="margin:0;cursor:pointer;">Tarikh lawatan tidak sesuai</label>
+              </div>
+              <div style="display:grid;grid-template-columns:18px minmax(0,1fr);align-items:center;column-gap:10px;min-height:32px;font-size:0.92rem;line-height:1.35;">
+                <input type="radio" name="sebab-tolak" id="sebab-tolak-3" value="Lokasi lawatan tidak dibenarkan" style="width:16px;height:16px;margin:0;accent-color:#0d5ba5;">
+                <label for="sebab-tolak-3" style="margin:0;cursor:pointer;">Lokasi lawatan tidak dibenarkan</label>
+              </div>
+              <div style="display:grid;grid-template-columns:18px minmax(0,1fr);align-items:center;column-gap:10px;min-height:32px;font-size:0.92rem;line-height:1.35;">
+                <input type="radio" name="sebab-tolak" id="sebab-tolak-4" value="Tujuan lawatan tidak memenuhi syarat" style="width:16px;height:16px;margin:0;accent-color:#0d5ba5;">
+                <label for="sebab-tolak-4" style="margin:0;cursor:pointer;">Tujuan lawatan tidak memenuhi syarat</label>
+              </div>
+              <div style="display:grid;grid-template-columns:18px minmax(0,1fr);align-items:center;column-gap:10px;min-height:32px;font-size:0.92rem;line-height:1.35;">
+                <input type="radio" name="sebab-tolak" id="sebab-tolak-5" value="Dokumen sokongan tidak mencukupi" style="width:16px;height:16px;margin:0;accent-color:#0d5ba5;">
+                <label for="sebab-tolak-5" style="margin:0;cursor:pointer;">Dokumen sokongan tidak mencukupi</label>
+              </div>
+              <div style="display:grid;grid-template-columns:18px minmax(0,1fr);align-items:center;column-gap:10px;min-height:32px;font-size:0.92rem;line-height:1.35;">
+                <input type="radio" name="sebab-tolak" id="sebab-tolak-lain" value="Lain-lain" style="width:16px;height:16px;margin:0;accent-color:#0d5ba5;">
+                <label for="sebab-tolak-lain" style="margin:0;cursor:pointer;">Lain-lain</label>
+              </div>
+            </div>
+          </fieldset>
           <textarea id="sebab-lain" class="form-control mt-3 d-none" rows="3" placeholder="Nyatakan sebab penolakan"></textarea>
           <div id="sebab-tolak-ralat" class="text-danger small mt-2 d-none">Sila pilih sebab penolakan.</div>
           <div class="d-flex justify-content-end gap-2 mt-4">
@@ -390,7 +409,7 @@ function showSebabTolakModal() {
       </div>`;
     document.body.appendChild(modal);
 
-    const sebab = modal.querySelector('#sebab-tolak');
+    const sebabRadios = Array.from(modal.querySelectorAll('input[name="sebab-tolak"]'));
     const sebabLain = modal.querySelector('#sebab-lain');
     const ralat = modal.querySelector('#sebab-tolak-ralat');
     const close = (value) => {
@@ -399,11 +418,18 @@ function showSebabTolakModal() {
       resolve(value);
     };
 
-    sebab.onchange = () => sebabLain.classList.toggle('d-none', sebab.value !== 'Lain-lain');
+    sebabRadios.forEach((radio) => {
+      radio.onchange = () => {
+        sebabLain.classList.toggle('d-none', radio.value !== 'Lain-lain');
+        ralat.classList.add('d-none');
+        if (radio.value === 'Lain-lain') sebabLain.focus();
+      };
+    });
     modal.querySelector('#sebab-tolak-batal').onclick = () => close(null);
     modal.querySelector('#sebab-tolak-simpan').onclick = () => {
-      const nilai = sebab.value === 'Lain-lain' ? sebabLain.value.trim() : sebab.value;
-      if (!nilai) {
+      const dipilih = sebabRadios.find((radio) => radio.checked);
+      const nilai = dipilih?.value === 'Lain-lain' ? sebabLain.value.trim() : dipilih?.value;
+      if (!dipilih || !nilai) {
         ralat.classList.remove('d-none');
         return;
       }
