@@ -189,7 +189,7 @@ public class ApiController {
         }
         Set<String> namaLokasiDalamDaerah = lokasRepository.findAll().stream()
                 .filter(l -> l.getDaerah() != null && daerahSeliaan.contains(l.getDaerah()))
-            .map(lokasi -> lokasi.getName())
+                .map(lokasi -> lokasi.getName())
                 .collect(Collectors.toSet());
         return s.senaraiSemua().stream()
                 .filter(p -> namaLokasiDalamDaerah.contains(p.getLocationName()))

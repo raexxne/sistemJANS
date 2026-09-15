@@ -39,7 +39,7 @@ class ApiControllerTest {
         PasswordEncoder passwordEncoder = mock(PasswordEncoder.class);
 
         ApiController controller = new ApiController(permohonanService, akaunService, penggunaRepository,
-            lokasRepository, permohonanRepository, penyeliaLojiRepository, passwordEncoder);
+                lokasRepository, permohonanRepository, penyeliaLojiRepository, passwordEncoder);
         controller.staf(null);
 
         verify(permohonanService).senaraiSemua();
@@ -62,7 +62,7 @@ class ApiControllerTest {
         when(penggunaRepository.save(any(Pengguna.class))).thenAnswer(invocation -> invocation.getArgument(0));
 
         ApiController controller = new ApiController(permohonanService, akaunService, penggunaRepository,
-            lokasRepository, permohonanRepository, penyeliaLojiRepository, passwordEncoder);
+                lokasRepository, permohonanRepository, penyeliaLojiRepository, passwordEncoder);
         Authentication auth = new TestingAuthenticationToken(
                 "old@example.com",
                 "password",
