@@ -185,7 +185,7 @@
     <section class="pt-2 pb-2">
       <div class="container-fluid">
         <h1 class="h4 fw-bold mb-1 text-dark">Dashboard Penyelia Loji</h1>
-        <p class="mb-0 text-muted">Senarai permohonan bagi daerah operasi seliaan anda.</p>
+        <p id="daerah-seliaan" class="mb-0 text-muted">Memuatkan daerah seliaan anda...</p>
       </div>
     </section>
 
@@ -331,6 +331,10 @@
         if (!response.ok) return;
         const data = await response.json();
         document.querySelector('#navUsername').textContent = data.name;
+        const daerah = Array.isArray(data.daerah) ? data.daerah.filter(Boolean) : [];
+        document.querySelector('#daerah-seliaan').textContent = daerah.length
+          ? `Senarai permohonan bagi daerah yang anda selia: ${daerah.join(', ')}.`
+          : 'Tiada daerah seliaan ditetapkan untuk akaun anda.';
         loadNavProfilePicture();
       } catch (error) {
         console.error('Error:', error);

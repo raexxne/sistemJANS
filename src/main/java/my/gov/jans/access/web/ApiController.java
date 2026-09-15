@@ -430,13 +430,19 @@ public class ApiController {
         if (p == null) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of("ralat", "Pengguna tidak ditemui"));
         }
-        return ResponseEntity.ok(Map.of(
-                "id", p.getId(),
-                "name", p.getName(),
-                "email", p.getEmail(),
-                "phone", p.getPhone() != null ? p.getPhone() : "",
-                "address", p.getAddress() != null ? p.getAddress() : "",
-                "role", p.getRole().toString()));
+        Map<String, Object> profile = new LinkedHashMap<>();
+        profile.put("id", p.getId());
+        profile.put("name", p.getName());
+        profile.put("email", p.getEmail());
+        profile.put("phone", p.getPhone() != null ? p.getPhone() : "");
+        profile.put("address", p.getAddress() != null ? p.getAddress() : "");
+        profile.put("role", p.getRole().toString());
+        if (p.getRole() == Role.PENYELIA_LOJI) {
+            PenyeliaLoji penyelia = penyeliaLojiRepository.findByPengguna(p).orElse(null);
+            List<String> daerah = penyelia != null ? penyelia.getDaerahSeliaan() : List.of();
+            profile.put("daerah", daerah);
+        }
+        return ResponseEntity.ok(profile);
     }
 
     private String normalisasiEmail(String email) {

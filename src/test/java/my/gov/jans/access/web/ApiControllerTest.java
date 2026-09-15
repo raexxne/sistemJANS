@@ -1,6 +1,8 @@
 package my.gov.jans.access.web;
 
 import my.gov.jans.access.domain.Pengguna;
+import my.gov.jans.access.domain.PenyeliaLoji;
+import my.gov.jans.access.domain.Role;
 import my.gov.jans.access.repo.PenggunaRepository;
 import my.gov.jans.access.repo.LokasRepository;
 import my.gov.jans.access.repo.PermohonanRepository;
@@ -27,6 +29,42 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 class ApiControllerTest {
+
+    @Test
+    @SuppressWarnings("unchecked")
+    void shouldIncludeAssignedDistrictsInSupervisorProfile() {
+        PermohonanService permohonanService = mock(PermohonanService.class);
+        AkaunService akaunService = mock(AkaunService.class);
+        PenggunaRepository penggunaRepository = mock(PenggunaRepository.class);
+        LokasRepository lokasRepository = mock(LokasRepository.class);
+        PermohonanRepository permohonanRepository = mock(PermohonanRepository.class);
+        PenyeliaLojiRepository penyeliaLojiRepository = mock(PenyeliaLojiRepository.class);
+        PasswordEncoder passwordEncoder = mock(PasswordEncoder.class);
+
+        Pengguna pengguna = new Pengguna();
+        pengguna.setId(8L);
+        pengguna.setName("Penyelia Loji");
+        pengguna.setEmail("penyelia@jans.gov.my");
+        pengguna.setRole(Role.PENYELIA_LOJI);
+        PenyeliaLoji penyelia = new PenyeliaLoji();
+        penyelia.setPengguna(pengguna);
+        penyelia.setDaerahSeliaan(List.of("Kota Kinabalu", "Penampang"));
+        when(penggunaRepository.findByEmail(pengguna.getEmail())).thenReturn(Optional.of(pengguna));
+        when(penyeliaLojiRepository.findByPengguna(pengguna)).thenReturn(Optional.of(penyelia));
+
+        ApiController controller = new ApiController(permohonanService, akaunService, penggunaRepository,
+                lokasRepository, permohonanRepository, penyeliaLojiRepository, passwordEncoder);
+        Authentication auth = new TestingAuthenticationToken(
+                pengguna.getEmail(),
+                "password",
+                List.of(new SimpleGrantedAuthority("ROLE_PENYELIA_LOJI")));
+
+        ResponseEntity<?> response = controller.getProfile(auth);
+        Map<String, Object> profile = (Map<String, Object>) response.getBody();
+
+        assertEquals(HttpStatus.OK, response.getStatusCode());
+        assertEquals(List.of("Kota Kinabalu", "Penampang"), profile.get("daerah"));
+    }
 
     @Test
     void shouldReturnAllApplicationsWhenStaffStatusIsNotProvided() {

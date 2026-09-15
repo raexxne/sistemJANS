@@ -20,4 +20,15 @@ class WebControllerTest {
 
         assertEquals("redirect:/admin.html", controller.utama(auth));
     }
+
+    @Test
+    void shouldRedirectPenyeliaLojiToPenyeliaDashboard() {
+        WebController controller = new WebController();
+        TestingAuthenticationToken auth = new TestingAuthenticationToken(
+                "penyelia",
+                "password",
+                List.of(new SimpleGrantedAuthority("ROLE_PENYELIA_LOJI")));
+
+        assertEquals("redirect:/penyelia-loji.html", controller.utama(auth));
+    }
 }

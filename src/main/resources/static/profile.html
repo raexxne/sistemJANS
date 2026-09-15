@@ -148,7 +148,7 @@
 
   <nav class="navbar navbar-expand-lg navbar-dark sticky-top internal-nav">
     <div class="container-fluid">
-      <a class="navbar-brand fw-bold fs-3 d-flex align-items-center" href="#" id="btnDashboard">
+      <a class="navbar-brand fw-bold fs-3 d-flex align-items-center" href="/utama" id="btnDashboard">
         <img src="/images/logo3.png" alt="Logo JAS" style="height: 60px; width: auto; margin-right: 14px;">
         <span class="d-flex flex-column align-items-start">
           <span class="fw-bold" style="font-size: 1.6rem; line-height: 1;">JAS</span>
@@ -344,15 +344,17 @@
           const dashboardLink = document.getElementById('btnDashboard');
           const btnBack = document.getElementById('btnBack');
 
-          let dashboardHref = '/';
+          let dashboardHref = '/utama';
           if (role === 'PENGARAH' || role.includes('PENGARAH')) {
             dashboardHref = '/pengarah.html';
           } else if (role === 'ADMIN') {
             dashboardHref = '/admin.html';
+          } else if (role === 'PENYELIA_LOJI') {
+            dashboardHref = '/penyelia-loji.html';
           } else if (role === 'PETUGAS' || role.includes('PETUGAS') || role === 'STAFF') {
             dashboardHref = '/petugas.html';
           } else {
-            console.warn('Role tidak dikenali, guna fallback /');
+            console.warn('Role tidak dikenali, guna fallback /utama');
           }
 
           if (dashboardLink) dashboardLink.href = dashboardHref;
