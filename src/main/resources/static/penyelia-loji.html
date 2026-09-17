@@ -588,7 +588,9 @@
         });
         const data = await response.json();
         if (!response.ok) {
-          showErrorPopup('Ralat', data.ralat || 'Gagal menyimpan catatan pelawat.');
+          showErrorPopup('Ralat', data.ralat || 'Gagal menyimpan catatan pelawat.', {
+            imageSrc: '/images/wrong-decision.gif'
+          });
           return;
         }
         await showConfirmModal({
@@ -597,11 +599,14 @@
           confirmText: 'OK',
           type: 'success',
           icon: 'fa-check-circle',
+          imageSrc: '/images/right-decision.gif',
           showCancel: false
         });
         await loadPenyeliaTable();
       } catch (error) {
-        showErrorPopup('Ralat', 'Gagal menghubungi pelayan.');
+        showErrorPopup('Ralat', 'Gagal menghubungi pelayan.', {
+          imageSrc: '/images/wrong-decision.gif'
+        });
       }
     }
 

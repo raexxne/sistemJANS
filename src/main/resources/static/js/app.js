@@ -26,6 +26,7 @@ function showConfirmModal({
   cancelText = 'Batal',
   type = 'primary', // 'primary', 'success', 'warning', 'danger'
   icon = 'fa-question-circle',
+  imageSrc = '',
   showCancel = true
 }) {
   return new Promise((resolve) => {
@@ -91,7 +92,9 @@ function showConfirmModal({
 
         <div style="padding: 28px 24px 20px 24px;">
           <div style="margin-bottom: 16px;">
-            <i class="fas ${esc(icon)}" style="font-size: 52px; color: ${style.icon};"></i>
+            ${imageSrc
+              ? `<img src="${esc(imageSrc)}" alt="${esc(title)}" style="width: 72px; height: 72px; object-fit: contain;">`
+              : `<i class="fas ${esc(icon)}" style="font-size: 52px; color: ${style.icon};"></i>`}
           </div>
           <p style="font-size: 16px; color: #495057; margin-bottom: 0; line-height: 1.5;">
             ${esc(message)}
@@ -164,7 +167,7 @@ function showLoadingPopover(message = 'Memuatkan, sila tunggu...') {
   `;
   popover.innerHTML = `
     <div class="bg-white text-center p-4 shadow" style="width: 100%; max-width: 360px; border-radius: 12px;">
-      <div class="spinner-border text-primary mb-3" role="status" aria-label="Memproses"></div>
+      <img src="/images/water-drops.gif" alt="Memproses" class="mb-3" style="width: 72px; height: 72px; object-fit: contain;">
       <p class="mb-0 fw-semibold text-dark">${esc(message)}</p>
     </div>
   `;
@@ -177,7 +180,7 @@ function showLoadingPopover(message = 'Memuatkan, sila tunggu...') {
  * Show error popup modal
  */
 function showErrorPopup(title, message, options = {}) {
-  const { redirectTo = null } = options;
+  const { redirectTo = null, imageSrc = '' } = options;
 
   let modal = document.querySelector('#error-modal');
   
@@ -215,7 +218,9 @@ function showErrorPopup(title, message, options = {}) {
       width: 90%;
     ">
       <div style="margin-bottom: 20px;">
-        <i class="fas fa-exclamation-circle" style="font-size: 50px; color: #dc3545;"></i>
+        ${imageSrc
+          ? `<img src="${esc(imageSrc)}" alt="${esc(title)}" style="width: 72px; height: 72px; object-fit: contain;">`
+          : '<i class="fas fa-exclamation-circle" style="font-size: 50px; color: #dc3545;"></i>'}
       </div>
       <h2 class="h4 mb-3" style="color: #dc3545; font-weight: 600;">${esc(title)}</h2>
       <p class="text-muted mb-4" style="font-size: 15px;">${esc(message)}</p>
@@ -269,7 +274,7 @@ function showSuccessPopup(nomborPermohonan) {
       width: 90%;
     ">
       <div style="margin-bottom: 20px;">
-        <i class="fas fa-check-circle" style="font-size: 50px; color: #198754;"></i>
+        <img src="/images/email.gif" alt="Permohonan berjaya dihantar" style="width: 72px; height: 72px; object-fit: contain;">
       </div>
       <h2 class="h4 mb-3" style="color: #198754; font-weight: 600;">Permohonan Berjaya Dihantar</h2>
       <p class="text-muted mb-1" style="font-size: 15px;">Nombor permohonan anda:</p>
@@ -888,6 +893,7 @@ async function bulkPutus(lulus) {
       confirmText: 'OK',
       type: lulus ? 'success' : 'danger',
       icon: lulus ? 'fa-check-circle' : 'fa-times-circle',
+      imageSrc: lulus ? '/images/right-decision.gif' : '/images/wrong-decision.gif',
       showCancel: false
     });
   } catch (e) {
@@ -1322,6 +1328,7 @@ async function putus(id, lulus) {
       confirmText: 'OK',
       type: lulus ? 'success' : 'danger',
       icon: lulus ? 'fa-check-circle' : 'fa-times-circle',
+      imageSrc: lulus ? '/images/right-decision.gif' : '/images/wrong-decision.gif',
       showCancel: false
     });
   } catch (e) {
