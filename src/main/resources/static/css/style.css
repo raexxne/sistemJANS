@@ -141,6 +141,7 @@ main { flex: 1 0 auto; }
 }
 
 .hero-announcement-box {
+  position: relative;
   width: 100%;
   max-width: 620px;
   background: rgba(255, 255, 255, 0.05);
@@ -152,11 +153,19 @@ main { flex: 1 0 auto; }
 }
 
 .hero-announcement-title {
+  display: flex;
+  align-items: center;
   color: #fff;
   font-weight: 700;
   font-size: 1.4rem;
   letter-spacing: 0.02em;
   margin-bottom: 1.75rem;
+}
+
+.hero-announcement-icon {
+  width: 2.4rem;
+  height: 2.4rem;
+  object-fit: contain;
 }
 
 .hero-announcement-box .carousel-item {
@@ -188,6 +197,7 @@ main { flex: 1 0 auto; }
 
 .hero-announcement-box .carousel-control-prev { left: auto; right: 3rem; }
 .hero-announcement-box .carousel-control-next { right: 0; }
+
 
 .hero-announcement-box .carousel-control-prev-icon,
 .hero-announcement-box .carousel-control-next-icon {
