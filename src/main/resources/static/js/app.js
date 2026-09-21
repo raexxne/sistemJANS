@@ -875,16 +875,22 @@ async function bulkPutus(lulus) {
     const catatan = lulus ? '' : await showSebabTolakModal();
     if (!lulus && catatan === null) return;
 
+    directorDecisionModalOpen = true;
     setBulkPutusLoading(true, lulus);
-    for (const id of ids) {
-      await api(`/api/pengarah/permohonan/${id}/keputusan`, {
-        method: 'POST',
-        body: JSON.stringify({ lulus, catatan })
-      });
-    }
+    const closeLoading = showLoadingPopover();
+    try {
+      for (const id of ids) {
+        await api(`/api/pengarah/permohonan/${id}/keputusan`, {
+          method: 'POST',
+          body: JSON.stringify({ lulus, catatan })
+        });
+      }
 
-    selectedPermohonanIds.clear();
-    await director(true);
+      selectedPermohonanIds.clear();
+      await director(true, true);
+    } finally {
+      closeLoading();
+    }
 
     // Popover keputusan selepas berjaya proses (hanya SEKALI, selepas gelung selesai)
     showConfirmModal({
@@ -1254,10 +1260,10 @@ async function showPengarahDetailModal(p) {
   });
 }
 
-async function director(resetSelection = false) {
+async function director(resetSelection = false, forceRefresh = false) {
   try {
     const permohonan = await api('/api/pengarah/permohonan');
-    if (directorDecisionModalOpen) return;
+    if (directorDecisionModalOpen && !forceRefresh) return;
 
     pengarahAllPermohonan = permohonan;
     if (resetSelection) {
@@ -1308,13 +1314,14 @@ async function putus(id, lulus) {
     const catatan = lulus ? '' : await showSebabTolakModal();
     if (!lulus && catatan === null) return;
 
+    directorDecisionModalOpen = true;
     const closeLoading = showLoadingPopover();
     try {
       await api(`/api/pengarah/permohonan/${id}/keputusan`, {
         method: 'POST',
         body: JSON.stringify({ lulus, catatan })
       });
-      await director(true);
+      await director(true, true);
     } finally {
       closeLoading();
     }

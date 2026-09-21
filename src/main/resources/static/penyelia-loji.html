@@ -156,6 +156,119 @@
       font-size: 0.9rem;
       line-height: 1.3;
     }
+    .tindakan-buttons {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+    }
+    .tindakan-buttons .btn {
+      width: 32px;
+      height: 32px;
+      padding: 0;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .detail-modal-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.65);
+      z-index: 2100;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 18px;
+    }
+    body.detail-modal-open {
+      overflow: hidden;
+    }
+    .detail-modal {
+      width: 100%;
+      max-width: 860px;
+      max-height: 90vh;
+      background: #fff;
+      border-radius: 12px;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.28);
+    }
+    .detail-modal-header {
+      padding: 18px 24px;
+      background: linear-gradient(135deg, #00467f, #0d5ba5);
+      color: #fff;
+    }
+    .detail-modal-body {
+      padding: 24px;
+      overflow-y: auto;
+    }
+    .detail-modal-footer {
+      padding: 14px 24px;
+      border-top: 1px solid #e9ecef;
+      display: flex;
+      justify-content: flex-end;
+      background: #f8f9fa;
+    }
+    .detail-field {
+      margin-bottom: 12px;
+    }
+    .detail-field label {
+      display: block;
+      margin-bottom: 2px;
+      color: #64748b;
+      font-size: 0.72rem;
+      font-weight: 700;
+      letter-spacing: 0.03em;
+      text-transform: uppercase;
+    }
+    .detail-field .value {
+      color: #1e293b;
+      font-size: 0.92rem;
+      font-weight: 500;
+      white-space: pre-wrap;
+    }
+    .application-summary-panel {
+      margin-bottom: 16px;
+      padding: 14px;
+      border: 1px solid #dbe5ef;
+      border-radius: 12px;
+      background: linear-gradient(135deg, #f8fbff 0%, #ffffff 100%);
+      box-shadow: 0 5px 16px rgba(15, 23, 42, 0.05);
+    }
+    .visitor-simple-list {
+      display: flex;
+      flex-direction: column;
+      border: 1px solid #dbe5ef;
+      border-radius: 10px;
+      overflow: hidden;
+    }
+    .visitor-simple-item {
+      display: flex;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 6px 10px;
+      padding: 10px 14px;
+      font-size: 0.9rem;
+      background: #fff;
+    }
+    .visitor-simple-item:nth-child(even) {
+      background: #f8fafc;
+    }
+    .visitor-simple-index {
+      color: #00467f;
+      font-weight: 700;
+    }
+    .visitor-simple-name {
+      color: #1e293b;
+      font-weight: 600;
+    }
+    .visitor-simple-sep {
+      color: #94a3b8;
+    }
+    .visitor-simple-value {
+      color: #475569;
+    }
   </style>
 </head>
 <body class="internal-portal d-flex flex-column min-vh-100">
@@ -378,6 +491,135 @@
       const info = map[normalized] || { label: status || '-', color: 'secondary' };
       const badgeClass = info.customClass || `bg-${info.color}`;
       return `<span class="badge ${badgeClass}">${info.label}</span>`;
+    }
+
+    function formatDisplayDate(value) {
+      if (!value) return '-';
+      const date = new Date(value);
+      if (Number.isNaN(date.getTime())) return value;
+      return date.toLocaleDateString('ms-MY', { day: '2-digit', month: 'short', year: 'numeric' });
+    }
+
+    function formatDisplayTime(value) {
+      if (!value) return '-';
+      const parts = String(value).split(':');
+      const hours = Number(parts[0]);
+      const minutes = Number(parts[1]);
+      if (Number.isNaN(hours) || Number.isNaN(minutes)) return value;
+      const period = hours >= 12 ? 'PM' : 'AM';
+      const hour12 = hours % 12 || 12;
+      return `${String(hour12).padStart(2, '0')}:${String(minutes).padStart(2, '0')} ${period}`;
+    }
+
+    function locationTypeLabel(value) {
+      const map = { LOJI: 'Loji Rawatan Air', INTAKE: 'Intake' };
+      return map[(value || '').toUpperCase()] || value || '-';
+    }
+
+    function detailField(label, value) {
+      return `
+        <div class="detail-field">
+          <label>${esc(label)}</label>
+          <div class="value">${esc(value || '-')}</div>
+        </div>
+      `;
+    }
+
+    function showPermohonanDetail(item) {
+      if (!item) return;
+
+      const oldModal = document.querySelector('#permohonan-detail-modal');
+      if (oldModal) oldModal.remove();
+
+      const visitors = Array.isArray(item.pelawat) && item.pelawat.length ? item.pelawat : [{
+        namaPenuh: item.applicantName,
+        noKadPengenalan: item.icNo,
+        email: item.email,
+        noTelefonBimbit: item.phoneMobile,
+        jawatan: item.jawatanGred,
+        noPendaftaranKenderaan: item.vehicleNo
+      }];
+      const noRujukan = item.nomborPermohonan || item.noRujukan || item.rujukan || item.referenceNo || item.id || '-';
+      const status = (item.status || '').toUpperCase();
+      const penyeliaNote = item.penyeliaNote || item.catatanPenyelia || '-';
+
+      const modal = document.createElement('div');
+      modal.id = 'permohonan-detail-modal';
+      modal.className = 'detail-modal-overlay';
+      modal.innerHTML = `
+        <div class="detail-modal" role="dialog" aria-modal="true" aria-labelledby="permohonan-detail-title">
+          <div class="detail-modal-header d-flex justify-content-between align-items-center gap-3">
+            <div>
+              <h2 id="permohonan-detail-title" class="h5 mb-0 fw-bold">Butiran Pemohon</h2>
+              <small class="opacity-75">No. Rujukan: ${esc(noRujukan)}</small>
+            </div>
+            <button type="button" class="btn-close btn-close-white flex-shrink-0" data-action="close-detail" aria-label="Tutup"></button>
+          </div>
+          <div class="detail-modal-body">
+            <div class="application-summary-panel">
+              <div class="row g-2">
+                <div class="col-md-4">${detailField('Kementerian / Jabatan / Agensi / Universiti / Syarikat', item.organisation)}</div>
+                <div class="col-md-4">${detailField('Tarikh Permohonan', formatDisplayDate(item.applicationDate))}</div>
+                <div class="col-md-4">${detailField('Tarikh Lawatan', formatDisplayDate(item.visitDate))}</div>
+                <div class="col-md-4">${detailField('Masa Lawatan', formatDisplayTime(item.visitTime))}</div>
+                <div class="col-md-4">${detailField('Jenis Lokasi', locationTypeLabel(item.locationType || item.jenisLokasi))}</div>
+                <div class="col-md-4">${detailField('Nama / Alamat Lokasi', item.locationName || item.lokasi || item.namaLokasi)}</div>
+                <div class="col-md-4">${detailField('No. Telefon (Pejabat)', item.phoneOffice || item.telefonPejabat)}</div>
+                <div class="col-md-4">${detailField('E-mel Untuk Dihubungi (Wakil)', item.emailWakil || item.email || item.emel)}</div>
+                <div class="col-md-4">${detailField('Tujuan Lawatan', item.purpose || item.tujuan || item.keterangan)}</div>
+                <div class="col-md-4">
+                  <div class="detail-field">
+                    <label>Status</label>
+                    <div class="value">${penyeliaStatusBadge(status)}</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div class="row g-3">
+              <div class="col-12">
+                <div class="detail-field">
+                  <label>Maklumat Pelawat</label>
+                  <ul class="visitor-simple-list list-unstyled mb-0">
+                    ${visitors.length ? visitors.map((visitor, index) => `
+                      <li class="visitor-simple-item">
+                        <span class="visitor-simple-index">${index + 1}.</span>
+                        <span class="visitor-simple-name">${esc(visitor.namaPenuh || '-')}</span>
+                        <span class="visitor-simple-sep">•</span>
+                        <span class="visitor-simple-value">${esc(visitor.noKadPengenalan || '-')}</span>
+                        <span class="visitor-simple-sep">•</span>
+                        <span class="visitor-simple-value">${esc(visitor.noPendaftaranKenderaan || '-')}</span>
+                      </li>`).join('') : '<li class="p-3 text-muted">Tiada maklumat pelawat direkodkan.</li>'}
+                  </ul>
+                </div>
+              </div>
+              ${penyeliaNote && String(penyeliaNote).trim() && String(penyeliaNote).trim() !== '-' ? `
+                <div class="col-12">
+                  <div class="detail-field">
+                    <label>Catatan Penyelia Loji</label>
+                    <div class="value" style="background:#e7f1ff;padding:10px 12px;border-radius:8px;border:1px solid #b6d4fe;white-space:pre-wrap;">${esc(penyeliaNote)}</div>
+                  </div>
+                </div>
+              ` : ''}
+            </div>
+          </div>
+        </div>
+      `;
+
+      const closeModal = () => {
+        document.body.classList.remove('detail-modal-open');
+        modal.remove();
+        document.removeEventListener('keydown', onKey);
+      };
+      const onKey = (event) => {
+        if (event.key === 'Escape') closeModal();
+      };
+
+      modal.addEventListener('click', (event) => {
+        if (event.target === modal || event.target.closest('[data-action="close-detail"]')) closeModal();
+      });
+      document.addEventListener('keydown', onKey);
+      document.body.classList.add('detail-modal-open');
+      document.body.appendChild(modal);
     }
 
     function renderPieChart(applications) {
@@ -686,13 +928,25 @@
             <td class="text-center">${penyeliaStatusBadge(item.status)}</td>
             <td class="catatan-penyelia-column">${esc(item.penyeliaNote || '-')}</td>
             <td class="text-center">
-              ${bolehCatat
-                ? `<button type="button" class="btn btn-sm btn-outline-primary" data-action="catatan" data-id="${item.id}"><i class="fas fa-plus me-1"></i>Catatan</button>`
-                : '<span class="text-muted small">-</span>'}
+              <span class="tindakan-buttons">
+                <button type="button" class="btn btn-sm btn-outline-info" data-action="lihat" data-id="${item.id}" title="Lihat detail pemohon" aria-label="Lihat detail pemohon">
+                  <i class="fas fa-eye" aria-hidden="true"></i>
+                </button>
+                ${bolehCatat
+                  ? `<button type="button" class="btn btn-sm btn-outline-primary" data-action="catatan" data-id="${item.id}" title="Tambah catatan" aria-label="Tambah catatan"><i class="fas fa-plus" aria-hidden="true"></i></button>`
+                  : ''}
+              </span>
             </td>
           </tr>
         `;
       }).join('');
+
+      tbody.querySelectorAll('button[data-action="lihat"]').forEach((btn) => {
+        btn.addEventListener('click', () => {
+          const item = cachedApplications.find((application) => String(application.id) === String(btn.dataset.id));
+          showPermohonanDetail(item);
+        });
+      });
 
       tbody.querySelectorAll('button[data-action="catatan"]').forEach((btn) => {
         btn.addEventListener('click', () => tambahCatatanPelawat(btn.dataset.id));
