@@ -211,6 +211,27 @@
     display: flex;
     flex-direction: column;
     gap: 8px;
+    max-height: 300px; 
+    overflow-y: auto; 
+    padding: 12px;
+    border: 1px solid #dee2e6;
+    border-radius: 8px;
+    background-color: #f8f9fa;
+  }
+
+  .daerah-checkbox-list::-webkit-scrollbar {
+    width: 6px;
+  }
+  .daerah-checkbox-list::-webkit-scrollbar-track {
+    background: #f1f1f1;
+    border-radius: 8px;
+  }
+  .daerah-checkbox-list::-webkit-scrollbar-thumb {
+    background: #c1c1c1;
+    border-radius: 8px;
+  }
+  .daerah-checkbox-list::-webkit-scrollbar-thumb:hover {
+    background: #0d5ba5;
   }
   .daerah-checkbox-list .form-check {
     display: flex;
