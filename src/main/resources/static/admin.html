@@ -20,6 +20,57 @@
     border-radius: 18px;
     box-shadow: 0 12px 30px rgba(0, 0, 0, 0.06);
   }
+  
+  /* ===========================================================
+     GAYA KAD STATISTIK (DASHBOARD CARDS) BERWARNA
+     =========================================================== */
+  .admin-stat-card {
+    border: none;
+    border-radius: 18px;
+    color: #fff;
+    overflow: hidden;
+    position: relative;
+    box-shadow: 0 10px 20px rgba(0,0,0,0.08);
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+  }
+  .admin-stat-card:hover {
+    transform: translateY(-5px) !important;
+    box-shadow: 0 15px 30px rgba(0,0,0,0.2) !important;
+  }
+  .admin-stat-card .card-body {
+    padding: 1.5rem;
+    z-index: 2;
+    position: relative;
+  }
+  .admin-stat-card .stat-icon-bg {
+    position: absolute;
+    right: -10px;
+    bottom: -20px;
+    font-size: 7rem;
+    opacity: 0.15;
+    z-index: 1;
+    transform: rotate(-10deg);
+  }
+  .admin-stat-card .stat-label {
+    font-size: 1.05rem;
+    font-weight: 600;
+    letter-spacing: 0.5px;
+    opacity: 0.9;
+    text-transform: uppercase;
+  }
+  .admin-stat-card .display-5 {
+    text-shadow: 2px 2px 4px rgba(0,0,0,0.1);
+  }
+
+  /* Pilihan Warna Sedondon Dengan Badge Bootstrap Di Jadual */
+  .bg-stat-primary { background: linear-gradient(135deg, #0d6efd 0%, #0a58ca 100%); } /* Biru (Loji) */
+  .bg-stat-secondary { background: linear-gradient(135deg, #6c757d 0%, #495057 100%); } /* Kelabu (Staff) */
+  .bg-stat-success { background: linear-gradient(135deg, #198754 0%, #146c43 100%); } /* Hijau (Penyelia Loji) */
+  .bg-stat-info { background: linear-gradient(135deg, #0dcaf0 0%, #087990 100%); color: #fff !important; } /* Biru Muda (Pengarah & Intake) */
+  .bg-stat-danger { background: linear-gradient(135deg, #dc3545 0%, #a52834 100%); } /* Merah (Admin) */
+  .bg-stat-dark { background: linear-gradient(135deg, #212529 0%, #000000 100%); } /* Hitam (Jumlah Keseluruhan) */
+  /* =========================================================== */
+
   .admin-table thead th {
     font-size: 0.9rem;
     text-transform: uppercase;
@@ -71,10 +122,8 @@
   .admin-action-btn:hover {
     transform: none !important;
   }
-  /* ===========================================================
-     Modal bersaiz kompak & tetap - menggantikan popup ad-hoc
-     yang besar/memanjang sebelum ini.
-     =========================================================== */
+  
+  /* Modal bersaiz kompak */
   .admin-modal-overlay {
     position: fixed;
     inset: 0;
@@ -280,48 +329,55 @@
 
     <!-- TAB PENGGUNA -->
     <div id="tab-pengguna">
+      <!-- MENGGUNAKAN COL-XL AGAR KELIMA-LIMA KAD KELIHATAN KEMAS DALAM SATU BARIS -->
       <div class="row g-4 mb-4">
-        <div class="col-lg-3">
-          <div class="card admin-card h-100">
+        <!-- Kad Jumlah Pengguna (Dark) -->
+        <div class="col-xl col-lg-4 col-md-6">
+          <div class="card admin-stat-card bg-stat-dark h-100">
+            <i class="fas fa-users stat-icon-bg"></i>
             <div class="card-body">
-              <div class="d-flex align-items-center justify-content-between mb-2">
-                <span class="text-muted small">Jumlah Pengguna</span>
-                <i class="fas fa-users text-primary"></i>
-              </div>
-              <div id="admin-user-count" class="display-6 fw-bold text-dark">0</div>
+              <div class="stat-label">Jumlah Pengguna</div>
+              <div id="admin-user-count" class="display-5 fw-bold mt-2">0</div>
             </div>
           </div>
         </div>
-        <div class="col-lg-3">
-          <div class="card admin-card h-100">
+        <!-- Kad Admin (Danger/Red) -->
+        <div class="col-xl col-lg-4 col-md-6">
+          <div class="card admin-stat-card bg-stat-danger h-100">
+            <i class="fas fa-user-cog stat-icon-bg"></i>
             <div class="card-body">
-              <div class="d-flex align-items-center justify-content-between mb-2">
-                <span class="text-muted small">Staff</span>
-                <i class="fas fa-user-check text-success"></i>
-              </div>
-              <div id="admin-staff-count" class="display-6 fw-bold text-dark">0</div>
+              <div class="stat-label">Admin</div>
+              <div id="admin-admin-count" class="display-5 fw-bold mt-2">0</div>
             </div>
           </div>
         </div>
-        <div class="col-lg-3">
-          <div class="card admin-card h-100">
+        <!-- Kad Pengarah (Info/Cyan) -->
+        <div class="col-xl col-lg-4 col-md-6">
+          <div class="card admin-stat-card bg-stat-info h-100">
+            <i class="fas fa-user-shield stat-icon-bg"></i>
             <div class="card-body">
-              <div class="d-flex align-items-center justify-content-between mb-2">
-                <span class="text-muted small">Pengarah</span>
-                <i class="fas fa-user-shield text-info"></i>
-              </div>
-              <div id="admin-director-count" class="display-6 fw-bold text-dark">0</div>
+              <div class="stat-label">Pengarah</div>
+              <div id="admin-director-count" class="display-5 fw-bold mt-2">0</div>
             </div>
           </div>
         </div>
-        <div class="col-lg-3">
-          <div class="card admin-card h-100">
+        <!-- Kad Penyelia Loji (Success/Green) -->
+        <div class="col-xl col-lg-6 col-md-6">
+          <div class="card admin-stat-card bg-stat-success h-100">
+            <i class="fas fa-user-hard-hat stat-icon-bg"></i>
             <div class="card-body">
-              <div class="d-flex align-items-center justify-content-between mb-2">
-                <span class="text-muted small">Penyelia Loji</span>
-                <i class="fas fa-user-hard-hat text-warning"></i>
-              </div>
-              <div id="admin-penyelia-count" class="display-6 fw-bold text-dark">0</div>
+              <div class="stat-label">Penyelia Loji</div>
+              <div id="admin-penyelia-count" class="display-5 fw-bold mt-2">0</div>
+            </div>
+          </div>
+        </div>
+        <!-- Kad Staff (Secondary/Grey) -->
+        <div class="col-xl col-lg-6 col-md-12">
+          <div class="card admin-stat-card bg-stat-secondary h-100">
+            <i class="fas fa-user-check stat-icon-bg"></i>
+            <div class="card-body">
+              <div class="stat-label">Staff</div>
+              <div id="admin-staff-count" class="display-5 fw-bold mt-2">0</div>
             </div>
           </div>
         </div>
@@ -330,16 +386,15 @@
       <div class="card admin-card">
         <div class="card-header bg-white border-0 py-3 d-flex justify-content-between align-items-center">
           <div>
-            <h2 class="h5 mb-0"><i class="fas fa-users-gear me-2"></i>Senarai Pengguna</h2>
+            <h2 class="h5 mb-0"><i class="fas fa-users-gear me-2 text-primary"></i>Senarai Pengguna</h2>
             <p class="text-muted mb-0 small">Klik ikon tindakan untuk melihat, menukar maklumat atau memadam pengguna.</p>
           </div>
-          <button id="btn-create-user" class="btn btn-primary admin-icon-btn" title="Tambah Pengguna">
+          <button id="btn-create-user" class="btn btn-primary admin-icon-btn shadow-sm" title="Tambah Pengguna">
             <i class="fas fa-plus"></i>
           </button>
         </div>
         <div class="card-body">
           <div class="table-responsive">
-            <!-- Tambahan .table-bordered untuk garisan jadual -->
             <table class="table table-bordered table-hover align-middle admin-table">
               <thead class="table-light">
                 <tr>
@@ -360,36 +415,33 @@
     <!-- TAB LOKASI -->
     <div id="tab-lokasi" style="display: none;">
       <div class="row g-4 mb-4">
-        <div class="col-lg-4">
-          <div class="card admin-card h-100">
+        <!-- Kad Jumlah Lokasi (Dark) -->
+        <div class="col-lg-4 col-md-6">
+          <div class="card admin-stat-card bg-stat-dark h-100">
+            <i class="fas fa-map-marker-alt stat-icon-bg"></i>
             <div class="card-body">
-              <div class="d-flex align-items-center justify-content-between mb-2">
-                <span class="text-muted small">Jumlah Lokasi</span>
-                <i class="fas fa-map-marker-alt text-primary"></i>
-              </div>
-              <div id="admin-lokasi-count" class="display-6 fw-bold text-dark">0</div>
+              <div class="stat-label">Jumlah Lokasi</div>
+              <div id="admin-lokasi-count" class="display-5 fw-bold mt-2">0</div>
             </div>
           </div>
         </div>
-        <div class="col-lg-4">
-          <div class="card admin-card h-100">
+        <!-- Kad Loji Rawatan (Primary/Blue) -->
+        <div class="col-lg-4 col-md-6">
+          <div class="card admin-stat-card bg-stat-primary h-100">
+            <i class="fas fa-tint stat-icon-bg"></i>
             <div class="card-body">
-              <div class="d-flex align-items-center justify-content-between mb-2">
-                <span class="text-muted small">Loji Rawatan Air</span>
-                <i class="fas fa-tint text-success"></i>
-              </div>
-              <div id="admin-loji-count" class="display-6 fw-bold text-dark">0</div>
+              <div class="stat-label">Loji Rawatan Air</div>
+              <div id="admin-loji-count" class="display-5 fw-bold mt-2">0</div>
             </div>
           </div>
         </div>
-        <div class="col-lg-4">
-          <div class="card admin-card h-100">
+        <!-- Kad Intake (Info/Cyan) -->
+        <div class="col-lg-4 col-md-12">
+          <div class="card admin-stat-card bg-stat-info h-100">
+            <i class="fas fa-water stat-icon-bg"></i>
             <div class="card-body">
-              <div class="d-flex align-items-center justify-content-between mb-2">
-                <span class="text-muted small">Intake</span>
-                <i class="fas fa-water text-info"></i>
-              </div>
-              <div id="admin-intake-count" class="display-6 fw-bold text-dark">0</div>
+              <div class="stat-label">Intake</div>
+              <div id="admin-intake-count" class="display-5 fw-bold mt-2">0</div>
             </div>
           </div>
         </div>
@@ -398,16 +450,15 @@
       <div class="card admin-card">
         <div class="card-header bg-white border-0 py-3 d-flex justify-content-between align-items-center">
           <div>
-            <h2 class="h5 mb-0"><i class="fas fa-map-marked-alt me-2"></i>Senarai Lokasi</h2>
+            <h2 class="h5 mb-0"><i class="fas fa-map-marked-alt me-2 text-primary"></i>Senarai Lokasi</h2>
             <p class="text-muted mb-0 small">Klik ikon tindakan untuk menukar maklumat atau memadam lokasi.</p>
           </div>
-          <button id="btn-create-lokasi" class="btn btn-primary admin-icon-btn" title="Tambah Lokasi">
+          <button id="btn-create-lokasi" class="btn btn-primary admin-icon-btn shadow-sm" title="Tambah Lokasi">
             <i class="fas fa-plus"></i>
           </button>
         </div>
         <div class="card-body">
           <div class="table-responsive">
-            <!-- Tambahan .table-bordered untuk garisan jadual -->
             <table class="table table-bordered table-hover align-middle admin-table">
               <thead class="table-light">
                 <tr>
@@ -428,7 +479,7 @@
   <footer class="bg-dark text-white py-4 mt-auto">
     <div class="container-fluid text-center">
       <p class="mb-1 fw-semibold">Jabatan Air Sabah (JAS)</p>
-      <p class="mb-0 text-white-50 small">Portal Dalaman Cawangan Pengeluaran</p>
+      <p class="mb-0 text-white-50 small">Portal Dalaman Pentadbir Sistem</p>
     </div>
   </footer>
 
@@ -476,8 +527,10 @@
       return button;
     }
 
+    // Mengemas kini kiraan ringkasan pengguna, termasuk fungsi baru untuk Admin
     function updateSummary(users) {
       document.querySelector('#admin-user-count').textContent = users.length;
+      document.querySelector('#admin-admin-count').textContent = users.filter((user) => user.role === 'ADMIN').length;
       document.querySelector('#admin-staff-count').textContent = users.filter((user) => user.role === 'STAFF').length;
       document.querySelector('#admin-director-count').textContent = users.filter((user) => user.role === 'PENGARAH').length;
       document.querySelector('#admin-penyelia-count').textContent = users.filter((user) => user.role === 'PENYELIA_LOJI').length;
