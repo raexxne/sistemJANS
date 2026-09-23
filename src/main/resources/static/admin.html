@@ -50,7 +50,6 @@
   .admin-action-btn:last-child {
     margin-right: 0;
   }
-
   .admin-hero,
   .admin-card,
   .card,
@@ -72,7 +71,6 @@
   .admin-action-btn:hover {
     transform: none !important;
   }
-
   /* ===========================================================
      Modal bersaiz kompak & tetap - menggantikan popup ad-hoc
      yang besar/memanjang sebelum ini.
@@ -167,7 +165,6 @@
     font-size: 0.95rem;
     line-height: 1.9;
   }
-
   .admin-tabs {
     background: transparent;
     display: flex;
@@ -190,7 +187,6 @@
     color: #0d5ba5;
     border-bottom-color: #0d5ba5;
   }
-
   .admin-icon-btn {
     width: 44px;
     height: 44px;
@@ -202,23 +198,20 @@
     font-size: 1.05rem;
     flex-shrink: 0;
   }
-
   .admin-page-main {
     margin-top: 0.4rem;
   }
-
   .daerah-checkbox-list {
     display: flex;
     flex-direction: column;
     gap: 8px;
-    max-height: 300px; 
-    overflow-y: auto; 
+    max-height: 300px;
+    overflow-y: auto;
     padding: 12px;
     border: 1px solid #dee2e6;
     border-radius: 8px;
     background-color: #f8f9fa;
   }
-
   .daerah-checkbox-list::-webkit-scrollbar {
     width: 6px;
   }
@@ -257,7 +250,6 @@
     display: none;
   }
 </style>
-
 <body class="internal-portal d-flex flex-column min-vh-100">
   <nav class="navbar navbar-expand-lg navbar-dark sticky-top internal-nav">
     <div class="container-fluid">
@@ -286,146 +278,150 @@
       <button type="button" class="admin-tab-btn" data-tab="lokasi">Pengurusan Lokasi</button>
     </div>
 
+    <!-- TAB PENGGUNA -->
     <div id="tab-pengguna">
-    <div class="row g-4 mb-4">
-      <div class="col-lg-3">
-        <div class="card admin-card h-100">
-          <div class="card-body">
-            <div class="d-flex align-items-center justify-content-between mb-2">
-              <span class="text-muted small">Jumlah Pengguna</span>
-              <i class="fas fa-users text-primary"></i>
+      <div class="row g-4 mb-4">
+        <div class="col-lg-3">
+          <div class="card admin-card h-100">
+            <div class="card-body">
+              <div class="d-flex align-items-center justify-content-between mb-2">
+                <span class="text-muted small">Jumlah Pengguna</span>
+                <i class="fas fa-users text-primary"></i>
+              </div>
+              <div id="admin-user-count" class="display-6 fw-bold text-dark">0</div>
             </div>
-            <div id="admin-user-count" class="display-6 fw-bold text-dark">0</div>
+          </div>
+        </div>
+        <div class="col-lg-3">
+          <div class="card admin-card h-100">
+            <div class="card-body">
+              <div class="d-flex align-items-center justify-content-between mb-2">
+                <span class="text-muted small">Staff</span>
+                <i class="fas fa-user-check text-success"></i>
+              </div>
+              <div id="admin-staff-count" class="display-6 fw-bold text-dark">0</div>
+            </div>
+          </div>
+        </div>
+        <div class="col-lg-3">
+          <div class="card admin-card h-100">
+            <div class="card-body">
+              <div class="d-flex align-items-center justify-content-between mb-2">
+                <span class="text-muted small">Pengarah</span>
+                <i class="fas fa-user-shield text-info"></i>
+              </div>
+              <div id="admin-director-count" class="display-6 fw-bold text-dark">0</div>
+            </div>
+          </div>
+        </div>
+        <div class="col-lg-3">
+          <div class="card admin-card h-100">
+            <div class="card-body">
+              <div class="d-flex align-items-center justify-content-between mb-2">
+                <span class="text-muted small">Penyelia Loji</span>
+                <i class="fas fa-user-hard-hat text-warning"></i>
+              </div>
+              <div id="admin-penyelia-count" class="display-6 fw-bold text-dark">0</div>
+            </div>
           </div>
         </div>
       </div>
-      <div class="col-lg-3">
-        <div class="card admin-card h-100">
-          <div class="card-body">
-            <div class="d-flex align-items-center justify-content-between mb-2">
-              <span class="text-muted small">Staff</span>
-              <i class="fas fa-user-check text-success"></i>
-            </div>
-            <div id="admin-staff-count" class="display-6 fw-bold text-dark">0</div>
+
+      <div class="card admin-card">
+        <div class="card-header bg-white border-0 py-3 d-flex justify-content-between align-items-center">
+          <div>
+            <h2 class="h5 mb-0"><i class="fas fa-users-gear me-2"></i>Senarai Pengguna</h2>
+            <p class="text-muted mb-0 small">Klik ikon tindakan untuk melihat, menukar maklumat atau memadam pengguna.</p>
           </div>
+          <button id="btn-create-user" class="btn btn-primary admin-icon-btn" title="Tambah Pengguna">
+            <i class="fas fa-plus"></i>
+          </button>
         </div>
-      </div>
-      <div class="col-lg-3">
-        <div class="card admin-card h-100">
-          <div class="card-body">
-            <div class="d-flex align-items-center justify-content-between mb-2">
-              <span class="text-muted small">Pengarah</span>
-              <i class="fas fa-user-shield text-info"></i>
-            </div>
-            <div id="admin-director-count" class="display-6 fw-bold text-dark">0</div>
-          </div>
-        </div>
-      </div>
-      <div class="col-lg-3">
-        <div class="card admin-card h-100">
-          <div class="card-body">
-            <div class="d-flex align-items-center justify-content-between mb-2">
-              <span class="text-muted small">Penyelia Loji</span>
-              <i class="fas fa-user-hard-hat text-warning"></i>
-            </div>
-            <div id="admin-penyelia-count" class="display-6 fw-bold text-dark">0</div>
+        <div class="card-body">
+          <div class="table-responsive">
+            <!-- Tambahan .table-bordered untuk garisan jadual -->
+            <table class="table table-bordered table-hover align-middle admin-table">
+              <thead class="table-light">
+                <tr>
+                  <th>Gambar</th>
+                  <th>Nama</th>
+                  <th>Emel</th>
+                  <th>Peranan</th>
+                  <th>Tindakan</th>
+                </tr>
+              </thead>
+              <tbody id="admin-user-list"></tbody>
+            </table>
           </div>
         </div>
       </div>
     </div>
 
-    <div class="card admin-card">
-      <div class="card-header bg-white border-0 py-3 d-flex justify-content-between align-items-center">
-        <div>
-          <h2 class="h5 mb-0"><i class="fas fa-users-gear me-2"></i>Senarai Pengguna</h2>
-          <p class="text-muted mb-0 small">Klik ikon tindakan untuk melihat, menukar maklumat atau memadam pengguna.</p>
-        </div>
-        <button id="btn-create-user" class="btn btn-primary admin-icon-btn" title="Tambah Pengguna">
-          <i class="fas fa-plus"></i>
-        </button>
-      </div>
-      <div class="card-body">
-        <div class="table-responsive">
-          <table class="table table-hover align-middle admin-table">
-            <thead class="table-light">
-              <tr>
-                <th>Gambar</th>
-                <th>Nama</th>
-                <th>Emel</th>
-                <th>Peranan</th>
-                <th>Tindakan</th>
-              </tr>
-            </thead>
-            <tbody id="admin-user-list"></tbody>
-          </table>
-        </div>
-      </div>
-    </div>
-    </div>
-
+    <!-- TAB LOKASI -->
     <div id="tab-lokasi" style="display: none;">
-    <div class="row g-4 mb-4">
-      <div class="col-lg-4">
-        <div class="card admin-card h-100">
-          <div class="card-body">
-            <div class="d-flex align-items-center justify-content-between mb-2">
-              <span class="text-muted small">Jumlah Lokasi</span>
-              <i class="fas fa-map-marker-alt text-primary"></i>
+      <div class="row g-4 mb-4">
+        <div class="col-lg-4">
+          <div class="card admin-card h-100">
+            <div class="card-body">
+              <div class="d-flex align-items-center justify-content-between mb-2">
+                <span class="text-muted small">Jumlah Lokasi</span>
+                <i class="fas fa-map-marker-alt text-primary"></i>
+              </div>
+              <div id="admin-lokasi-count" class="display-6 fw-bold text-dark">0</div>
             </div>
-            <div id="admin-lokasi-count" class="display-6 fw-bold text-dark">0</div>
+          </div>
+        </div>
+        <div class="col-lg-4">
+          <div class="card admin-card h-100">
+            <div class="card-body">
+              <div class="d-flex align-items-center justify-content-between mb-2">
+                <span class="text-muted small">Loji Rawatan Air</span>
+                <i class="fas fa-tint text-success"></i>
+              </div>
+              <div id="admin-loji-count" class="display-6 fw-bold text-dark">0</div>
+            </div>
+          </div>
+        </div>
+        <div class="col-lg-4">
+          <div class="card admin-card h-100">
+            <div class="card-body">
+              <div class="d-flex align-items-center justify-content-between mb-2">
+                <span class="text-muted small">Intake</span>
+                <i class="fas fa-water text-info"></i>
+              </div>
+              <div id="admin-intake-count" class="display-6 fw-bold text-dark">0</div>
+            </div>
           </div>
         </div>
       </div>
-      <div class="col-lg-4">
-        <div class="card admin-card h-100">
-          <div class="card-body">
-            <div class="d-flex align-items-center justify-content-between mb-2">
-              <span class="text-muted small">Loji Rawatan Air</span>
-              <i class="fas fa-tint text-success"></i>
-            </div>
-            <div id="admin-loji-count" class="display-6 fw-bold text-dark">0</div>
-          </div>
-        </div>
-      </div>
-      <div class="col-lg-4">
-        <div class="card admin-card h-100">
-          <div class="card-body">
-            <div class="d-flex align-items-center justify-content-between mb-2">
-              <span class="text-muted small">Intake</span>
-              <i class="fas fa-water text-info"></i>
-            </div>
-            <div id="admin-intake-count" class="display-6 fw-bold text-dark">0</div>
-          </div>
-        </div>
-      </div>
-    </div>
 
-    <div class="card admin-card">
-      <div class="card-header bg-white border-0 py-3 d-flex justify-content-between align-items-center">
-        <div>
-          <h2 class="h5 mb-0"><i class="fas fa-map-marked-alt me-2"></i>Senarai Lokasi</h2>
-          <p class="text-muted mb-0 small">Klik ikon tindakan untuk menukar maklumat atau memadam lokasi.</p>
+      <div class="card admin-card">
+        <div class="card-header bg-white border-0 py-3 d-flex justify-content-between align-items-center">
+          <div>
+            <h2 class="h5 mb-0"><i class="fas fa-map-marked-alt me-2"></i>Senarai Lokasi</h2>
+            <p class="text-muted mb-0 small">Klik ikon tindakan untuk menukar maklumat atau memadam lokasi.</p>
+          </div>
+          <button id="btn-create-lokasi" class="btn btn-primary admin-icon-btn" title="Tambah Lokasi">
+            <i class="fas fa-plus"></i>
+          </button>
         </div>
-        <button id="btn-create-lokasi" class="btn btn-primary admin-icon-btn" title="Tambah Lokasi">
-          <i class="fas fa-plus"></i>
-        </button>
-      </div>
-      <div class="card-body">
-        <div class="table-responsive">
-          <table class="table table-hover align-middle admin-table">
-            <thead class="table-light">
-              <tr>
-                <th>Jenis</th>
-                <th>Nama Lokasi</th>
-                <th>Daerah</th>
-                <th>Tindakan</th>
-              </tr>
-            </thead>
-            <tbody id="admin-lokasi-list"></tbody>
-          </table>
+        <div class="card-body">
+          <div class="table-responsive">
+            <!-- Tambahan .table-bordered untuk garisan jadual -->
+            <table class="table table-bordered table-hover align-middle admin-table">
+              <thead class="table-light">
+                <tr>
+                  <th>Jenis</th>
+                  <th>Nama Lokasi</th>
+                  <th>Daerah</th>
+                  <th>Tindakan</th>
+                </tr>
+              </thead>
+              <tbody id="admin-lokasi-list"></tbody>
+            </table>
+          </div>
         </div>
       </div>
-    </div>
     </div>
   </main>
 
@@ -435,9 +431,10 @@
       <p class="mb-0 text-white-50 small">Portal Dalaman Cawangan Pengeluaran</p>
     </div>
   </footer>
+
   <script>
     const DEFAULT_AVATAR = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 200 200'%3E%3Crect width='200' height='200' fill='%23e9ecef'/%3E%3Ccircle cx='100' cy='60' r='35' fill='%236c757d'/%3E%3Cellipse cx='100' cy='150' rx='50' ry='45' fill='%236c757d'/%3E%3C/svg%3E";
-
+    
     async function loadProfile() {
       const response = await fetch('/api/profile');
       if (!response.ok) return;
@@ -456,7 +453,6 @@
         })
         .catch(() => {});
     }
-
 
     function renderRoleBadge(role) {
       const normalized = (role || '').toUpperCase();
@@ -487,15 +483,9 @@
       document.querySelector('#admin-penyelia-count').textContent = users.filter((user) => user.role === 'PENYELIA_LOJI').length;
     }
 
-    /**
-     * Bina elemen gambar profil untuk setiap pengguna dalam jadual.
-     * Cuba muatkan gambar sebenar dari server; jika tiada gambar
-     * (404 / ralat), gunakan avatar lalai secara automatik.
-     */
     function createUserPhotoCell(user) {
       const wrapper = document.createElement('div');
       wrapper.className = 'd-flex justify-content-center';
-
       const img = document.createElement('img');
       img.className = 'admin-user-photo';
       img.alt = user.name || 'Pengguna';
@@ -504,9 +494,7 @@
         img.onerror = null;
         img.src = DEFAULT_AVATAR;
       };
-      // Endpoint gambar khusus admin untuk melihat gambar pengguna lain.
       img.src = `/api/admin/users/${user.id}/picture?t=${Date.now()}`;
-
       wrapper.appendChild(img);
       return wrapper;
     }
@@ -518,10 +506,12 @@
         const response = await fetch('/api/admin/users');
         if (!response.ok) throw new Error('Gagal memuat senarai pengguna');
         const users = await response.json();
+        
         if (!users.length) {
           tbody.innerHTML = '<tr><td colspan="5" class="text-center text-muted">Tiada pengguna dijumpai.</td></tr>';
           return;
         }
+        
         updateSummary(users);
         tbody.innerHTML = '';
         users.forEach((user) => {
@@ -534,8 +524,8 @@
             <td></td>
           `;
           row.querySelector('td:first-child').appendChild(createUserPhotoCell(user));
-
           const actionsCell = row.querySelector('td:last-child');
+          
           const actions = [
             createActionButton('fas fa-eye', 'Lihat maklumat pengguna', 'primary', async () => {
               const detail = await fetch(`/api/admin/users/${user.id}`);
@@ -600,16 +590,6 @@
       }
     }
 
-    /**
-     * Modal generik bersaiz kompak & tetap.
-     * Menggantikan corak position-fixed/position-absolute ad-hoc sebelum ini
-     * yang tiada had tinggi/lebar sepatutnya, jadi nampak besar/memanjang.
-     *
-     * @param {string} title       Tajuk header modal
-     * @param {string} bodyHtml    Kandungan HTML badan modal
-    * @param {object} opts        { wide: boolean, danger: boolean, closeButton: boolean, closeOnOverlay: boolean }
-     * @returns {{ overlay, card, close }}
-     */
     function createModalShell(title, bodyHtml, opts = {}) {
       const overlay = document.createElement('div');
       overlay.className = 'admin-modal-overlay';
@@ -623,15 +603,12 @@
         </div>
       `;
       document.body.appendChild(overlay);
-
       const close = () => overlay.remove();
-
       if (opts.closeOnOverlay !== false) {
         overlay.addEventListener('click', (e) => {
           if (e.target === overlay) close();
         });
       }
-
       const onKey = (e) => {
         if (e.key === 'Escape') {
           document.removeEventListener('keydown', onKey);
@@ -639,16 +616,13 @@
         }
       };
       document.addEventListener('keydown', onKey);
-
       overlay.querySelector('.admin-modal-close')?.addEventListener('click', close);
-
       return { overlay, card: overlay.querySelector('.admin-modal-card'), close };
     }
 
     function showCreateModal() {
       return new Promise((resolve) => {
         let pendingDaerah = [];
-
         const bodyHtml = `
           <form id="create-user-form">
             <div class="mb-2"><label class="form-label">Nama</label><input name="name" class="form-control" required></div>
@@ -671,9 +645,7 @@
             <div class="mb-2"><label class="form-label">Alamat</label><input name="address" class="form-control"></div>
           </form>
         `;
-
         const { overlay, card, close } = createModalShell('Tambah Pengguna Baharu', bodyHtml);
-
         const footer = document.createElement('div');
         footer.className = 'admin-modal-footer';
         footer.innerHTML = `
@@ -681,18 +653,17 @@
           <button type="submit" form="create-user-form" class="btn btn-primary" id="create-user-submit">Simpan</button>
         `;
         card.appendChild(footer);
-
         const form = overlay.querySelector('#create-user-form');
         const roleSelect = overlay.querySelector('#create-user-role');
         const daerahRow = overlay.querySelector('#create-user-daerah-row');
         const btnTetapkanDaerah = overlay.querySelector('#btn-create-tetapkan-daerah');
-
+        
         const updateDaerahRowVisibility = () => {
           daerahRow.classList.toggle('is-hidden', roleSelect.value !== 'PENYELIA_LOJI');
         };
         updateDaerahRowVisibility();
         roleSelect.addEventListener('change', updateDaerahRowVisibility);
-
+        
         btnTetapkanDaerah.addEventListener('click', async () => {
           const dipilih = await showPilihDaerahModal(pendingDaerah);
           if (dipilih === false) return;
@@ -704,7 +675,6 @@
           close();
           resolve(value);
         };
-
         footer.querySelector('#create-user-cancel').addEventListener('click', () => finish(false));
         form.addEventListener('submit', (event) => {
           event.preventDefault();
@@ -714,8 +684,6 @@
           }
           finish(payload);
         });
-
-        // Elak overlay-click menutup modal tanpa resolve
         overlay.addEventListener('click', (e) => {
           if (e.target === overlay) finish(false);
         });
@@ -725,12 +693,10 @@
     function showInfoModal(title, message) {
       return new Promise((resolve) => {
         const { overlay, close } = createModalShell(title, message, { closeButton: true });
-
         const finish = () => {
           close();
           resolve(true);
         };
-
         overlay.querySelector('.admin-modal-close').addEventListener('click', finish);
         overlay.addEventListener('click', (e) => {
           if (e.target === overlay) finish();
@@ -761,9 +727,7 @@
             </div>
           </form>
         `;
-
         const { overlay, card, close } = createModalShell('Edit Pengguna', bodyHtml);
-
         const footer = document.createElement('div');
         footer.className = 'admin-modal-footer';
         footer.innerHTML = `
@@ -771,11 +735,11 @@
           <button type="submit" form="edit-user-form" class="btn btn-primary" id="edit-user-submit">Simpan</button>
         `;
         card.appendChild(footer);
-
+        
         const form = overlay.querySelector('#edit-user-form');
         const roleSelect = overlay.querySelector('#edit-user-role');
         const daerahRow = overlay.querySelector('#edit-user-daerah-row');
-
+        
         roleSelect.addEventListener('change', () => {
           daerahRow.classList.toggle('is-hidden', roleSelect.value !== 'PENYELIA_LOJI');
         });
@@ -795,7 +759,6 @@
           const payload = Object.fromEntries(new FormData(form).entries());
           finish(payload);
         });
-
         overlay.addEventListener('click', (e) => {
           if (e.target === overlay) finish(false);
         });
@@ -811,19 +774,16 @@
       const semuaLokasi = lokasiRes.ok ? await lokasiRes.json() : [];
       const daerahSediaAda = Array.isArray(daerahData.daerah) ? daerahData.daerah : [];
       const senaraiDaerah = [...new Set(semuaLokasi.map((l) => l.daerah).filter((d) => d && d.trim()))].sort();
-
+      
       return new Promise((resolve) => {
         const checkboxesHtml = renderDaerahCheckboxesHtml(senaraiDaerah, daerahSediaAda);
-
         const bodyHtml = `
           <form id="tetapkan-daerah-form">
             <label class="form-label">Pilih daerah operasi yang diselia:</label>
             <div class="mb-2">${checkboxesHtml}</div>
           </form>
         `;
-
         const { overlay, card, close } = createModalShell('Tetapkan Daerah Seliaan', bodyHtml);
-
         const footer = document.createElement('div');
         footer.className = 'admin-modal-footer';
         footer.innerHTML = `
@@ -831,19 +791,17 @@
           <button type="submit" form="tetapkan-daerah-form" class="btn btn-primary" id="tetapkan-daerah-submit">Simpan</button>
         `;
         card.appendChild(footer);
-
+        
         const form = overlay.querySelector('#tetapkan-daerah-form');
-
         const finish = (value) => {
           close();
           resolve(value);
         };
-
+        
         footer.querySelector('#tetapkan-daerah-cancel').addEventListener('click', () => finish(false));
         form.addEventListener('submit', async (event) => {
           event.preventDefault();
           const daerahFinal = Array.from(form.querySelectorAll('input[type="checkbox"]:checked')).map((cb) => cb.value);
-
           const response = await fetch(`/api/admin/penyelia/${userId}/daerah`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
@@ -857,7 +815,6 @@
           }
           finish(true);
         });
-
         overlay.addEventListener('click', (e) => {
           if (e.target === overlay) finish(false);
         });
@@ -880,19 +837,16 @@
       const lokasiRes = await fetch('/api/public/locations');
       const semuaLokasi = lokasiRes.ok ? await lokasiRes.json() : [];
       const senaraiDaerah = [...new Set(semuaLokasi.map((l) => l.daerah).filter((d) => d && d.trim()))].sort();
-
+      
       return new Promise((resolve) => {
         const checkboxesHtml = renderDaerahCheckboxesHtml(senaraiDaerah, daerahSediaAda);
-
         const bodyHtml = `
           <form id="pilih-daerah-form">
             <label class="form-label">Pilih daerah operasi yang diselia:</label>
             <div class="mb-2">${checkboxesHtml}</div>
           </form>
         `;
-
         const { overlay, card, close } = createModalShell('Tetapkan Daerah Seliaan', bodyHtml);
-
         const footer = document.createElement('div');
         footer.className = 'admin-modal-footer';
         footer.innerHTML = `
@@ -900,21 +854,19 @@
           <button type="submit" form="pilih-daerah-form" class="btn btn-primary" id="pilih-daerah-submit">Simpan</button>
         `;
         card.appendChild(footer);
-
+        
         const form = overlay.querySelector('#pilih-daerah-form');
-
         const finish = (value) => {
           close();
           resolve(value);
         };
-
+        
         footer.querySelector('#pilih-daerah-cancel').addEventListener('click', () => finish(false));
         form.addEventListener('submit', (event) => {
           event.preventDefault();
           const daerahFinal = Array.from(form.querySelectorAll('input[type="checkbox"]:checked')).map((cb) => cb.value);
           finish(daerahFinal);
         });
-
         overlay.addEventListener('click', (e) => {
           if (e.target === overlay) finish(false);
         });
@@ -925,7 +877,6 @@
       return new Promise((resolve) => {
         const bodyHtml = `<p class="mb-0">${message}</p>`;
         const { overlay, card, close } = createModalShell(title, bodyHtml, { danger: type === 'danger' });
-
         const color = type === 'danger' ? 'danger' : 'primary';
         const footer = document.createElement('div');
         footer.className = 'admin-modal-footer';
@@ -934,12 +885,11 @@
           <button type="button" class="btn btn-${color}" id="confirm-modal-ok">${confirmText}</button>
         `;
         card.appendChild(footer);
-
+        
         const finish = (value) => {
           close();
           resolve(value);
         };
-
         footer.querySelector('#confirm-modal-cancel').addEventListener('click', () => finish(false));
         footer.querySelector('#confirm-modal-ok').addEventListener('click', () => finish(true));
         overlay.addEventListener('click', (e) => {
@@ -969,10 +919,12 @@
         if (!response.ok) throw new Error('Gagal memuat senarai lokasi');
         const senaraiLokasi = await response.json();
         updateLokasiSummary(senaraiLokasi);
+        
         if (!senaraiLokasi.length) {
           tbody.innerHTML = '<tr><td colspan="4" class="text-center text-muted">Tiada lokasi dijumpai.</td></tr>';
           return;
         }
+        
         tbody.innerHTML = '';
         senaraiLokasi.forEach((lokasi) => {
           const row = document.createElement('tr');
@@ -982,7 +934,6 @@
             <td>${lokasi.daerah || '-'}</td>
             <td></td>
           `;
-
           const actionsCell = row.querySelector('td:last-child');
           const actions = [
             createActionButton('fas fa-edit', 'Edit lokasi', 'warning', async () => {
@@ -1037,9 +988,7 @@
             <div class="mb-2"><label class="form-label">Daerah</label><input name="daerah" class="form-control"></div>
           </form>
         `;
-
         const { overlay, card, close } = createModalShell('Tambah Lokasi Baharu', bodyHtml);
-
         const footer = document.createElement('div');
         footer.className = 'admin-modal-footer';
         footer.innerHTML = `
@@ -1047,21 +996,18 @@
           <button type="submit" form="create-lokasi-form" class="btn btn-primary" id="create-lokasi-submit">Simpan</button>
         `;
         card.appendChild(footer);
-
+        
         const form = overlay.querySelector('#create-lokasi-form');
-
         const finish = (value) => {
           close();
           resolve(value);
         };
-
         footer.querySelector('#create-lokasi-cancel').addEventListener('click', () => finish(false));
         form.addEventListener('submit', (event) => {
           event.preventDefault();
           const payload = Object.fromEntries(new FormData(form).entries());
           finish(payload);
         });
-
         overlay.addEventListener('click', (e) => {
           if (e.target === overlay) finish(false);
         });
@@ -1083,9 +1029,7 @@
             <div class="mb-2"><label class="form-label">Daerah</label><input name="daerah" class="form-control" value="${lokasi.daerah || ''}"></div>
           </form>
         `;
-
         const { overlay, card, close } = createModalShell('Edit Lokasi', bodyHtml);
-
         const footer = document.createElement('div');
         footer.className = 'admin-modal-footer';
         footer.innerHTML = `
@@ -1093,21 +1037,18 @@
           <button type="submit" form="edit-lokasi-form" class="btn btn-primary" id="edit-lokasi-submit">Simpan</button>
         `;
         card.appendChild(footer);
-
+        
         const form = overlay.querySelector('#edit-lokasi-form');
-
         const finish = (value) => {
           close();
           resolve(value);
         };
-
         footer.querySelector('#edit-lokasi-cancel').addEventListener('click', () => finish(false));
         form.addEventListener('submit', (event) => {
           event.preventDefault();
           const payload = Object.fromEntries(new FormData(form).entries());
           finish(payload);
         });
-
         overlay.addEventListener('click', (e) => {
           if (e.target === overlay) finish(false);
         });
@@ -1118,7 +1059,7 @@
       await loadProfile();
       await loadUsers();
       await loadLokasi();
-
+      
       document.querySelectorAll('.admin-tab-btn').forEach((btn) => {
         btn.addEventListener('click', () => {
           document.querySelectorAll('.admin-tab-btn').forEach((b) => b.classList.remove('active'));
@@ -1131,8 +1072,10 @@
       document.querySelector('#btn-create-user').addEventListener('click', async () => {
         const payload = await showCreateModal();
         if (!payload) return;
+        
         const daerahTerpilih = Array.isArray(payload.daerah) ? payload.daerah : [];
         delete payload.daerah;
+        
         const response = await fetch('/api/admin/users', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
@@ -1159,6 +1102,7 @@
       document.querySelector('#btn-create-lokasi').addEventListener('click', async () => {
         const payload = await showCreateLokasiModal();
         if (!payload) return;
+        
         const response = await fetch('/api/locations', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
