@@ -1,16 +1,27 @@
 package my.gov.jans.access.service;
 
-import my.gov.jans.access.domain.*;
-import my.gov.jans.access.repo.*;
-import org.springframework.dao.DataIntegrityViolationException;
+import java.awt.Color;
+import java.io.ByteArrayOutputStream;
+import java.io.InputStream;
+import java.security.SecureRandom;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.LocalTime;
+import java.time.Year;
+import java.util.Base64;
+import java.util.List;
+import java.util.Locale;
+import java.util.Objects;
+
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import java.io.*;
-import java.security.SecureRandom;
-import java.time.*;
-import java.util.*;
 
+import com.google.zxing.BarcodeFormat;
+import com.google.zxing.MultiFormatWriter;
+import com.google.zxing.client.j2se.MatrixToImageWriter;
+import com.google.zxing.common.BitMatrix;
 import com.lowagie.text.Chunk;
 import com.lowagie.text.Document;
 import com.lowagie.text.Element;
@@ -21,12 +32,18 @@ import com.lowagie.text.PageSize;
 import com.lowagie.text.Paragraph;
 import com.lowagie.text.Phrase;
 import com.lowagie.text.Rectangle;
-import com.lowagie.text.pdf.*;
+import com.lowagie.text.pdf.PdfPCell;
+import com.lowagie.text.pdf.PdfPTable;
+import com.lowagie.text.pdf.PdfWriter;
 import com.lowagie.text.pdf.draw.LineSeparator;
-import java.awt.Color;
-import com.google.zxing.*;
-import com.google.zxing.client.j2se.MatrixToImageWriter;
-import com.google.zxing.common.BitMatrix;
+
+import my.gov.jans.access.domain.Pelawat;
+import my.gov.jans.access.domain.Pengguna;
+import my.gov.jans.access.domain.Permohonan;
+import my.gov.jans.access.domain.Role;
+import my.gov.jans.access.domain.StatusPermohonan;
+import my.gov.jans.access.repo.PenggunaRepository;
+import my.gov.jans.access.repo.PermohonanRepository;
 
 @Service
 public class PermohonanService {
@@ -239,7 +256,7 @@ public class PermohonanService {
             subjek = "Permohonan Diluluskan - " + p.getNomborPermohonan();
             isi = "<p>Tuan/Puan,</p>"
                     + "<p>Permohonan akses anda dengan nombor <b>" + p.getNomborPermohonan() + "</b> "
-                    + "telah <b>diluluskan</b> oleh pihak pengarah dan pas kebenaran telah dikeluarkan.</p>"
+                    + "telah <b>diluluskan</b> oleh Pengarah Jabatan Air Sabah dan pas kebenaran telah dikeluarkan.</p>"
                     + "<p>Sila semak status permohonan untuk memilih tindakan seterusnya (cetak PDF atau tunjuk QR). "
                     + "<a href=\"" + linkSemak + "\">Klik sini</a> untuk semak permohonan anda.</p>"
                     + "<p>Terima kasih.</p>";
@@ -251,7 +268,7 @@ public class PermohonanService {
                     : catatan;
             isi = "<p>Tuan/Puan,</p>"
                     + "<p>Permohonan akses anda dengan nombor <b>" + p.getNomborPermohonan() + "</b> "
-                    + "adalah <b>tidak diluluskan</b> oleh pihak pengarah.</p>"
+                    + "adalah <b>tidak diluluskan</b> oleh Pengarah Jabatan Air Sabah.</p>"
                     + "<p><b>Sebab tidak diluluskan:</b> " + sebabPenolakan + "</p>"
                     + "<p>Untuk sebarang pertanyaan lanjut, sila hubungi pihak JAS.</p>"
                     + "<p>Terima kasih.</p>";
