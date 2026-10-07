@@ -8,6 +8,7 @@ import my.gov.jans.access.repo.PenyeliaLojiRepository;
 import my.gov.jans.access.service.AkaunService;
 import my.gov.jans.access.service.PermohonanService;
 import org.springframework.http.*;
+import org.springframework.security.web.csrf.CsrfToken;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -15,6 +16,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
+import jakarta.validation.Valid;
 import java.security.SecureRandom;
 import java.util.*;
 import java.util.stream.Collectors;
@@ -41,6 +43,13 @@ public class ApiController {
         this.permohonanRepository = permohonanRepository;
         this.penyeliaLojiRepository = penyeliaLojiRepository;
         this.passwordEncoder = passwordEncoder;
+    }
+
+    @GetMapping("/csrf")
+    ResponseEntity<Map<String, String>> csrf(CsrfToken csrfToken) {
+        return ResponseEntity.ok()
+                .cacheControl(org.springframework.http.CacheControl.noStore())
+                .body(Map.of("token", csrfToken.getToken()));
     }
 
     @PostMapping("/public/forgot-password")
@@ -75,7 +84,7 @@ public class ApiController {
     }
 
     @PostMapping("/public/permohonan")
-    ResponseEntity<?> mohon(@RequestBody Permohonan p) {
+    ResponseEntity<?> mohon(@Valid @RequestBody Permohonan p) {
         try {
             return ResponseEntity.ok(Map.of("nomborPermohonan", s.cipta(p).getNomborPermohonan()));
         } catch (IllegalArgumentException | IllegalStateException e) {
@@ -674,7 +683,7 @@ public class ApiController {
     }
 
     @DeleteMapping("/locations/{id}")
-    ResponseEntity<?> padamLokasi(@PathVariable Long id) {
+    public ResponseEntity<?> padamLokasi(@PathVariable Long id) {
         if (!lokasRepository.existsById(Objects.requireNonNull(id))) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of("ralat", "Lokasi tidak ditemui"));
         }

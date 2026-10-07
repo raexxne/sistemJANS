@@ -1,7 +1,9 @@
 package my.gov.jans.access.service;
 
 import my.gov.jans.access.domain.Pengguna;
+import my.gov.jans.access.domain.PasswordResetToken;
 import my.gov.jans.access.repo.PenggunaRepository;
+import my.gov.jans.access.repo.PasswordResetTokenRepository;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -21,30 +23,21 @@ public class AkaunService {
     private static final String AKSARA = "abcdefghjkmnpqrstuvwxyz23456789";
 
     private final PenggunaRepository penggunaRepository;
+    private final PasswordResetTokenRepository resetTokenRepository;
     private final PasswordEncoder passwordEncoder;
     private final EmailService emailService;
     private final SecureRandom random = new SecureRandom();
-    private final Map<String, ResetKodInfo> resetKodStore = new ConcurrentHashMap<>();
     private final Map<String, Deque<String>> sejarahKataLaluanStore = new ConcurrentHashMap<>();
 
-    private static final class ResetKodInfo {
-        private final String kod;
-        private final Instant tamatPada;
-
-        private ResetKodInfo(String kod, Instant tamatPada) {
-            this.kod = kod;
-            this.tamatPada = tamatPada;
-        }
-    }
-
-    public AkaunService(PenggunaRepository penggunaRepository, PasswordEncoder passwordEncoder,
-            EmailService emailService) {
+    public AkaunService(PenggunaRepository penggunaRepository, PasswordResetTokenRepository resetTokenRepository,
+            PasswordEncoder passwordEncoder, EmailService emailService) {
         this.penggunaRepository = penggunaRepository;
+        this.resetTokenRepository = resetTokenRepository;
         this.passwordEncoder = passwordEncoder;
         this.emailService = emailService;
     }
 
-    @Transactional(readOnly = true)
+    @Transactional
     public void hantarKodReset(String email) {
         String emel = normalisasiEmail(email);
         Pengguna pengguna = penggunaRepository.findByEmail(emel).orElse(null);
@@ -52,8 +45,20 @@ public class AkaunService {
             return;
         }
 
+        Instant sekarang = Instant.now();
+        Optional<PasswordResetToken> resetSediaAda = resetTokenRepository.findById(
+                Objects.requireNonNull(pengguna.getId(), "ID pengguna diperlukan"));
+        if (resetSediaAda.isPresent()
+                && resetSediaAda.get().getCreatedAt().isAfter(sekarang.minusSeconds(60))) {
+            return;
+        }
+
         String kod = String.format("%06d", random.nextInt(1_000_000));
-        resetKodStore.put(emel, new ResetKodInfo(kod, Instant.now().plusSeconds(600)));
+        resetTokenRepository.save(new PasswordResetToken(
+                pengguna,
+                passwordEncoder.encode(kod),
+                sekarang.plusSeconds(600),
+                sekarang));
 
         String isi = "<p>Tuan/Puan,</p>"
                 + "<p>Kod 6 digit untuk reset kata laluan akaun JAS anda ialah:</p>"
@@ -69,7 +74,7 @@ public class AkaunService {
                 null);
     }
 
-    @Transactional
+    @Transactional(noRollbackFor = IllegalStateException.class)
     public void sahkanKodDanResetKataLaluan(String email, String kod) {
         String emel = normalisasiEmail(email);
         String kodBersih = Objects.requireNonNull(kod, "Kod reset diperlukan").trim();
@@ -77,19 +82,25 @@ public class AkaunService {
             throw new IllegalArgumentException("Kod reset mesti 6 digit");
         }
 
-        ResetKodInfo info = resetKodStore.get(emel);
-        if (info == null || Instant.now().isAfter(info.tamatPada) || !info.kod.equals(kodBersih)) {
-            resetKodStore.remove(emel);
+        Pengguna pengguna = penggunaRepository.findByEmail(emel)
+                .orElseThrow(() -> new IllegalStateException("Kod reset tidak sah atau telah tamat"));
+        PasswordResetToken resetToken = resetTokenRepository.findByUserIdForUpdate(pengguna.getId())
+                .orElseThrow(() -> new IllegalStateException("Kod reset tidak sah atau telah tamat"));
+
+        if (Instant.now().isAfter(resetToken.getExpiresAt()) || resetToken.getFailedAttempts() >= 5) {
+            resetTokenRepository.delete(resetToken);
             throw new IllegalStateException("Kod reset tidak sah atau telah tamat");
         }
-
-        Pengguna pengguna = penggunaRepository.findByEmail(emel)
-                .orElseThrow(() -> new IllegalStateException("Akaun tidak ditemui"));
+        if (!passwordEncoder.matches(kodBersih, resetToken.getCodeHash())) {
+            resetToken.incrementFailedAttempts();
+            resetTokenRepository.save(resetToken);
+            throw new IllegalStateException("Kod reset tidak sah atau telah tamat");
+        }
 
         String kataLaluanBaharu = janaKataLaluan(10);
         pengguna.setPasswordHash(passwordEncoder.encode(kataLaluanBaharu));
         penggunaRepository.save(pengguna);
-        resetKodStore.remove(emel);
+        resetTokenRepository.delete(resetToken);
 
         String isi = "<p>Tuan/Puan,</p>"
                 + "<p>Kata laluan baharu untuk akaun JAS anda telah dijana.</p>"

@@ -1,6 +1,10 @@
 package my.gov.jans.access.domain;
 
 import jakarta.persistence.*;
+import jakarta.validation.constraints.Email;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Size;
 import java.time.*;
 import java.util.ArrayList;
 import java.util.List;
@@ -17,6 +21,9 @@ public class Permohonan {
     private String nomborPermohonan;
 
     @Column(name = "email_wakil")
+    @NotBlank(message = "E-mel wakil diperlukan")
+    @Email(message = "Format e-mel tidak sah")
+    @Size(max = 255, message = "E-mel wakil tidak boleh melebihi 255 aksara")
     private String emailWakil;
 
     @Column(name = "phone_office")
@@ -26,15 +33,23 @@ public class Permohonan {
     private LocalDate applicationDate;
 
     private String organisation;
+
+    @NotNull(message = "Tarikh lawatan diperlukan")
     private LocalDate visitDate;
+
+    @NotNull(message = "Masa lawatan diperlukan")
     private LocalTime visitTime;
 
     @Enumerated(EnumType.STRING)
+    @NotNull(message = "Jenis lokasi diperlukan")
     private JenisLokasi locationType;
 
+    @NotBlank(message = "Lokasi diperlukan")
+    @Size(max = 255, message = "Lokasi tidak boleh melebihi 255 aksara")
     private String locationName;
 
     @Column(columnDefinition = "TEXT")
+    @NotBlank(message = "Tujuan lawatan diperlukan")
     private String purpose;
 
     @Enumerated(EnumType.STRING)

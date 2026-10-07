@@ -7,6 +7,8 @@ import org.springframework.security.core.userdetails.*;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.security.web.csrf.CookieCsrfTokenRepository;
+import org.springframework.security.web.csrf.CsrfTokenRequestAttributeHandler;
 
 @Configuration
 public class SecurityConfig {
@@ -26,7 +28,11 @@ public class SecurityConfig {
 
         @Bean
         SecurityFilterChain security(HttpSecurity h) throws Exception {
-                return h.csrf(c -> c.disable())
+                CookieCsrfTokenRepository csrfTokenRepository = CookieCsrfTokenRepository.withHttpOnlyFalse();
+                csrfTokenRepository.setCookiePath("/");
+                return h.csrf(c -> c
+                                .csrfTokenRepository(csrfTokenRepository)
+                                .csrfTokenRequestHandler(new CsrfTokenRequestAttributeHandler()))
                                 .authorizeHttpRequests(a -> a
                                                 .requestMatchers("/", "/index.html", "/login.html",
                                                                 "/forgot-password.html", "/forgot-password-verify.html",
@@ -35,7 +41,9 @@ public class SecurityConfig {
                                                 .requestMatchers("/faq.html", "/hubungi.html", "/aduan.html")
                                                 .permitAll()
                                                 .requestMatchers("/mohon.html", "/semak.html", "/sah.html").permitAll()
-                                                .requestMatchers("/api/public/**", "/api/pas/**").permitAll()
+                                                .requestMatchers("/api/csrf", "/api/public/**", "/api/pas/**")
+                                                .permitAll()
+                                                .requestMatchers("/actuator/health", "/actuator/health/**").permitAll()
                                                 .requestMatchers("/api/staff/**", "/petugas.html")
                                                 .hasRole("STAFF")
                                                 .requestMatchers("/api/pengarah/**", "/pengarah.html")

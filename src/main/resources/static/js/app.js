@@ -1,8 +1,3 @@
-// ============================================
-//  PENGATURAN URL (ngrok)
-// ============================================
-const BASE_URL = 'https://impart-cube-crabgrass.ngrok-free.dev';
-
 /**
  * Escape HTML special characters
  */
