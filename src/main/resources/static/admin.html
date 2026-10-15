@@ -390,6 +390,10 @@
             <h2 class="h5 mb-0"><i class="fas fa-users-gear me-2 text-primary"></i>Senarai Pengguna</h2>
             <p class="text-muted mb-0 small">Klik ikon tindakan untuk melihat, menukar maklumat atau memadam pengguna.</p>
           </div>
+          <div class="input-group ms-auto me-3" style="max-width: 360px;">
+            <span class="input-group-text"><i class="fas fa-search"></i></span>
+            <input type="search" id="admin-user-search" class="form-control" placeholder="Cari nama, emel atau peranan..." autocomplete="off">
+          </div>
           <button id="btn-create-user" class="btn btn-primary admin-icon-btn shadow-sm" title="Tambah Pengguna">
             <i class="fas fa-plus"></i>
           </button>
@@ -453,6 +457,10 @@
           <div>
             <h2 class="h5 mb-0"><i class="fas fa-map-marked-alt me-2 text-primary"></i>Senarai Lokasi</h2>
             <p class="text-muted mb-0 small">Klik ikon tindakan untuk menukar maklumat atau memadam lokasi.</p>
+          </div>
+          <div class="input-group ms-auto me-3" style="max-width: 360px;">
+            <span class="input-group-text"><i class="fas fa-search"></i></span>
+            <input type="search" id="admin-lokasi-search" class="form-control" placeholder="Cari nama lokasi atau daerah..." autocomplete="off">
           </div>
           <button id="btn-create-lokasi" class="btn btn-primary admin-icon-btn shadow-sm" title="Tambah Lokasi">
             <i class="fas fa-plus"></i>
@@ -637,12 +645,35 @@
             })
           ];
           actions.forEach((btn) => actionsCell.appendChild(btn));
+          row.dataset.search = `${user.name || ''} ${user.email || ''} ${user.role || ''}`.toLowerCase();
           tbody.appendChild(row);
         });
+        filterUsers();
       } catch (error) {
         tbody.innerHTML = `<tr><td colspan="5" class="text-center text-danger">${error.message}</td></tr>`;
       }
     }
+
+    function filterUsers() {
+      const keyword = (document.querySelector('#admin-user-search')?.value || '').trim().toLowerCase();
+      const tbody = document.querySelector('#admin-user-list');
+      let visible = 0;
+      const rows = tbody.querySelectorAll('tr[data-search]');
+      rows.forEach((row) => {
+        const match = !keyword || row.dataset.search.includes(keyword);
+        row.style.display = match ? '' : 'none';
+        if (match) visible++;
+      });
+      tbody.querySelector('.no-result-row')?.remove();
+      if (rows.length && !visible) {
+        const empty = document.createElement('tr');
+        empty.className = 'no-result-row';
+        empty.innerHTML = '<td colspan="5" class="text-center text-muted">Tiada pengguna sepadan dengan carian.</td>';
+        tbody.appendChild(empty);
+      }
+    }
+
+    document.querySelector('#admin-user-search')?.addEventListener('input', filterUsers);
 
     function createModalShell(title, bodyHtml, opts = {}) {
       const overlay = document.createElement('div');
@@ -1020,12 +1051,35 @@
             })
           ];
           actions.forEach((btn) => actionsCell.appendChild(btn));
+          row.dataset.search = `${lokasi.name || ''} ${lokasi.daerah || ''}`.toLowerCase();
           tbody.appendChild(row);
         });
+        filterLokasi();
       } catch (error) {
         tbody.innerHTML = `<tr><td colspan="4" class="text-center text-danger">${error.message}</td></tr>`;
       }
     }
+
+    function filterLokasi() {
+      const keyword = (document.querySelector('#admin-lokasi-search')?.value || '').trim().toLowerCase();
+      const tbody = document.querySelector('#admin-lokasi-list');
+      let visible = 0;
+      const rows = tbody.querySelectorAll('tr[data-search]');
+      rows.forEach((row) => {
+        const match = !keyword || row.dataset.search.includes(keyword);
+        row.style.display = match ? '' : 'none';
+        if (match) visible++;
+      });
+      tbody.querySelector('.no-result-row')?.remove();
+      if (rows.length && !visible) {
+        const empty = document.createElement('tr');
+        empty.className = 'no-result-row';
+        empty.innerHTML = '<td colspan="4" class="text-center text-muted">Tiada lokasi sepadan dengan carian.</td>';
+        tbody.appendChild(empty);
+      }
+    }
+
+    document.querySelector('#admin-lokasi-search')?.addEventListener('input', filterLokasi);
 
     function showCreateLokasiModal() {
       return new Promise((resolve) => {
