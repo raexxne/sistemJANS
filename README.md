@@ -20,6 +20,16 @@ Aplikasi Spring Boot + MySQL untuk mengurus permohonan akses loji dan intake.
 4. Jalankan `mvn spring-boot:run`.
 5. Buka `http://localhost:8080`.
 
+## Membina fail WAR
+
+Jalankan arahan berikut dari folder projek:
+
+```powershell
+mvn clean package
+```
+
+Fail WAR akan dijana di `target/jans-access-1.0.0.war`. Fail ini boleh digunakan pada servlet container yang serasi dengan Jakarta Servlet 6.0 dan Java 25 atau lebih baharu. Konfigurasi pangkalan data dan pemboleh ubah persekitaran yang diterangkan di atas masih diperlukan apabila aplikasi dijalankan.
+
 Dump SQL mengandungi akaun demo untuk pembangunan setempat sahaja. Tukar kata laluan semua akaun demo dan buang data contoh sebelum sistem digunakan di luar persekitaran pembangunan.
 
 Kredensial demo selepas import SQL (pembangunan setempat sahaja):

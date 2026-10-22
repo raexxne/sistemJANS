@@ -6,7 +6,7 @@
   <title>Petugas Cawangan Pengeluaran | JAS</title>
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.6.0/css/all.min.css">
-  <link rel="stylesheet" href="/css/style.css">
+  <link rel="stylesheet" href="css/style.css">
   <style>
     .dashboard-stat-card {
       border: 0;
@@ -557,25 +557,25 @@
       }
     }
   </style>
-  <script src="/js/csrf.js"></script>
+  <script src="js/csrf.js"></script>
 </head>
 <body class="internal-portal d-flex flex-column min-vh-100">
 
   <nav class="navbar navbar-expand-lg navbar-dark sticky-top internal-nav">
     <div class="container-fluid">
-      <a class="navbar-brand fw-bold fs-3 d-flex align-items-center" href="/petugas.html">
-        <img src="/images/logo3.png" alt="Logo JAS" style="height: 60px; width: auto; margin-right: 14px;">
+      <a class="navbar-brand fw-bold fs-3 d-flex align-items-center" href="petugas.html">
+        <img src="images/logo3.png" alt="Logo JAS" style="height: 60px; width: auto; margin-right: 14px;">
         <span class="d-flex flex-column align-items-start">
           <span class="fw-bold" style="font-size: 1.6rem; line-height: 1;">JAS</span>
           <span class="text-white-50" style="font-size: 0.8rem; line-height: 1.1; letter-spacing: 0.04em; margin-top: 3px;">Jabatan Air Sabah</span>
         </span>
       </a>
       <div class="ms-auto d-flex align-items-center gap-3">
-        <a href="/profile.html" class="d-flex align-items-center gap-2 text-decoration-none" style="cursor: pointer;">
+        <a href="profile.html" class="d-flex align-items-center gap-2 text-decoration-none" style="cursor: pointer;">
           <img id="navProfilePic" src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 200 200'%3E%3Crect width='200' height='200' fill='%23e9ecef'/%3E%3Ccircle cx='100' cy='60' r='35' fill='%236c757d'/%3E%3Cellipse cx='100' cy='150' rx='50' ry='45' fill='%236c757d'/%3E%3C/svg%3E" alt="Profil" class="rounded-circle" style="width: 36px; height: 36px; object-fit: cover; border: 2px solid white;">
           <span id="navUsername" class="text-light fw-500" style="font-size: 14px;"></span>
         </a>
-        <form id="logout-form" method="post" action="/logout" class="d-inline">
+        <form id="logout-form" method="post" action="logout" class="d-inline">
           <button type="submit" class="btn btn-outline-light btn-sm">Log keluar</button>
         </form>
       </div>
@@ -808,7 +808,7 @@
       popover.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.65);backdrop-filter:blur(4px);z-index:3000;display:flex;align-items:center;justify-content:center;padding:16px;';
       popover.innerHTML = `
         <div class="bg-white text-center p-4 shadow" style="width:100%;max-width:360px;border-radius:12px;">
-          <img src="/images/water-drops.gif" alt="Memuatkan" class="mb-3" style="width:72px;height:72px;object-fit:contain;">
+          <img src="images/water-drops.gif" alt="Memuatkan" class="mb-3" style="width:72px;height:72px;object-fit:contain;">
           <p class="mb-0 fw-semibold text-dark">Memuatkan, sila tunggu...</p>
         </div>
       `;
@@ -819,7 +819,7 @@
 
     async function loadDashboardProfile() {
       try {
-        const response = await fetch('/api/profile');
+        const response = await fetch('api/profile');
         if (!response.ok) return;
         const data = await response.json();
         document.querySelector('#navUsername').textContent = data.name;
@@ -831,10 +831,10 @@
 
     function loadNavProfilePicture() {
       const img = document.querySelector('#navProfilePic');
-      fetch('/api/profile/picture')
+      fetch('api/profile/picture')
         .then(response => {
           if (response.ok) {
-            img.src = '/api/profile/picture?t=' + Date.now();
+            img.src = 'api/profile/picture?t=' + Date.now();
           }
         })
         .catch(() => {});
@@ -1326,7 +1326,7 @@
       let data = { ...item };
 
       try {
-        const res = await fetch(`/api/staff/permohonan/${id}`);
+        const res = await fetch(`api/staff/permohonan/${id}`);
         if (res.ok) data = await res.json();
       } catch (e) {
         console.warn('Gagal muat butiran penuh, guna data senarai.', e);
@@ -1350,7 +1350,7 @@
       let auditTrailEntries = [];
       if (auditTrailReference) {
         try {
-          const auditRes = await fetch(`/api/public/permohonan/${encodeURIComponent(auditTrailReference)}/audit-trail`);
+          const auditRes = await fetch(`api/public/permohonan/${encodeURIComponent(auditTrailReference)}/audit-trail`);
           if (auditRes.ok) {
             auditTrailEntries = await auditRes.json();
           }
@@ -1395,7 +1395,7 @@
                 <div class="detail-field">
                   <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-2">
                     <label class="mb-0">Maklumat Pelawat</label>
-                    <button type="button" class="btn btn-sm btn-outline-primary" onclick="sessionStorage.setItem('petugasReopenId', '${id}'); sessionStorage.setItem('petugasScrollY', String(window.scrollY)); location.href='/pelawat.html?no=${encodeURIComponent(noRujukan)}&from=petugas'">
+                    <button type="button" class="btn btn-sm btn-outline-primary" onclick="sessionStorage.setItem('petugasReopenId', '${id}'); sessionStorage.setItem('petugasScrollY', String(window.scrollY)); location.href='pelawat.html?no=${encodeURIComponent(noRujukan)}&from=petugas'">
                       Lihat Butiran
                     </button>
                   </div>
@@ -1551,16 +1551,24 @@
 
       let successCount = 0;
       let failCount = 0;
+      let lastError = '';
 
       try {
         for (const id of selectedIds) {
           try {
-            const res = await fetch(`/api/staff/permohonan/${encodeURIComponent(id)}/hantar-pengarah`, {
+            const res = await fetch(`api/staff/permohonan/${encodeURIComponent(id)}/hantar-pengarah`, {
               method: 'POST',
               headers: { 'Content-Type': 'application/json' },
               body: JSON.stringify({ catatan: finalCatatan })
             });
-            if (res.ok) successCount += 1; else failCount += 1;
+            if (res.ok) {
+              successCount += 1;
+            } else {
+              failCount += 1;
+              const err = await res.json().catch(() => ({}));
+              console.error('Hantar pengarah gagal', res.status, err);
+              lastError = err.ralat || `HTTP ${res.status}`;
+            }
           } catch (error) {
             console.error(error);
             failCount += 1;
@@ -1577,9 +1585,9 @@
           title: successCount > 0 ? 'Berjaya Dihantar' : 'Gagal Menghantar',
           message: successCount > 0
             ? `${successCount} permohonan berjaya dihantar kepada pengarah.${failCount ? ` ${failCount} permohonan gagal.` : ''}`
-            : 'Tiada permohonan berjaya dihantar kepada pengarah.',
+            : `Tiada permohonan berjaya dihantar kepada pengarah.${lastError ? ` Sebab: ${lastError}` : ''}`,
           icon: successCount > 0 ? 'fa-check-circle' : 'fa-circle-exclamation',
-          imageSrc: successCount > 0 ? '/images/right-decision.gif' : '/images/wrong-decision.gif',
+          imageSrc: successCount > 0 ? 'images/right-decision.gif' : 'images/wrong-decision.gif',
           type: successCount > 0 ? 'success' : 'error'
         });
       } finally {
@@ -1701,7 +1709,7 @@
       const filters = getFilterValues();
 
       try {
-        const response = await fetch('/api/staff/permohonan');
+              const response = await fetch('api/staff/permohonan');
         if (!response.ok) throw new Error('Gagal memuat senarai permohonan');
 
         const all = (await response.json()).map(item => ({
@@ -1802,7 +1810,7 @@
 
     async function loadDashboardStats() {
       try {
-        const response = await fetch('/api/staff/permohonan');
+        const response = await fetch('api/staff/permohonan');
         if (!response.ok) return;
         const applications = await response.json();
         const pendingReview = applications.filter((item) =>

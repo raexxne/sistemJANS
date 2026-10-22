@@ -4,7 +4,7 @@
 
   const getToken = () => {
     if (!tokenPromise) {
-      tokenPromise = nativeFetch('/api/csrf', {
+      tokenPromise = nativeFetch('api/csrf', {
         credentials: 'same-origin',
         headers: { Accept: 'application/json' },
         cache: 'no-store'

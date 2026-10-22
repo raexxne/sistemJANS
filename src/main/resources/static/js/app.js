@@ -162,7 +162,7 @@ function showLoadingPopover(message = 'Memuatkan, sila tunggu...') {
   `;
   popover.innerHTML = `
     <div class="bg-white text-center p-4 shadow" style="width: 100%; max-width: 360px; border-radius: 12px;">
-      <img src="/images/water-drops.gif" alt="Memproses" class="mb-3" style="width: 72px; height: 72px; object-fit: contain;">
+      <img src="images/water-drops.gif" alt="Memproses" class="mb-3" style="width: 72px; height: 72px; object-fit: contain;">
       <p class="mb-0 fw-semibold text-dark">${esc(message)}</p>
     </div>
   `;
@@ -269,7 +269,7 @@ function showSuccessPopup(nomborPermohonan) {
       width: 90%;
     ">
       <div style="margin-bottom: 20px;">
-        <img src="/images/email.gif" alt="Permohonan berjaya dihantar" style="width: 72px; height: 72px; object-fit: contain;">
+        <img src="images/email.gif" alt="Permohonan berjaya dihantar" style="width: 72px; height: 72px; object-fit: contain;">
       </div>
       <h2 class="h4 mb-3" style="color: #198754; font-weight: 600;">Permohonan Berjaya Dihantar</h2>
       <p class="text-muted mb-1" style="font-size: 15px;">Nombor permohonan anda:</p>
@@ -549,7 +549,7 @@ if (form) {
     }
 
     try {
-      const r = await api('/api/public/permohonan', {
+      const r = await api('api/public/permohonan', {
         method: 'POST',
         body: JSON.stringify(data)
       });
@@ -581,7 +581,7 @@ async function semak() {
   if (!no) return;
 
   try {
-    let p = await api('/api/public/permohonan/' + encodeURIComponent(no));
+    let p = await api('api/public/permohonan/' + encodeURIComponent(no));
 
     // === Status paparan: hanya 3 label dipaparkan kepada pemohon ===
     let statusPaparan;
@@ -601,7 +601,7 @@ async function semak() {
     let pas = p.status === 'PAS_DIKELUARKAN'
       ? `
         <p class="mt-3">
-          <a href="/api/pas/${p.passToken}/pdf-tanpa-qr" target="_blank" class="btn btn-primary me-2">
+          <a href="api/pas/${p.passToken}/pdf-tanpa-qr" target="_blank" class="btn btn-primary me-2">
             Cetak Pas Kebenaran
           </a>
           <button class="btn btn-info" onclick="lihatQR('${p.passToken}')">
@@ -698,7 +698,7 @@ function lihatQR(token) {
   // guna path relatif (bukan BASE_URL) supaya request sentiasa ke asal (origin)
   // yang sama dengan halaman semasa — elak sekatan CORS bila halaman dibuka
   // melalui domain/hos lain daripada domain ngrok
-  const qrUrl = '/api/pas/' + encodeURIComponent(token) + '/qr?t=' + Date.now();
+  const qrUrl = 'api/pas/' + encodeURIComponent(token) + '/qr?t=' + Date.now();
 
   console.log('QR Image URL:', qrUrl);
 
@@ -729,7 +729,7 @@ function lihatQR(token) {
     } catch (e) {
       console.error('Gagal load QR image', e);
       showErrorPopup('Ralat QR', 'Gagal memuatkan QR code. Sila cuba lagi.', {
-        redirectTo: '/semak.html'
+        redirectTo: 'semak.html'
       });
     }
   })();
@@ -875,7 +875,7 @@ async function bulkPutus(lulus) {
     const closeLoading = showLoadingPopover();
     try {
       for (const id of ids) {
-        await api(`/api/pengarah/permohonan/${id}/keputusan`, {
+        await api(`api/pengarah/permohonan/${id}/keputusan`, {
           method: 'POST',
           body: JSON.stringify({ lulus, catatan })
         });
@@ -894,7 +894,7 @@ async function bulkPutus(lulus) {
       confirmText: 'OK',
       type: lulus ? 'success' : 'danger',
       icon: lulus ? 'fa-check-circle' : 'fa-times-circle',
-      imageSrc: lulus ? '/images/right-decision.gif' : '/images/wrong-decision.gif',
+      imageSrc: lulus ? 'images/right-decision.gif' : 'images/wrong-decision.gif',
       showCancel: false
     });
   } catch (e) {
@@ -1032,7 +1032,7 @@ function renderPengarahTable() {
           <button type="button" class="btn btn-sm btn-success" data-action="setuju" data-id="${p.id}" title="Setuju">
             <i class="fas fa-check"></i>
           </button>
-          <a href="/api/public/permohonan/${encodeURIComponent(p.nomborPermohonan)}/pdf" target="_blank" rel="noopener" class="btn btn-sm btn-outline-primary" title="Cetak PDF">
+          <a href="api/public/permohonan/${encodeURIComponent(p.nomborPermohonan)}/pdf" target="_blank" rel="noopener" class="btn btn-sm btn-outline-primary" title="Cetak PDF">
             <i class="fas fa-print"></i>
           </a>
         </div>
@@ -1125,7 +1125,7 @@ async function showPengarahDetailModal(p) {
   let auditTrailEntries = [];
   if (p.nomborPermohonan) {
     try {
-      const auditRes = await fetch(`/api/public/permohonan/${encodeURIComponent(p.nomborPermohonan)}/audit-trail`);
+      const auditRes = await fetch(`api/public/permohonan/${encodeURIComponent(p.nomborPermohonan)}/audit-trail`);
       if (auditRes.ok) {
         auditTrailEntries = await auditRes.json();
       }
@@ -1166,7 +1166,7 @@ async function showPengarahDetailModal(p) {
             <div class="detail-field">
               <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-2">
                 <label class="mb-0">Maklumat Pelawat</label>
-                <button type="button" class="btn btn-sm btn-outline-primary" onclick="sessionStorage.setItem('pengarahReopenId', '${p.id}'); sessionStorage.setItem('pengarahScrollY', String(window.scrollY)); location.href='/pelawat.html?no=${encodeURIComponent(p.nomborPermohonan)}&from=pengarah'">
+                <button type="button" class="btn btn-sm btn-outline-primary" onclick="sessionStorage.setItem('pengarahReopenId', '${p.id}'); sessionStorage.setItem('pengarahScrollY', String(window.scrollY)); location.href='pelawat.html?no=${encodeURIComponent(p.nomborPermohonan)}&from=pengarah'">
                   Lihat Butiran
                 </button>
               </div>
@@ -1257,7 +1257,7 @@ async function showPengarahDetailModal(p) {
 
 async function director(resetSelection = false, forceRefresh = false) {
   try {
-    const permohonan = await api('/api/pengarah/permohonan');
+    const permohonan = await api('api/pengarah/permohonan');
     if (directorDecisionModalOpen && !forceRefresh) return;
 
     pengarahAllPermohonan = permohonan;
@@ -1312,7 +1312,7 @@ async function putus(id, lulus) {
     directorDecisionModalOpen = true;
     const closeLoading = showLoadingPopover();
     try {
-      await api(`/api/pengarah/permohonan/${id}/keputusan`, {
+      await api(`api/pengarah/permohonan/${id}/keputusan`, {
         method: 'POST',
         body: JSON.stringify({ lulus, catatan })
       });
@@ -1330,7 +1330,7 @@ async function putus(id, lulus) {
       confirmText: 'OK',
       type: lulus ? 'success' : 'danger',
       icon: lulus ? 'fa-check-circle' : 'fa-times-circle',
-      imageSrc: lulus ? '/images/right-decision.gif' : '/images/wrong-decision.gif',
+      imageSrc: lulus ? 'images/right-decision.gif' : 'images/wrong-decision.gif',
       showCancel: false
     });
   } catch (e) {
@@ -1351,7 +1351,7 @@ if (document.querySelector('#senarai-pengarah')) {
 
 if (document.querySelector('#sah')) {
   let token = q.get('token');
-  api('/api/pas/' + encodeURIComponent(token))
+  api('api/pas/' + encodeURIComponent(token))
     .then(p => {
       document.querySelector('#sah').innerHTML = `
         <div class="alert alert-success mb-3">

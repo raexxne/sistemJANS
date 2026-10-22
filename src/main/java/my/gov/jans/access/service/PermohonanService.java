@@ -200,12 +200,18 @@ public class PermohonanService {
         List<Pengguna> pengarahList = pengguna.findByRole(Role.PENGARAH);
         for (Pengguna pengarah : pengarahList) {
             if (pengarah.getEmail() != null && !pengarah.getEmail().isBlank()) {
-                emailService.hantarEmail(
-                        pengarah.getEmail(),
-                        "Permohonan baru diterima - " + p.getNomborPermohonan(),
-                        isi,
-                        null,
-                        null);
+                try {
+                    emailService.hantarEmail(
+                            pengarah.getEmail(),
+                            "Permohonan baru diterima - " + p.getNomborPermohonan(),
+                            isi,
+                            null,
+                            null);
+                } catch (RuntimeException e) {
+                    // Kegagalan emel tidak patut membatalkan penghantaran permohonan
+                    org.slf4j.LoggerFactory.getLogger(PermohonanService.class)
+                            .warn("Notifikasi emel kepada pengarah gagal: {}", e.getMessage());
+                }
             }
         }
 
