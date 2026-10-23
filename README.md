@@ -37,6 +37,7 @@ Kredensial demo selepas import SQL (pembangunan setempat sahaja):
 - Kakitangan: `staff@jans.gov.my` / `Staff123!`
 - Pengarah: `pengarah@jans.gov.my` / `Pengarah123!`
 - Admin: `admin@jans.gov.my` / `Admin123!`
+- Penyelia Loji: `penyelia@jans.gov.my` / `Penyelia123!`
 
 ## Konfigurasi
 
