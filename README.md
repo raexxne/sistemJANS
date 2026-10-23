@@ -28,7 +28,7 @@ Jalankan arahan berikut dari folder projek:
 mvn clean package
 ```
 
-Fail WAR akan dijana di `target/jans-access-1.0.0.war`. Fail ini boleh digunakan pada servlet container yang serasi dengan Jakarta Servlet 6.0 dan Java 25 atau lebih baharu. Konfigurasi pangkalan data dan pemboleh ubah persekitaran yang diterangkan di atas masih diperlukan apabila aplikasi dijalankan.
+Fail WAR akan dijana di `target/jans-access-system.war`. Fail ini boleh digunakan pada servlet container yang serasi dengan Jakarta Servlet 6.0 dan Java 25 atau lebih baharu. Konfigurasi pangkalan data dan pemboleh ubah persekitaran yang diterangkan di atas masih diperlukan apabila aplikasi dijalankan.
 
 Dump SQL mengandungi akaun demo untuk pembangunan setempat sahaja. Tukar kata laluan semua akaun demo dan buang data contoh sebelum sistem digunakan di luar persekitaran pembangunan.
 
