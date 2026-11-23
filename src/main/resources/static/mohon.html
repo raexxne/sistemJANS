@@ -106,28 +106,36 @@
                       </button>
                       <ul class="dropdown-menu w-100 shadow" id="menuJenisLokasi" style="max-height: 280px; overflow-y: auto;">
                         <li><a class="dropdown-item" href="#" data-val="LOJI" style="white-space: normal; word-wrap: break-word; padding: 8px 16px; border-bottom: 1px solid #f8f9fa;">Loji Rawatan Air</a></li>
-                        <li><a class="dropdown-item" href="#" data-val="INTAKE" style="white-space: normal; word-wrap: break-word; padding: 8px 16px;">Intake</a></li>
+                        <li><a class="dropdown-item" href="#" data-val="INTAKE" style="white-space: normal; word-wrap: break-word; padding: 8px 16px;">Muka Sauk</a></li>
                       </ul>
                       <select id="locationType" name="locationType" required style="position: absolute; bottom: 0; left: 50%; width: 1px; height: 1px; opacity: 0; pointer-events: none;">
                         <option value="">-- Pilih Jenis Lokasi --</option>
                         <option value="LOJI">Loji Rawatan Air</option>
-                        <option value="INTAKE">Intake</option>
+                        <option value="INTAKE">Muka Sauk</option>
                       </select>
                     </div>
                   </div>
 
-                  <!-- 2. Dropdown Nama / Alamat Lokasi -->
+                  <div class="col-md-6">
+                    <label for="locationDistrict" class="form-label fw-medium">Daerah <span class="text-danger">*</span></label>
+                    <select id="locationDistrict" class="form-select" required disabled>
+                      <option value="">-- Sila Pilih Jenis Lokasi Dahulu --</option>
+                    </select>
+                    <div class="form-text text-muted" id="locationDistrictHint"></div>
+                  </div>
+
+                  <!-- 3. Dropdown Nama / Alamat Lokasi -->
                   <div class="col-md-6">
                     <label for="locationDropdownBtn" class="form-label fw-medium">Nama / Alamat Lokasi <span class="text-danger">*</span></label>
                     <div class="dropdown">
                       <button class="form-select text-start w-100" type="button" data-bs-toggle="dropdown" aria-expanded="false" id="locationDropdownBtn" disabled style="overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">
-                        -- Sila Pilih Jenis Lokasi Dahulu --
+                        -- Sila Pilih Daerah Dahulu --
                       </button>
                       <ul class="dropdown-menu w-100 shadow" id="locationDropdownMenu" style="max-height: 280px; overflow-y: auto;">
-                        <li><span class="dropdown-item text-muted" style="white-space: normal; word-wrap: break-word; padding: 8px 16px;">-- Sila Pilih Jenis Lokasi Dahulu --</span></li>
+                        <li><span class="dropdown-item text-muted" style="white-space: normal; word-wrap: break-word; padding: 8px 16px;">-- Sila Pilih Daerah Dahulu --</span></li>
                       </ul>
                       <select id="locationName" name="locationName" required style="position: absolute; bottom: 0; left: 50%; width: 1px; height: 1px; opacity: 0; pointer-events: none;">
-                        <option value="">-- Sila Pilih Jenis Lokasi Dahulu --</option>
+                        <option value="">-- Sila Pilih Daerah Dahulu --</option>
                       </select>
                     </div>
                     <div class="form-text text-muted" id="locationHint"></div>
@@ -143,6 +151,13 @@
                     <label for="emailWakil" class="form-label fw-medium">E-mel Untuk Dihubungi (Wakil) <span class="text-danger">*</span></label>
                     <input id="emailWakil" name="emailWakil" type="email" class="form-control"
                            placeholder="Contoh: wakil@jabatan.gov.my" required>
+                  </div>
+
+                  <div class="col-md-6">
+                    <label for="dokumenSokongan" class="form-label fw-medium">Dokumen sokongan <span class="text-danger">*</span></label>
+                    <input id="dokumenSokongan" name="dokumenSokongan" type="file" class="form-control"
+                           accept=".pdf,application/pdf" required>
+                    <div class="form-text">PDF sahaja, maksimum 5 MB.</div>
                   </div>
 
                   <div class="col-12">
@@ -254,14 +269,14 @@
     }
 
     // Fungsi populasikan senarai Nama / Alamat Lokasi
-    function kumakanLokasiBerdasarkanJenis(jenis) {
+    function kumakanLokasiBerdasarkanJenis(jenis, daerah) {
       const locationSelect = document.getElementById('locationName');
       const btn = document.getElementById('locationDropdownBtn');
       const menu = document.getElementById('locationDropdownMenu');
 
       locationSelect.innerHTML = '';
       menu.innerHTML = '';
-      btn.textContent = '-- Sila Pilih Jenis Lokasi Dahulu --';
+      btn.textContent = '-- Sila Pilih Daerah Dahulu --';
       btn.setAttribute('disabled', 'true');
 
       if (!jenis) {
@@ -270,10 +285,17 @@
         return;
       }
 
-      const lokasiTapis = semuaLokasi.filter(l => l.type === jenis);
+      if (!daerah) {
+        locationSelect.innerHTML = '<option value="">-- Sila Pilih Daerah Dahulu --</option>';
+        menu.innerHTML = '<li><span class="dropdown-item text-muted" style="white-space: normal; word-wrap: break-word; padding: 8px 16px;">-- Sila Pilih Daerah Dahulu --</span></li>';
+        return;
+      }
+
+      const lokasiTapis = semuaLokasi.filter(l =>
+        l.type === jenis && String(l.daerah || '').trim() === daerah);
       if (lokasiTapis.length === 0) {
         locationSelect.innerHTML = '<option value="">Tiada lokasi tersedia</option>';
-        menu.innerHTML = '<li><span class="dropdown-item text-muted" style="white-space: normal; word-wrap: break-word; padding: 8px 16px;">Tiada lokasi tersedia untuk jenis ini</span></li>';
+        menu.innerHTML = '<li><span class="dropdown-item text-muted" style="white-space: normal; word-wrap: break-word; padding: 8px 16px;">Tiada lokasi tersedia di daerah ini</span></li>';
         btn.textContent = 'Tiada lokasi tersedia';
         return;
       }
@@ -322,6 +344,8 @@
       const locationType = document.getElementById('locationType');
       const btnJenisLokasi = document.getElementById('btnJenisLokasi');
       const borang = document.getElementById('borang');
+      const locationDistrict = document.getElementById('locationDistrict');
+      const locationDistrictHint = document.getElementById('locationDistrictHint');
 
       // Logik klik untuk Jenis Lokasi (Tukar data apabila diklik)
       document.querySelectorAll('#menuJenisLokasi .dropdown-item').forEach(item => {
@@ -336,14 +360,75 @@
         });
       });
 
-      // Apabila Jenis Lokasi bertukar, muatkan senarai lokasi
+      const kemasKiniDaerah = (jenis) => {
+        locationDistrict.innerHTML = '';
+        const pilihanAwal = document.createElement('option');
+        pilihanAwal.value = '';
+        locationDistrict.appendChild(pilihanAwal);
+
+        if (!jenis) {
+          pilihanAwal.textContent = '-- Sila Pilih Jenis Lokasi Dahulu --';
+          locationDistrict.disabled = true;
+          locationDistrictHint.textContent = '';
+          kumakanLokasiBerdasarkanJenis('', '');
+          return;
+        }
+
+        const daerahTersedia = [...new Set(semuaLokasi
+          .filter((lokasi) => lokasi.type === jenis)
+          .map((lokasi) => String(lokasi.daerah || '').trim())
+          .filter(Boolean))]
+          .sort((a, b) => a.localeCompare(b, 'ms'));
+
+        locationDistrict.disabled = false;
+        if (daerahTersedia.length === 0) {
+          pilihanAwal.textContent = 'Tiada daerah tersedia';
+          locationDistrictHint.textContent = 'Tiada daerah direkodkan untuk jenis lokasi ini.';
+          kumakanLokasiBerdasarkanJenis(jenis, '');
+          return;
+        }
+
+        pilihanAwal.textContent = '-- Pilih Daerah --';
+        locationDistrictHint.textContent = '';
+        daerahTersedia.forEach((daerah) => {
+          const option = document.createElement('option');
+          option.value = daerah;
+          option.textContent = daerah;
+          locationDistrict.appendChild(option);
+        });
+        kumakanLokasiBerdasarkanJenis(jenis, '');
+      };
+
+      // Apabila Jenis Lokasi bertukar, muatkan daerah yang tersedia.
       locationType.addEventListener('change', (e) => {
-        kumakanLokasiBerdasarkanJenis(e.target.value);
+        kemasKiniDaerah(e.target.value);
+      });
+
+      locationDistrict.addEventListener('change', () => {
+        kumakanLokasiBerdasarkanJenis(locationType.value, locationDistrict.value);
       });
 
       const senaraiPelawat = document.getElementById('senaraiPelawat');
       const tambahPelawat = document.getElementById('tambahPelawat');
       const maksimumPelawat = 10;
+
+      const kemasKiniMedanPengenalan = (ruangPelawat) => {
+        const jenis = ruangPelawat.querySelector('[name="visitorIdentityType"]').value;
+        const butiran = ruangPelawat.querySelector('.visitor-identity-details');
+        const medanKad = ruangPelawat.querySelector('.visitor-ic-field');
+        const medanPasport = [...ruangPelawat.querySelectorAll('.visitor-passport-field')];
+
+        butiran.hidden = !jenis;
+        medanKad.hidden = jenis !== 'KAD_PENGENALAN';
+        medanKad.querySelector('input').disabled = jenis !== 'KAD_PENGENALAN';
+        medanKad.querySelector('input').required = jenis === 'KAD_PENGENALAN';
+        medanPasport.forEach((medan) => {
+          medan.hidden = jenis !== 'PASPORT';
+          const input = medan.querySelector('input');
+          input.disabled = jenis !== 'PASPORT';
+          input.required = jenis === 'PASPORT';
+        });
+      };
 
       const kemasKiniButangPelawat = () => {
         const jumlahPelawat = senaraiPelawat.querySelectorAll('.visitor-entry').length;
@@ -368,8 +453,28 @@
               <input name="visitorName" class="form-control" placeholder="Contoh: Amanda Lindrus" required>
             </div>
             <div class="col-md-6">
-              <label class="form-label fw-medium">No. Kad Pengenalan <span class="text-danger">*</span></label>
-              <input name="visitorIcNo" class="form-control" placeholder="Contoh: 871234-12-1234" required>
+              <label class="form-label fw-medium">Jenis pengenalan diri <span class="text-danger">*</span></label>
+              <select name="visitorIdentityType" class="form-select" required>
+                <option value="">-- Pilih Jenis Pengenalan Diri --</option>
+                <option value="KAD_PENGENALAN">No. Kad Pengenalan</option>
+                <option value="PASPORT">Pasport</option>
+              </select>
+            </div>
+            <div class="col-12 visitor-identity-details" hidden>
+              <div class="row g-3">
+                <div class="col-md-6 visitor-ic-field" hidden>
+                  <label class="form-label fw-medium">No. Kad Pengenalan <span class="text-danger">*</span></label>
+                  <input name="visitorIcNo" class="form-control" placeholder="Contoh: 871234-12-1234" disabled>
+                </div>
+                <div class="col-md-6 visitor-passport-field" hidden>
+                  <label class="form-label fw-medium">Warganegara <span class="text-danger">*</span></label>
+                  <input name="visitorNationality" class="form-control" placeholder="Contoh: Malaysia" disabled>
+                </div>
+                <div class="col-md-6 visitor-passport-field" hidden>
+                  <label class="form-label fw-medium">No. Permit Kerja <span class="text-danger">*</span></label>
+                  <input name="visitorWorkPermitNo" class="form-control" placeholder="Contoh: PW-MYS-2026-0012" disabled>
+                </div>
+              </div>
             </div>
             <div class="col-md-6">
               <label class="form-label fw-medium">E-mel <span class="text-danger">*</span></label>
@@ -384,11 +489,14 @@
               <input name="visitorPosition" class="form-control" placeholder="Contoh: Jurutera (J41)" required>
             </div>
             <div class="col-md-6">
-              <label class="form-label fw-medium">No. Pendaftaran Kenderaan <span class="text-muted">(jika ada)</span></label>
-              <input name="visitorVehicleNo" class="form-control" placeholder="Contoh: SAB 1234 W">
+              <label class="form-label fw-medium">No. Pendaftaran Kenderaan <span class="text-danger">*</span></label>
+              <input name="visitorVehicleNo" class="form-control" placeholder="Contoh: SAB 1234 W" required>
+              <div class="form-text">Jika berkongsi kenderaan dengan orang lain, masukkan nombor pendaftaran kenderaan yang sama.</div>
             </div>
           </div>`;
         senaraiPelawat.appendChild(ruangPelawat);
+        const jenisPengenalan = ruangPelawat.querySelector('[name="visitorIdentityType"]');
+        jenisPengenalan.addEventListener('change', () => kemasKiniMedanPengenalan(ruangPelawat));
         kemasKiniButangPelawat();
       };
 
@@ -406,6 +514,32 @@
       });
 
       tambahRuangPelawat();
+
+      const dokumenSokongan = document.getElementById('dokumenSokongan');
+      const saizMaksimumDokumen = 5 * 1024 * 1024;
+      const dokumenPdfSah = async (fail) => {
+        if (!fail.name.toLowerCase().endsWith('.pdf') || fail.size > saizMaksimumDokumen) {
+          return false;
+        }
+        const header = new TextDecoder().decode(await fail.slice(0, 5).arrayBuffer());
+        return header === '%PDF-';
+      };
+
+      dokumenSokongan.addEventListener('change', async () => {
+        dokumenSokongan.setCustomValidity('');
+        const fail = dokumenSokongan.files[0];
+        if (!fail) return;
+
+        try {
+          if (!await dokumenPdfSah(fail)) {
+            dokumenSokongan.setCustomValidity('Sila pilih fail PDF yang tidak melebihi 5 MB.');
+            dokumenSokongan.reportValidity();
+          }
+        } catch (error) {
+          dokumenSokongan.setCustomValidity('Fail tidak dapat disahkan sebagai PDF. Sila pilih fail lain.');
+          dokumenSokongan.reportValidity();
+        }
+      });
 
       const appDate = document.getElementById('applicationDate');
       const todayStr = new Date().toISOString().slice(0, 10);
@@ -434,13 +568,15 @@
           // Reset Jenis Lokasi Dropdown
           document.getElementById('btnJenisLokasi').textContent = '-- Pilih Jenis Lokasi --';
           document.getElementById('locationType').value = '';
+          kemasKiniDaerah('');
           
           // Reset Nama Lokasi Dropdown
-          document.getElementById('locationDropdownBtn').textContent = '-- Sila Pilih Jenis Lokasi Dahulu --';
+          document.getElementById('locationDropdownBtn').textContent = '-- Sila Pilih Daerah Dahulu --';
           document.getElementById('locationDropdownBtn').setAttribute('disabled', 'true');
-          document.getElementById('locationDropdownMenu').innerHTML = '<li><span class="dropdown-item text-muted" style="white-space: normal; word-wrap: break-word; padding: 8px 16px;">-- Sila Pilih Jenis Lokasi Dahulu --</span></li>';
-          document.getElementById('locationName').innerHTML = '<option value="">-- Sila Pilih Jenis Lokasi Dahulu --</option>';
+          document.getElementById('locationDropdownMenu').innerHTML = '<li><span class="dropdown-item text-muted" style="white-space: normal; word-wrap: break-word; padding: 8px 16px;">-- Sila Pilih Daerah Dahulu --</span></li>';
+          document.getElementById('locationName').innerHTML = '<option value="">-- Sila Pilih Daerah Dahulu --</option>';
           document.getElementById('locationName').value = '';
+          dokumenSokongan.setCustomValidity('');
         });
       });
 
@@ -482,6 +618,14 @@
           e.stopImmediatePropagation();
           document.getElementById('btnJenisLokasi').focus();
           document.getElementById('locationType').reportValidity();
+          return;
+        }
+
+        if (!locationDistrict.value) {
+          e.preventDefault();
+          e.stopImmediatePropagation();
+          locationDistrict.focus();
+          locationDistrict.reportValidity();
           return;
         }
 

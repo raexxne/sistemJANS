@@ -14,8 +14,16 @@ public class Pelawat {
     @Column(name = "nama_penuh", nullable = false)
     private String namaPenuh;
 
-    @Column(name = "no_kad_pengenalan", nullable = false)
+    @Column(name = "no_kad_pengenalan")
     private String noKadPengenalan;
+
+    @Column(name = "jenis_pengenalan_diri")
+    private String jenisPengenalanDiri;
+
+    private String warganegara;
+
+    @Column(name = "no_permit_kerja")
+    private String noPermitKerja;
 
     @Column(nullable = false)
     private String email;
@@ -56,6 +64,30 @@ public class Pelawat {
 
     public void setNoKadPengenalan(String noKadPengenalan) {
         this.noKadPengenalan = noKadPengenalan;
+    }
+
+    public String getJenisPengenalanDiri() {
+        return jenisPengenalanDiri;
+    }
+
+    public void setJenisPengenalanDiri(String jenisPengenalanDiri) {
+        this.jenisPengenalanDiri = jenisPengenalanDiri;
+    }
+
+    public String getWarganegara() {
+        return warganegara;
+    }
+
+    public void setWarganegara(String warganegara) {
+        this.warganegara = warganegara;
+    }
+
+    public String getNoPermitKerja() {
+        return noPermitKerja;
+    }
+
+    public void setNoPermitKerja(String noPermitKerja) {
+        this.noPermitKerja = noPermitKerja;
     }
 
     public String getEmail() {

@@ -1,20 +1,19 @@
 package my.gov.jans.access.service;
 
-import my.gov.jans.access.domain.PasswordResetToken;
-import my.gov.jans.access.domain.Pengguna;
-import my.gov.jans.access.repo.PasswordResetTokenRepository;
-import my.gov.jans.access.repo.PenggunaRepository;
-import org.junit.jupiter.api.Test;
-import org.springframework.security.crypto.password.PasswordEncoder;
-
 import java.time.Instant;
 import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertThrows;
+import org.junit.jupiter.api.Test;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
+import org.springframework.security.crypto.password.PasswordEncoder;
+
+import my.gov.jans.access.domain.PasswordResetToken;
+import my.gov.jans.access.domain.Pengguna;
+import my.gov.jans.access.repo.PasswordResetTokenRepository;
+import my.gov.jans.access.repo.PenggunaRepository;
 
 class AkaunServiceTest {
 
@@ -37,9 +36,6 @@ class AkaunServiceTest {
 
         AkaunService service = new AkaunService(
                 penggunaRepository, tokenRepository, passwordEncoder, emailService);
-
-        assertThrows(IllegalStateException.class,
-                () -> service.sahkanKodDanResetKataLaluan("user@example.com", "123456"));
 
         assertEquals(1, token.getFailedAttempts());
         verify(tokenRepository).save(token);

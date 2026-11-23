@@ -1,5 +1,6 @@
 package my.gov.jans.access.domain;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
@@ -64,6 +65,12 @@ public class Permohonan {
     @Column(columnDefinition = "TEXT")
     private String penyeliaNote;
 
+    @Column(name = "cgso_note", columnDefinition = "TEXT")
+    private String cgsoNote;
+
+    @Column(name = "kpp_note", columnDefinition = "TEXT")
+    private String kppNote;
+
     @ManyToOne
     @JoinColumn(name = "reviewed_by")
     private Pengguna reviewedBy;
@@ -82,6 +89,13 @@ public class Permohonan {
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
     private String passToken;
+
+    @Lob
+    @Column(name = "dokumen_sokongan", columnDefinition = "LONGBLOB")
+    private byte[] dokumenSokongan;
+
+    @Column(name = "dokumen_sokongan_nama")
+    private String dokumenSokonganNama;
 
     @OneToMany(mappedBy = "permohonan", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.EAGER)
     @OrderBy("id ASC")
@@ -243,6 +257,22 @@ public class Permohonan {
         penyeliaNote = v;
     }
 
+    public String getCgsoNote() {
+        return cgsoNote;
+    }
+
+    public void setCgsoNote(String v) {
+        cgsoNote = v;
+    }
+
+    public String getKppNote() {
+        return kppNote;
+    }
+
+    public void setKppNote(String v) {
+        kppNote = v;
+    }
+
     public Pengguna getCompletedBy() {
         return completedBy;
     }
@@ -305,6 +335,23 @@ public class Permohonan {
 
     public void setPassToken(String v) {
         passToken = v;
+    }
+
+    @JsonIgnore
+    public byte[] getDokumenSokongan() {
+        return dokumenSokongan;
+    }
+
+    public void setDokumenSokongan(byte[] v) {
+        dokumenSokongan = v;
+    }
+
+    public String getDokumenSokonganNama() {
+        return dokumenSokonganNama;
+    }
+
+    public void setDokumenSokonganNama(String v) {
+        dokumenSokonganNama = v;
     }
 
     public List<Pelawat> getPelawat() {

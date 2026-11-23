@@ -6,9 +6,13 @@ import my.gov.jans.access.repo.LokasRepository;
 import my.gov.jans.access.repo.PermohonanRepository;
 import my.gov.jans.access.repo.PenyeliaLojiRepository;
 import my.gov.jans.access.service.AkaunService;
+import my.gov.jans.access.service.PermohonanAccessCodeService;
 import my.gov.jans.access.service.PermohonanService;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.http.*;
 import org.springframework.security.web.csrf.CsrfToken;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -16,15 +20,23 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
+import jakarta.servlet.http.HttpSession;
 import jakarta.validation.Valid;
 import java.security.SecureRandom;
+import java.nio.charset.StandardCharsets;
 import java.util.*;
 import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/api")
 public class ApiController {
+    private static final Logger LOG = LoggerFactory.getLogger(ApiController.class);
+    private static final String VERIFIED_APPLICATION_NUMBER = "verifiedApplicationNumber";
+    private static final String VERIFIED_APPLICATION_UNTIL = "verifiedApplicationUntil";
+    private static final long VERIFIED_APPLICATION_TTL_MILLIS = 15 * 60 * 1000;
+
     private final PermohonanService s;
+    private final PermohonanAccessCodeService accessCodeService;
     private final AkaunService akaunService;
     private final PenggunaRepository penggunaRepository;
     private final LokasRepository lokasRepository;
@@ -33,10 +45,12 @@ public class ApiController {
     private final PasswordEncoder passwordEncoder;
     private final SecureRandom random = new SecureRandom();
 
-    public ApiController(PermohonanService x, AkaunService akaunService, PenggunaRepository penggunaRepository,
-            LokasRepository lokasRepository, PermohonanRepository permohonanRepository,
+    public ApiController(PermohonanService x, PermohonanAccessCodeService accessCodeService,
+            AkaunService akaunService, PenggunaRepository penggunaRepository, LokasRepository lokasRepository,
+            PermohonanRepository permohonanRepository,
             PenyeliaLojiRepository penyeliaLojiRepository, PasswordEncoder passwordEncoder) {
         s = x;
+        this.accessCodeService = accessCodeService;
         this.akaunService = akaunService;
         this.penggunaRepository = penggunaRepository;
         this.lokasRepository = lokasRepository;
@@ -83,18 +97,89 @@ public class ApiController {
         }
     }
 
-    @PostMapping("/public/permohonan")
+    @PostMapping(value = "/public/permohonan", consumes = MediaType.APPLICATION_JSON_VALUE)
     ResponseEntity<?> mohon(@Valid @RequestBody Permohonan p) {
+        return ciptaPermohonan(p, null);
+    }
+
+    @PostMapping(value = "/public/permohonan", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    ResponseEntity<?> mohonDenganDokumen(
+            @Valid @RequestPart("permohonan") Permohonan p,
+            @RequestPart("dokumenSokongan") MultipartFile dokumenSokongan) {
+        return ciptaPermohonan(p, dokumenSokongan);
+    }
+
+    private ResponseEntity<?> ciptaPermohonan(Permohonan p, MultipartFile dokumenSokongan) {
         try {
+            if (p.getLocationType() == null || p.getLocationName() == null
+                    || p.getLocationName().isBlank()
+                    || lokasRepository.findByType(p.getLocationType()).stream()
+                            .noneMatch(lokasi -> p.getLocationName().trim().equals(lokasi.getName()))) {
+                throw new IllegalArgumentException(
+                        "Lokasi yang dipilih tidak lagi tersedia. Sila muat semula pilihan lokasi.");
+            }
+            if (dokumenSokongan == null || dokumenSokongan.isEmpty()) {
+                throw new IllegalArgumentException("Dokumen sokongan diperlukan");
+            }
+            if (dokumenSokongan.getSize() > 5 * 1024 * 1024) {
+                throw new IllegalArgumentException("Dokumen sokongan tidak boleh melebihi 5 MB");
+            }
+
+            String namaFail = Optional.ofNullable(dokumenSokongan.getOriginalFilename()).orElse("")
+                    .replace('\\', '/');
+            namaFail = namaFail.substring(namaFail.lastIndexOf('/') + 1).replaceAll("[\\r\\n\\t]", "_");
+            if (!namaFail.toLowerCase(Locale.ROOT).endsWith(".pdf")) {
+                throw new IllegalArgumentException("Dokumen sokongan mestilah fail PDF");
+            }
+            if (namaFail.length() > 255) {
+                namaFail = namaFail.substring(namaFail.length() - 255);
+            }
+
+            byte[] kandungan = dokumenSokongan.getBytes();
+            if (kandungan.length < 5
+                    || !"%PDF-".equals(new String(kandungan, 0, 5, StandardCharsets.US_ASCII))) {
+                throw new IllegalArgumentException("Kandungan dokumen sokongan bukan PDF yang sah");
+            }
+
+            p.setDokumenSokongan(kandungan);
+            p.setDokumenSokonganNama(namaFail);
             return ResponseEntity.ok(Map.of("nomborPermohonan", s.cipta(p).getNomborPermohonan()));
         } catch (IllegalArgumentException | IllegalStateException e) {
             s.hantarEmelKegagalanPermohonan(p.getEmailWakil(), e.getMessage());
             return ResponseEntity.badRequest().body(Map.of("ralat", e.getMessage()));
         } catch (Exception e) {
             String mesejRamah = "Permohonan tidak dapat diproses buat masa ini. Sila semak semula maklumat yang diisi atau cuba beberapa saat lagi.";
+            LOG.error("Gagal memproses permohonan baharu", e);
             s.hantarEmelKegagalanPermohonan(p.getEmailWakil(), mesejRamah);
-            return ResponseEntity.badRequest().body(Map.of("ralat", mesejRamah));
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(Map.of("ralat", mesejRamah));
         }
+    }
+
+    @GetMapping({
+            "/staff/permohonan/{id}/dokumen-sokongan",
+            "/admin/permohonan/{id}/dokumen-sokongan",
+            "/cgso/permohonan/{id}/dokumen-sokongan",
+            "/kpp/permohonan/{id}/dokumen-sokongan"
+    })
+    ResponseEntity<?> muatDokumenSokongan(
+            @PathVariable Long id,
+            @RequestParam(name = "disposition", defaultValue = "attachment") String disposition) {
+        Permohonan permohonan = permohonanRepository.findById(Objects.requireNonNull(id)).orElse(null);
+        if (permohonan == null || permohonan.getDokumenSokongan() == null) {
+            return ResponseEntity.notFound().build();
+        }
+
+        String namaFail = Optional.ofNullable(permohonan.getDokumenSokonganNama())
+                .filter(nama -> !nama.isBlank())
+                .orElse("dokumen-sokongan.pdf");
+        String jenisPaparan = "inline".equalsIgnoreCase(disposition) ? "inline" : "attachment";
+        return ResponseEntity.ok()
+                .contentType(MediaType.APPLICATION_PDF)
+                .header(HttpHeaders.CONTENT_DISPOSITION,
+                        jenisPaparan.equals("inline")
+                                ? ContentDisposition.inline().filename(namaFail).build().toString()
+                                : ContentDisposition.attachment().filename(namaFail).build().toString())
+                .body(permohonan.getDokumenSokongan());
     }
 
     @PostMapping("/public/hubungi")
@@ -131,13 +216,54 @@ public class ApiController {
         return ResponseEntity.ok(Map.of("rujukan", rujukan, "berjaya", true));
     }
 
+    @PostMapping("/public/permohonan/{no}/request-access-code")
+    ResponseEntity<?> mintaKodSemakan(@PathVariable String no) {
+        try {
+            accessCodeService.mintaKod(no);
+            return ResponseEntity.ok(Map.of(
+                    "mesej",
+                    "Jika nombor permohonan sah, kod pengesahan telah dihantar ke e-mel wakil berdaftar."));
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.badRequest().body(Map.of("ralat", e.getMessage()));
+        } catch (Exception e) {
+            LOG.error("Gagal memproses permintaan kod semakan", e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(Map.of("ralat", "Permintaan kod tidak dapat diproses buat masa ini."));
+        }
+    }
+
+    @PostMapping("/public/permohonan/{no}/verify-access-code")
+    ResponseEntity<?> sahkanKodSemakan(
+            @PathVariable String no,
+            @RequestBody Map<String, String> body,
+            HttpSession session) {
+        try {
+            Permohonan permohonan = accessCodeService.sahkanKod(no, body.get("kod"));
+            session.setAttribute(VERIFIED_APPLICATION_NUMBER, normalisasiNombor(permohonan.getNomborPermohonan()));
+            session.setAttribute(
+                    VERIFIED_APPLICATION_UNTIL,
+                    System.currentTimeMillis() + VERIFIED_APPLICATION_TTL_MILLIS);
+            return ResponseEntity.ok(paparanStatusAwam(permohonan));
+        } catch (IllegalArgumentException | IllegalStateException e) {
+            return ResponseEntity.badRequest().body(Map.of("ralat", "Kod pengesahan tidak sah atau telah luput."));
+        }
+    }
+
     @GetMapping("/public/permohonan/{no}")
-    Permohonan semak(@PathVariable String no) {
-        return s.cari(no);
+    ResponseEntity<?> semak(@PathVariable String no, Authentication auth, HttpSession session) {
+        try {
+            return ResponseEntity.ok(paparanStatusAwam(s.cari(no)));
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.notFound().build();
+        }
     }
 
     @GetMapping("/public/permohonan/{no}/pdf")
-    ResponseEntity<byte[]> pdf(@PathVariable String no) {
+    ResponseEntity<?> pdf(@PathVariable String no, Authentication auth, HttpSession session) {
+        if (!bolehAksesPermohonan(no, auth, session)) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                    .body(Map.of("ralat", "Pengesahan e-mel diperlukan sebelum memuat turun PDF."));
+        }
         return ResponseEntity.ok()
                 .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=permohonan-" + no + ".pdf")
                 .contentType(Objects.requireNonNull(MediaType.APPLICATION_PDF)).body(s.pdfPermohonan(s.cari(no)));
@@ -149,14 +275,31 @@ public class ApiController {
     }
 
     @GetMapping("/staff/permohonan/{id}")
-    Permohonan butiranStaf(@PathVariable Long id) {
-        return s.cari(id);
+    Permohonan butiranStaf(@PathVariable String id) {
+        return cariPermohonanUntukStaf(id);
+    }
+
+    @GetMapping("/staff/permohonan/{id}/pelawat")
+    List<Pelawat> pelawatStaf(@PathVariable String id) {
+        return cariPermohonanUntukStaf(id).getPelawat();
+    }
+
+    private Permohonan cariPermohonanUntukStaf(String rujukan) {
+        String nilai = Optional.ofNullable(rujukan).orElse("").trim();
+        if (nilai.matches("\\d+")) {
+            return s.cari(Long.valueOf(nilai));
+        }
+        return s.cari(nilai);
     }
 
     @PostMapping("/staff/permohonan/{id}/hantar-pengarah")
     ResponseEntity<?> hantar(@PathVariable Long id, @RequestBody Map<String, String> b, Authentication a) {
         try {
-            return ResponseEntity.ok(s.hantarPengarah(id, b.get("catatan"), a.getName()));
+            Permohonan permohonan = s.cari(id);
+            if (permohonan.getKppNote() != null && !permohonan.getKppNote().isBlank()) {
+                return ResponseEntity.ok(s.hantarPengarah(id, b.get("catatan"), a.getName()));
+            }
+            return ResponseEntity.ok(s.hantarCgso(id, b.get("catatan"), a.getName()));
         } catch (NoSuchElementException e) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND)
                     .body(Map.of("ralat", "Permohonan atau pengguna tidak ditemui"));
@@ -166,6 +309,97 @@ public class ApiController {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                     .body(Map.of("ralat", "Ralat semasa menghantar kepada pengarah"));
         }
+    }
+
+    @PostMapping("/staff/permohonan/{id}/hantar-cgso")
+    ResponseEntity<?> hantarCgso(@PathVariable Long id, @RequestBody Map<String, String> b, Authentication a) {
+        try {
+            return ResponseEntity.ok(s.hantarCgso(id, b.get("catatan"), a.getName()));
+        } catch (NoSuchElementException e) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                    .body(Map.of("ralat", "Permohonan atau pengguna tidak ditemui"));
+        } catch (IllegalStateException e) {
+            return ResponseEntity.badRequest().body(Map.of("ralat", e.getMessage()));
+        }
+    }
+
+    @GetMapping("/cgso/permohonan")
+    List<Permohonan> cgsoSenarai() {
+        return s.senarai(StatusPermohonan.SEMAKAN_STAFF).stream()
+                .filter(p -> p.getCgsoNote() == null || p.getCgsoNote().isBlank())
+                .toList();
+    }
+
+    @GetMapping("/cgso/permohonan/{id}")
+    Permohonan cgsoButiran(@PathVariable String id) {
+        return cariPermohonanUntukStaf(id);
+    }
+
+    @GetMapping("/cgso/permohonan/{id}/pelawat")
+    List<Pelawat> pelawatCgso(@PathVariable String id) {
+        return cariPermohonanUntukStaf(id).getPelawat();
+    }
+
+    @PostMapping("/cgso/permohonan/{id}/hantar-kpp")
+    ResponseEntity<?> cgsoHantarKpp(@PathVariable Long id, @RequestBody Map<String, String> b, Authentication a) {
+        try {
+            return ResponseEntity.ok(s.hantarKpp(id, b.get("catatan"), a.getName()));
+        } catch (IllegalArgumentException | NoSuchElementException e) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                    .body(Map.of("ralat", "Permohonan tidak ditemui"));
+        } catch (IllegalStateException e) {
+            return ResponseEntity.badRequest().body(Map.of("ralat", e.getMessage()));
+        }
+    }
+
+    @GetMapping("/cgso/permohonan/{id}/pdf")
+    ResponseEntity<byte[]> cgsoPdf(@PathVariable Long id) {
+        Permohonan p = s.cari(id);
+        return ResponseEntity.ok()
+                .header(HttpHeaders.CONTENT_DISPOSITION,
+                        "attachment; filename=permohonan-" + p.getNomborPermohonan() + ".pdf")
+                .contentType(MediaType.APPLICATION_PDF)
+                .body(s.pdfPermohonan(p));
+    }
+
+    @GetMapping("/kpp/permohonan")
+    List<Permohonan> kppSenarai() {
+        return s.senarai(StatusPermohonan.SEMAKAN_STAFF).stream()
+                .filter(p -> p.getCgsoNote() != null && !p.getCgsoNote().isBlank())
+                .filter(p -> p.getKppNote() == null || p.getKppNote().isBlank())
+                .toList();
+    }
+
+    @GetMapping("/kpp/permohonan/{id}")
+    Permohonan kppButiran(@PathVariable String id) {
+        return cariPermohonanUntukStaf(id);
+    }
+
+    @GetMapping("/kpp/permohonan/{id}/pelawat")
+    List<Pelawat> pelawatKpp(@PathVariable String id) {
+        return cariPermohonanUntukStaf(id).getPelawat();
+    }
+
+    @PostMapping("/kpp/permohonan/{id}/hantar-petugas")
+    ResponseEntity<?> kppHantarPetugas(@PathVariable Long id, @RequestBody Map<String, String> b, Authentication a) {
+        try {
+            return ResponseEntity.ok(s.hantarKembaliPetugas(id, b.get("catatan"), a.getName()));
+        } catch (IllegalArgumentException | NoSuchElementException e) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                    .body(Map.of("ralat", "Permohonan tidak ditemui"));
+        } catch (IllegalStateException e) {
+            return ResponseEntity.badRequest().body(Map.of("ralat", e.getMessage()));
+        }
+    }
+
+    @GetMapping("/kpp/permohonan/{id}/pdf")
+    ResponseEntity<byte[]> kppPdf(@PathVariable Long id) {
+        Permohonan p = s.cari(id);
+        return ResponseEntity.ok()
+                .header(HttpHeaders.CONTENT_DISPOSITION,
+                        "attachment; filename=permohonan-" + p.getNomborPermohonan() + ".pdf")
+                .contentType(MediaType.APPLICATION_PDF)
+                .body(s.pdfPermohonan(p));
     }
 
     @DeleteMapping("/staff/permohonan/{id}")
@@ -181,6 +415,16 @@ public class ApiController {
     @GetMapping("/pengarah/permohonan")
     List<Permohonan> pengarah() {
         return s.senarai(StatusPermohonan.MENUNGGU_PENGARAH);
+    }
+
+    @GetMapping("/pengarah/permohonan/{id}")
+    Permohonan butiranPengarah(@PathVariable String id) {
+        return cariPermohonanUntukStaf(id);
+    }
+
+    @GetMapping("/pengarah/permohonan/{id}/pelawat")
+    List<Pelawat> pelawatPengarah(@PathVariable String id) {
+        return cariPermohonanUntukStaf(id).getPelawat();
     }
 
     @PostMapping("/pengarah/permohonan/{id}/keputusan")
@@ -304,8 +548,13 @@ public class ApiController {
             return ResponseEntity.badRequest().body(Map.of("ralat", "Status diperlukan"));
         }
         p.setEnabled(enabled);
-        penggunaRepository.save(p);
-        return ResponseEntity.ok(Map.of("berjaya", true, "enabled", p.isEnabled()));
+        try {
+            penggunaRepository.save(p);
+            return ResponseEntity.ok(Map.of("berjaya", true, "enabled", p.isEnabled()));
+        } catch (DataIntegrityViolationException e) {
+            return ResponseEntity.status(HttpStatus.CONFLICT)
+                    .body(Map.of("ralat", "Status pengguna gagal dikemas kini."));
+        }
     }
 
     @PutMapping("/admin/users/{id}")
@@ -333,8 +582,15 @@ public class ApiController {
                 return ResponseEntity.badRequest().body(Map.of("ralat", "Peranan tidak sah"));
             }
         }
-        penggunaRepository.save(p);
-        return ResponseEntity.ok(Map.of("berjaya", true));
+        try {
+            penggunaRepository.save(p);
+            return ResponseEntity.ok(Map.of("berjaya", true));
+        } catch (DataIntegrityViolationException e) {
+            LOG.error("Gagal mengemas kini pengguna {}", p.getEmail(), e);
+            return ResponseEntity.status(HttpStatus.CONFLICT)
+                    .body(Map.of("ralat",
+                            "Pengguna gagal dikemas kini. Pastikan migrasi pangkalan data V6 telah dijalankan."));
+        }
     }
 
     @PostMapping("/admin/users")
@@ -364,17 +620,23 @@ public class ApiController {
         pengguna.setEnabled(Boolean.parseBoolean(Optional.ofNullable(body.get("enabled")).orElse("true")));
         pengguna.setPhone(Optional.ofNullable(body.get("phone")).orElse(""));
         pengguna.setAddress(Optional.ofNullable(body.get("address")).orElse(""));
-        penggunaRepository.save(pengguna);
-
-        return ResponseEntity.ok(Map.of(
-                "berjaya", true,
-                "password", password,
-                "user", Map.of(
-                        "id", pengguna.getId(),
-                        "name", pengguna.getName(),
-                        "email", pengguna.getEmail(),
-                        "role", pengguna.getRole().name(),
-                        "enabled", pengguna.isEnabled())));
+        try {
+            penggunaRepository.save(pengguna);
+            return ResponseEntity.ok(Map.of(
+                    "berjaya", true,
+                    "password", password,
+                    "user", Map.of(
+                            "id", pengguna.getId(),
+                            "name", pengguna.getName(),
+                            "email", pengguna.getEmail(),
+                            "role", pengguna.getRole().name(),
+                            "enabled", pengguna.isEnabled())));
+        } catch (DataIntegrityViolationException e) {
+            LOG.error("Gagal mencipta pengguna {} kerana sekatan pangkalan data", email, e);
+            return ResponseEntity.status(HttpStatus.CONFLICT)
+                    .body(Map.of("ralat",
+                            "Pengguna gagal dicipta. Pastikan migrasi pangkalan data V6 telah dijalankan dan peranan pengguna sah."));
+        }
     }
 
     @DeleteMapping("/admin/users/{id}")
@@ -469,6 +731,40 @@ public class ApiController {
             sb.append(chars.charAt(random.nextInt(chars.length())));
         }
         return sb.toString();
+    }
+
+    private Map<String, Object> paparanStatusAwam(Permohonan permohonan) {
+        Map<String, Object> payload = new LinkedHashMap<>();
+        payload.put("nomborPermohonan", permohonan.getNomborPermohonan());
+        payload.put("status", permohonan.getStatus());
+        payload.put("locationType", permohonan.getLocationType());
+        payload.put("locationName", permohonan.getLocationName());
+        if (permohonan.getStatus() == StatusPermohonan.PAS_DIKELUARKAN) {
+            payload.put("passToken", permohonan.getPassToken());
+        }
+        return payload;
+    }
+
+    private boolean bolehAksesPermohonan(String no, Authentication auth, HttpSession session) {
+        if (auth != null && auth.isAuthenticated()
+                && auth.getAuthorities().stream()
+                        .anyMatch(authority -> Set.of("ROLE_STAFF", "ROLE_PENGARAH", "ROLE_ADMIN")
+                                .contains(authority.getAuthority()))) {
+            return true;
+        }
+
+        Object nomborDisahkan = session.getAttribute(VERIFIED_APPLICATION_NUMBER);
+        Object tempohSah = session.getAttribute(VERIFIED_APPLICATION_UNTIL);
+        if (!(nomborDisahkan instanceof String) || !(tempohSah instanceof Long)
+                || ((Long) tempohSah) <= System.currentTimeMillis()
+                || !nomborDisahkan.equals(normalisasiNombor(no))) {
+            return false;
+        }
+        return true;
+    }
+
+    private String normalisasiNombor(String no) {
+        return Optional.ofNullable(no).orElse("").trim().toUpperCase(Locale.ROOT);
     }
 
     @PostMapping("/profile/update")
@@ -625,7 +921,7 @@ public class ApiController {
                 jenisLokasi = JenisLokasi.valueOf(typeStr);
             } catch (IllegalArgumentException e) {
                 return ResponseEntity.badRequest()
-                        .body(Map.of("ralat", "Jenis lokasi tidak sah. Pilih LOJI atau INTAKE"));
+                        .body(Map.of("ralat", "Jenis lokasi tidak sah. Pilih Loji Rawatan Air atau Muka Sauk"));
             }
 
             Lokasi lokasi = new Lokasi();

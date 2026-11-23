@@ -161,6 +161,9 @@
     async function loadPelawat() {
       const container = document.querySelector('#pelawat-content');
       const nomborPermohonan = new URLSearchParams(location.search).get('no');
+      const sumber = new URLSearchParams(location.search).get('from');
+      const daripadaPetugas = sumber === 'petugas';
+      const daripadaPengarah = sumber === 'pengarah';
 
       if (!nomborPermohonan) {
         container.innerHTML = '<div class="alert alert-danger">Tiada nombor permohonan dinyatakan.</div>';
@@ -168,10 +171,24 @@
       }
 
       try {
-        const res = await fetch(`api/public/permohonan/${encodeURIComponent(nomborPermohonan)}`);
-        if (!res.ok) throw new Error('Permohonan tidak ditemui');
-        const data = await res.json();
-        const pelawat = Array.isArray(data.pelawat) ? data.pelawat : [];
+        let data = {};
+        let pelawat = [];
+
+        if (daripadaPetugas || daripadaPengarah) {
+          const baseApi = daripadaPengarah ? 'api/pengarah' : 'api/staff';
+          const [permohonanRes, pelawatRes] = await Promise.all([
+            fetch(`${baseApi}/permohonan/${encodeURIComponent(nomborPermohonan)}`),
+            fetch(`${baseApi}/permohonan/${encodeURIComponent(nomborPermohonan)}/pelawat`)
+          ]);
+          if (!permohonanRes.ok || !pelawatRes.ok) throw new Error('Permohonan tidak ditemui');
+          data = await permohonanRes.json();
+          pelawat = await pelawatRes.json();
+        } else {
+          const res = await fetch(`api/public/permohonan/${encodeURIComponent(nomborPermohonan)}`);
+          if (!res.ok) throw new Error('Permohonan tidak ditemui');
+          data = await res.json();
+          pelawat = Array.isArray(data.pelawat) ? data.pelawat : [];
+        }
 
         const subtitle = document.querySelector('#pelawat-subtitle');
         if (subtitle) {
@@ -190,7 +207,9 @@
                     <div class="visitor-detail-card-header"><i class="fas fa-user"></i><span>Pelawat ${index + 1}</span></div>
                     <div class="visitor-detail-card-body">
                       <div class="visitor-detail-item"><span class="visitor-detail-item-label">Nama</span><span class="visitor-detail-item-value">${esc(v.namaPenuh || '-')}</span></div>
-                      <div class="visitor-detail-item"><span class="visitor-detail-item-label">No. Kad Pengenalan</span><span class="visitor-detail-item-value">${esc(v.noKadPengenalan || '-')}</span></div>
+                      <div class="visitor-detail-item"><span class="visitor-detail-item-label">Jenis pengenalan diri</span><span class="visitor-detail-item-value">${esc(v.jenisPengenalanDiri === 'PASPORT' ? 'Pasport' : 'No. Kad Pengenalan')}</span></div>
+                      <div class="visitor-detail-item"><span class="visitor-detail-item-label">${esc(v.jenisPengenalanDiri === 'PASPORT' ? 'No. Permit Kerja' : 'No. Kad Pengenalan')}</span><span class="visitor-detail-item-value">${esc(v.jenisPengenalanDiri === 'PASPORT' ? (v.noPermitKerja || '-') : (v.noKadPengenalan || '-'))}</span></div>
+                      ${v.jenisPengenalanDiri === 'PASPORT' ? `<div class="visitor-detail-item"><span class="visitor-detail-item-label">Warganegara</span><span class="visitor-detail-item-value">${esc(v.warganegara || '-')}</span></div>` : ''}
                       <div class="visitor-detail-item"><span class="visitor-detail-item-label">E-mel</span><span class="visitor-detail-item-value">${esc(v.email || '-')}</span></div>
                       <div class="visitor-detail-item"><span class="visitor-detail-item-label">Telefon</span><span class="visitor-detail-item-value">${esc(v.noTelefonBimbit || '-')}</span></div>
                       <div class="visitor-detail-item"><span class="visitor-detail-item-label">Jawatan</span><span class="visitor-detail-item-value">${esc(v.jawatan || '-')}</span></div>

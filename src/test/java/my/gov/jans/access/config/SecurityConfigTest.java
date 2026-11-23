@@ -5,6 +5,7 @@ import my.gov.jans.access.repo.LokasRepository;
 import my.gov.jans.access.repo.PermohonanRepository;
 import my.gov.jans.access.repo.PenyeliaLojiRepository;
 import my.gov.jans.access.service.AkaunService;
+import my.gov.jans.access.service.PermohonanAccessCodeService;
 import my.gov.jans.access.service.PermohonanService;
 import my.gov.jans.access.web.ApiController;
 import jakarta.servlet.http.Cookie;
@@ -41,6 +42,8 @@ class SecurityConfigTest {
     private AkaunService akaunService;
     @MockitoBean
     private PermohonanService permohonanService;
+    @MockitoBean
+    private PermohonanAccessCodeService accessCodeService;
 
     @Test
     void requiresCsrfTokenForPublicPostRequests() throws Exception {

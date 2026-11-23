@@ -17,6 +17,12 @@ public class WebController {
         if (a.getAuthorities().stream().anyMatch(x -> x.getAuthority().equals("ROLE_PENYELIA_LOJI"))) {
             return "redirect:/penyelia-loji.html";
         }
+        if (a.getAuthorities().stream().anyMatch(x -> x.getAuthority().equals("ROLE_CGSO"))) {
+            return "redirect:/cgso.html";
+        }
+        if (a.getAuthorities().stream().anyMatch(x -> x.getAuthority().equals("ROLE_KPP_CAWANGAN_PENGELUARAN"))) {
+            return "redirect:/kpp-cawangan-pengeluar.html";
+        }
         return "redirect:/petugas.html";
     }
 }

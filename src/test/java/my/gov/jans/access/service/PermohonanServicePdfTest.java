@@ -1,13 +1,17 @@
 package my.gov.jans.access.service;
 
 import com.lowagie.text.pdf.PdfReader;
+import com.lowagie.text.pdf.PdfDictionary;
+import com.lowagie.text.pdf.PdfName;
 import com.lowagie.text.pdf.parser.PdfTextExtractor;
 import my.gov.jans.access.domain.Pelawat;
 import my.gov.jans.access.domain.Permohonan;
+import my.gov.jans.access.domain.StatusPermohonan;
 import org.junit.jupiter.api.Test;
 
 import java.io.IOException;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
@@ -58,6 +62,59 @@ class PermohonanServicePdfTest {
         assertFalse(text.contains("Catatan Pengarah"));
         assertFalse(text.contains("Catatan dalaman untuk petugas"));
         assertFalse(text.contains("Catatan dalaman untuk pengarah"));
+    }
+
+    @Test
+    void shouldOmitDirectorSignatureFromPrintablePassPdfOnly() throws IOException {
+        PermohonanService service = new PermohonanService(null, null, null);
+        service.publicUrl = "https://example.test";
+
+        Permohonan permohonan = new Permohonan();
+        permohonan.setNomborPermohonan("JAS-2026-000003");
+        permohonan.setStatus(StatusPermohonan.PAS_DIKELUARKAN);
+        tambahPelawat(permohonan, "Bahar Bin Rahman");
+
+        assertEquals(1, countXObjects(service.pdfPasTanpaQR(permohonan)));
+        assertTrue(countXObjects(service.pdfPas(permohonan)) > 1);
+    }
+
+    @Test
+    void shouldOmitDirectorApprovalDetailsFromPrintablePassPdf() throws IOException {
+        PermohonanService service = new PermohonanService(null, null, null);
+        service.publicUrl = "https://example.test";
+
+        Permohonan permohonan = new Permohonan();
+        permohonan.setNomborPermohonan("JAS-2026-000004");
+        permohonan.setStatus(StatusPermohonan.PAS_DIKELUARKAN);
+        permohonan.setDecisionAt(java.time.LocalDateTime.of(2026, 11, 23, 10, 0));
+        tambahPelawat(permohonan, "Aisyah Binti Ahmad");
+
+        byte[] pdfBytes = service.pdfPasTanpaQR(permohonan);
+        PdfReader reader = new PdfReader(pdfBytes);
+        PdfTextExtractor extractor = new PdfTextExtractor(reader);
+        String text = extractor.getTextFromPage(1);
+        reader.close();
+
+        assertFalse(text.contains("Diluluskan oleh:"));
+        assertFalse(text.contains("Pengarah, JAS"));
+        assertFalse(text.contains("Tarikh: 2026-11-23"));
+    }
+
+    private static int countXObjects(byte[] pdfBytes) throws IOException {
+        PdfReader reader = new PdfReader(pdfBytes);
+        try {
+            int count = 0;
+            for (int page = 1; page <= reader.getNumberOfPages(); page++) {
+                PdfDictionary resources = reader.getPageN(page).getAsDict(PdfName.RESOURCES);
+                PdfDictionary xObjects = resources != null ? resources.getAsDict(PdfName.XOBJECT) : null;
+                if (xObjects != null) {
+                    count += xObjects.size();
+                }
+            }
+            return count;
+        } finally {
+            reader.close();
+        }
     }
 
     private static void tambahPelawat(Permohonan permohonan, String nama) {

@@ -13,6 +13,8 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Objects;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
@@ -47,6 +49,8 @@ import my.gov.jans.access.repo.PermohonanRepository;
 
 @Service
 public class PermohonanService {
+    private static final Logger LOG = LoggerFactory.getLogger(PermohonanService.class);
+
     private final PermohonanRepository repo;
     private final PenggunaRepository pengguna;
     private final EmailService emailService;
@@ -72,6 +76,14 @@ public class PermohonanService {
 
         if (p.getPelawat().isEmpty()) {
             throw new IllegalArgumentException("Maklumat sekurang-kurangnya seorang pelawat diperlukan");
+        }
+        if (p.getPelawat().size() > 10) {
+            throw new IllegalArgumentException("Maksimum 10 orang pelawat dibenarkan");
+        }
+        if (p.getPelawat().stream()
+                .anyMatch(pelawat -> pelawat.getNoPendaftaranKenderaan() == null
+                        || pelawat.getNoPendaftaranKenderaan().isBlank())) {
+            throw new IllegalArgumentException("Nombor pendaftaran kenderaan diperlukan untuk setiap pelawat");
         }
         if (p.getEmailWakil() == null || p.getEmailWakil().isBlank()) {
             throw new IllegalArgumentException("E-mel untuk dihubungi diperlukan");
@@ -127,8 +139,7 @@ public class PermohonanService {
                     null,
                     null);
         } catch (Exception e) {
-            // Kegagalan hantar e-mel pengesahan tidak boleh menggagalkan permohonan yang
-            // telah berjaya disimpan
+            LOG.error("E-mel pengesahan permohonan gagal dihantar untuk {}", p.getNomborPermohonan(), e);
         }
     }
 
@@ -148,8 +159,7 @@ public class PermohonanService {
                     null,
                     null);
         } catch (Exception e) {
-            // Kegagalan hantar e-mel notis tidak boleh mengganggu respons ralat asal kepada
-            // pemohon
+            LOG.warn("E-mel notis kegagalan permohonan tidak dapat dihantar kepada {}", email, e);
         }
     }
 
@@ -174,17 +184,57 @@ public class PermohonanService {
     }
 
     @Transactional
+    public Permohonan hantarCgso(Long id, String catatan, String email) {
+        Permohonan p = repo.findById(Objects.requireNonNull(id)).orElseThrow();
+        if (p.getStatus() != StatusPermohonan.DIHANTAR
+                && p.getStatus() != StatusPermohonan.SEMAKAN_STAFF) {
+            throw new IllegalStateException("Permohonan belum boleh dihantar kepada CGSO");
+        }
+        p.setStaffNote((catatan == null || catatan.trim().isBlank()) ? "Tidak ada catatan" : catatan.trim());
+        p.setReviewedBy(pengguna.findByEmail(email).orElseThrow());
+        p.setStatus(StatusPermohonan.SEMAKAN_STAFF);
+        p.setCgsoNote(null);
+        p.setKppNote(null);
+        return repo.save(p);
+    }
+
+    @Transactional
+    public Permohonan hantarKpp(Long id, String catatan, String email) {
+        Permohonan p = repo.findById(Objects.requireNonNull(id)).orElseThrow();
+        if (p.getStatus() != StatusPermohonan.SEMAKAN_STAFF) {
+            throw new IllegalStateException("Permohonan belum dalam semakan CGSO");
+        }
+        p.setCgsoNote((catatan == null || catatan.trim().isBlank()) ? "Tiada komen CGSO" : catatan.trim());
+        p.setKppNote(null);
+        return repo.save(p);
+    }
+
+    @Transactional
+    public Permohonan hantarKembaliPetugas(Long id, String catatan, String email) {
+        Permohonan p = repo.findById(Objects.requireNonNull(id)).orElseThrow();
+        if (p.getStatus() != StatusPermohonan.SEMAKAN_STAFF
+                || p.getCgsoNote() == null || p.getCgsoNote().isBlank()) {
+            throw new IllegalStateException("Permohonan belum menunggu semakan KPP Cawangan Pengeluaran");
+        }
+        p.setKppNote((catatan == null || catatan.trim().isBlank()) ? "Tiada komen KPP" : catatan.trim());
+        p.setStatus(StatusPermohonan.DIHANTAR);
+        return repo.save(p);
+    }
+
+    @Transactional
     public Permohonan hantarPengarah(Long id, String catatan, String email) {
         Permohonan p = repo.findById(Objects.requireNonNull(id)).orElseThrow();
         if (p.getStatus() == StatusPermohonan.MENUNGGU_PENGARAH)
             return p;
-        if (p.getStatus() != StatusPermohonan.DIHANTAR && p.getStatus() != StatusPermohonan.SEMAKAN_STAFF)
+        if (p.getStatus() != StatusPermohonan.DIHANTAR
+                && p.getStatus() != StatusPermohonan.SEMAKAN_STAFF)
             throw new IllegalStateException("Status tidak sah");
         String finalCatatan = (catatan == null || catatan.trim().isBlank()) ? "Tidak ada catatan" : catatan.trim();
         p.setStaffNote(finalCatatan);
         p.setReviewedBy(pengguna.findByEmail(email).orElseThrow());
         p.setStatus(StatusPermohonan.MENUNGGU_PENGARAH);
         repo.save(p);
+        repo.flush();
 
         String linkLogin = (publicUrl == null || publicUrl.isBlank())
                 ? "/login.html"
@@ -198,21 +248,37 @@ public class PermohonanService {
                 + "<p>Terima kasih.</p>";
 
         List<Pengguna> pengarahList = pengguna.findByRole(Role.PENGARAH);
+        boolean adaPenerima = false;
+        RuntimeException kegagalanNotifikasi = null;
         for (Pengguna pengarah : pengarahList) {
-            if (pengarah.getEmail() != null && !pengarah.getEmail().isBlank()) {
-                try {
-                    emailService.hantarEmail(
-                            pengarah.getEmail(),
-                            "Permohonan baru diterima - " + p.getNomborPermohonan(),
-                            isi,
-                            null,
-                            null);
-                } catch (RuntimeException e) {
-                    // Kegagalan emel tidak patut membatalkan penghantaran permohonan
-                    org.slf4j.LoggerFactory.getLogger(PermohonanService.class)
-                            .warn("Notifikasi emel kepada pengarah gagal: {}", e.getMessage());
+            String emailPengarah = pengarah.getEmail();
+            if (emailPengarah == null || emailPengarah.isBlank()) {
+                continue;
+            }
+            adaPenerima = true;
+            try {
+                emailService.hantarEmail(
+                        emailPengarah,
+                        "Permohonan baru diterima - " + p.getNomborPermohonan(),
+                        isi,
+                        null,
+                        null);
+            } catch (RuntimeException e) {
+                LOG.error("Notifikasi permohonan {} kepada pengarah {} gagal",
+                        p.getNomborPermohonan(), emailPengarah, e);
+                if (kegagalanNotifikasi == null) {
+                    kegagalanNotifikasi = e;
                 }
             }
+        }
+
+        if (!adaPenerima) {
+            throw new IllegalStateException("Tiada alamat e-mel pengarah berdaftar ditemui");
+        }
+        if (kegagalanNotifikasi != null) {
+            throw new IllegalStateException(
+                    "E-mel notifikasi gagal dihantar. Semak alamat e-mel pengarah dan konfigurasi SMTP.",
+                    kegagalanNotifikasi);
         }
 
         return p;
@@ -282,12 +348,17 @@ public class PermohonanService {
 
         repo.save(p);
 
-        emailService.hantarEmail(
-                p.getEmailWakil(),
-                subjek,
-                isi,
-                null,
-                null);
+        try {
+            emailService.hantarEmail(
+                    p.getEmailWakil(),
+                    subjek,
+                    isi,
+                    null,
+                    null);
+        } catch (RuntimeException e) {
+            LOG.error("E-mel keputusan permohonan {} gagal dihantar kepada {}",
+                    p.getNomborPermohonan(), p.getEmailWakil(), e);
+        }
 
         return p;
     }
@@ -299,15 +370,15 @@ public class PermohonanService {
     // PermohonanController.java atau tempat lain, gantikan rujukan itu
     // kepada pdfPermohonan() sebelum deploy.
     public byte[] pdfPermohonan(Permohonan p) {
-        return pdf(p, "BUTIRAN PERMOHONAN KEBENARAN MASUK", false, true);
+        return pdf(p, "BUTIRAN PERMOHONAN KEBENARAN MASUK", false, true, true);
     }
 
     public byte[] pdfPas(Permohonan p) {
-        return pdf(p, "PAS KEBENARAN MASUK JAS", true, false);
+        return pdf(p, "PAS KEBENARAN MASUK JAS", true, false, true);
     }
 
     public byte[] pdfPasTanpaQR(Permohonan p) {
-        return pdf(p, "PAS KEBENARAN MASUK JAS", false, false);
+        return pdf(p, "PAS KEBENARAN MASUK JAS", false, false, false);
     }
 
     public byte[] qrCodeImage(Permohonan p) {
@@ -339,7 +410,8 @@ public class PermohonanService {
         return String.format("%02d:%02d %s", h12, m, period);
     }
 
-    private byte[] pdf(Permohonan p, String tajuk, boolean includeQr, boolean includeInternalNotes) {
+    private byte[] pdf(Permohonan p, String tajuk, boolean includeQr, boolean includeInternalNotes,
+            boolean includeSignatureImage) {
         try {
             ByteArrayOutputStream out = new ByteArrayOutputStream();
             Document d = new Document(PageSize.A4, 50, 50, 40, 40);
@@ -477,8 +549,18 @@ public class PermohonanService {
                     jadualPelawat.addCell(tajukPelawatCell);
 
                     addRow(jadualPelawat, "Nama Penuh", pelawat.getNamaPenuh(), fLabel, fValue, lightBlue, white);
-                    addRow(jadualPelawat, "No. Kad Pengenalan", pelawat.getNoKadPengenalan(), fLabel, fValue, lightBlue,
-                            white);
+                    addRow(jadualPelawat, "Jenis Pengenalan Diri",
+                            "PASPORT".equals(pelawat.getJenisPengenalanDiri()) ? "Pasport" : "No. Kad Pengenalan",
+                            fLabel, fValue, lightBlue, white);
+                    addRow(jadualPelawat,
+                            "PASPORT".equals(pelawat.getJenisPengenalanDiri()) ? "No. Permit Kerja"
+                                    : "No. Kad Pengenalan",
+                            "PASPORT".equals(pelawat.getJenisPengenalanDiri()) ? pelawat.getNoPermitKerja()
+                                    : pelawat.getNoKadPengenalan(),
+                            fLabel, fValue, lightBlue, white);
+                    if ("PASPORT".equals(pelawat.getJenisPengenalanDiri())) {
+                        addRow(jadualPelawat, "Warganegara", pelawat.getWarganegara(), fLabel, fValue, lightBlue, white);
+                    }
                     addRow(jadualPelawat, "E-mel", pelawat.getEmail(), fLabel, fValue, lightBlue, white);
                     addRow(jadualPelawat, "No. Telefon (Bimbit)", pelawat.getNoTelefonBimbit(), fLabel, fValue,
                             lightBlue, white);
@@ -526,7 +608,7 @@ public class PermohonanService {
             boolean sudahDiluluskan = p.getStatus() == StatusPermohonan.DILULUSKAN
                     || p.getStatus() == StatusPermohonan.PAS_DIKELUARKAN;
 
-            if (sudahDiluluskan) {
+            if (sudahDiluluskan && includeSignatureImage) {
                 PdfPTable sigTbl = new PdfPTable(new float[] { 2f, 1f });
                 sigTbl.setWidthPercentage(100);
                 sigTbl.setSpacingBefore(10);
@@ -546,26 +628,28 @@ public class PermohonanService {
                 dilulusLabel.setAlignment(Element.ALIGN_CENTER);
                 dirSig.addElement(dilulusLabel);
 
-                try (InputStream ss = getClass().getResourceAsStream("/static/images/tandatangan-pengarah.png")) {
-                    if (ss != null) {
-                        Image sig = Image.getInstance(ss.readAllBytes());
-                        sig.scaleToFit(150, 55);
-                        sig.setAlignment(Element.ALIGN_CENTER);
-                        dirSig.addElement(sig);
-                    } else {
+                if (includeSignatureImage) {
+                    try (InputStream ss = getClass().getResourceAsStream("/static/images/tandatangan-pengarah.png")) {
+                        if (ss != null) {
+                            Image sig = Image.getInstance(ss.readAllBytes());
+                            sig.scaleToFit(150, 55);
+                            sig.setAlignment(Element.ALIGN_CENTER);
+                            dirSig.addElement(sig);
+                        } else {
+                            Paragraph blank = new Paragraph("\n\n\n\n", fValue);
+                            blank.setAlignment(Element.ALIGN_CENTER);
+                            dirSig.addElement(blank);
+                        }
+                    } catch (Exception ignored) {
                         Paragraph blank = new Paragraph("\n\n\n\n", fValue);
                         blank.setAlignment(Element.ALIGN_CENTER);
                         dirSig.addElement(blank);
                     }
-                } catch (Exception ignored) {
-                    Paragraph blank = new Paragraph("\n\n\n\n", fValue);
-                    blank.setAlignment(Element.ALIGN_CENTER);
-                    dirSig.addElement(blank);
-                }
 
-                Paragraph underline = new Paragraph("_________________________", fValue);
-                underline.setAlignment(Element.ALIGN_CENTER);
-                dirSig.addElement(underline);
+                    Paragraph underline = new Paragraph("_________________________", fValue);
+                    underline.setAlignment(Element.ALIGN_CENTER);
+                    dirSig.addElement(underline);
+                }
 
                 String dirName = (p.getDecidedBy() != null && p.getDecidedBy().getName() != null)
                         ? p.getDecidedBy().getName()

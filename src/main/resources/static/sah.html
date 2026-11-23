@@ -210,7 +210,7 @@
     }
 
     function labelLokasi(type) {
-      const labels = { LOJI: 'Loji', INTAKE: 'Intake' };
+      const labels = { LOJI: 'Loji', INTAKE: 'Muka Sauk' };
       return labels[type] || nilai(type);
     }
 
@@ -311,7 +311,9 @@
                   <div class="visitor-card">
                     <div class="visitor-name"><i class="fas fa-user me-2"></i>Pelawat ${index + 1}: ${escapeHtml(nilai(visitor.namaPenuh))}</div>
                     <div class="visitor-grid">
-                      ${medanPelawat('No. kad pengenalan', visitor.noKadPengenalan)}
+                      ${medanPelawat('Jenis pengenalan diri', visitor.jenisPengenalanDiri === 'PASPORT' ? 'Pasport' : 'No. Kad Pengenalan')}
+                      ${medanPelawat(visitor.jenisPengenalanDiri === 'PASPORT' ? 'No. Permit Kerja' : 'No. Kad Pengenalan', visitor.jenisPengenalanDiri === 'PASPORT' ? visitor.noPermitKerja : visitor.noKadPengenalan)}
+                      ${visitor.jenisPengenalanDiri === 'PASPORT' ? medanPelawat('Warganegara', visitor.warganegara) : ''}
                       ${medanPelawat('E-mel', visitor.email)}
                       ${medanPelawat('Telefon bimbit', visitor.noTelefonBimbit)}
                       ${medanPelawat('Jawatan', visitor.jawatan)}

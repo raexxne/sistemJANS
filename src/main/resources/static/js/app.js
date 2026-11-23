@@ -472,7 +472,7 @@ async function api(url, opt = {}) {
     ...opt,
     cache: 'no-store',
     headers: {
-      'Content-Type': 'application/json',
+      ...(opt.body instanceof FormData ? {} : { 'Content-Type': 'application/json' }),
       // elak halaman amaran ngrok free-tier menggantikan respons JSON sebenar
       'ngrok-skip-browser-warning': 'true',
       ...(opt.headers || {})
@@ -524,14 +524,25 @@ if (form) {
     }
 
     const data = Object.fromEntries(new FormData(form));
-    const pelawat = [...form.querySelectorAll('.visitor-entry')].map((entry) => ({
-      namaPenuh: entry.querySelector('[name="visitorName"]').value.trim(),
-      noKadPengenalan: entry.querySelector('[name="visitorIcNo"]').value.trim(),
-      email: entry.querySelector('[name="visitorEmail"]').value.trim(),
-      noTelefonBimbit: entry.querySelector('[name="visitorPhone"]').value.trim(),
-      jawatan: entry.querySelector('[name="visitorPosition"]').value.trim(),
-      noPendaftaranKenderaan: entry.querySelector('[name="visitorVehicleNo"]').value.trim()
-    }));
+    const dokumenSokongan = form.querySelector('[name="dokumenSokongan"]')?.files?.[0] || null;
+    delete data.dokumenSokongan;
+    const pelawat = [...form.querySelectorAll('.visitor-entry')].map((entry) => {
+      const jenisPengenalanDiri = entry.querySelector('[name="visitorIdentityType"]').value;
+      return {
+        namaPenuh: entry.querySelector('[name="visitorName"]').value.trim(),
+        jenisPengenalanDiri,
+        noKadPengenalan: jenisPengenalanDiri === 'KAD_PENGENALAN'
+          ? entry.querySelector('[name="visitorIcNo"]').value.trim() : null,
+        warganegara: jenisPengenalanDiri === 'PASPORT'
+          ? entry.querySelector('[name="visitorNationality"]').value.trim() : null,
+        noPermitKerja: jenisPengenalanDiri === 'PASPORT'
+          ? entry.querySelector('[name="visitorWorkPermitNo"]').value.trim() : null,
+        email: entry.querySelector('[name="visitorEmail"]').value.trim(),
+        noTelefonBimbit: entry.querySelector('[name="visitorPhone"]').value.trim(),
+        jawatan: entry.querySelector('[name="visitorPosition"]').value.trim(),
+        noPendaftaranKenderaan: entry.querySelector('[name="visitorVehicleNo"]').value.trim()
+      };
+    });
 
     if (pelawat.length) {
       const pelawatPertama = pelawat[0];
@@ -549,9 +560,24 @@ if (form) {
     }
 
     try {
+      let body = JSON.stringify(data);
+      if (dokumenSokongan) {
+        const header = new TextDecoder().decode(await dokumenSokongan.slice(0, 5).arrayBuffer());
+        if (!dokumenSokongan.name.toLowerCase().endsWith('.pdf')
+            || dokumenSokongan.size > 5 * 1024 * 1024
+            || header !== '%PDF-') {
+          throw new Error('Dokumen sokongan mestilah fail PDF yang sah dan tidak melebihi 5 MB.');
+        }
+
+        const borangMultipart = new FormData();
+        borangMultipart.append('permohonan', new Blob([JSON.stringify(data)], { type: 'application/json' }));
+        borangMultipart.append('dokumenSokongan', dokumenSokongan);
+        body = borangMultipart;
+      }
+
       const r = await api('api/public/permohonan', {
         method: 'POST',
-        body: JSON.stringify(data)
+        body
       });
 
       showSuccessPopup(r.nomborPermohonan);
@@ -577,11 +603,16 @@ if (form) {
 }
 
 async function semak() {
-  let no = document.querySelector('#no').value.trim();
-  if (!no) return;
+  const no = document.querySelector('#no').value.trim();
+  const mesej = document.querySelector('#mesejSemakan');
+  if (!no) {
+    mesej.textContent = 'Sila masukkan nombor permohonan.';
+    return;
+  }
 
   try {
-    let p = await api('api/public/permohonan/' + encodeURIComponent(no));
+    const p = await api(`api/public/permohonan/${encodeURIComponent(no)}`);
+    mesej.textContent = '';
 
     // === Status paparan: hanya 3 label dipaparkan kepada pemohon ===
     let statusPaparan;
@@ -600,6 +631,9 @@ async function semak() {
     // (passToken dijana terus oleh sistem sebaik pengarah tekan Setuju)
     let pas = p.status === 'PAS_DIKELUARKAN'
       ? `
+        <div class="alert alert-info mt-3" role="note">
+          Sila cetak Pas Kebenaran ini untuk diberikan kepada pihak sekuriti keselamatan atau bagi urusan yang diperlukan kelak.
+        </div>
         <p class="mt-3">
           <a href="api/pas/${p.passToken}/pdf-tanpa-qr" target="_blank" class="btn btn-primary me-2">
             Cetak Pas Kebenaran
@@ -623,9 +657,19 @@ async function semak() {
       ${pas}
     `;
   } catch (x) {
-    showErrorPopup('Ralat Pencarian', 'Nombor permohonan tidak wujud, sila masukkan nombor permohonan dengan betul.');
+    mesej.textContent = x.message || 'Nombor permohonan tidak wujud.';
   }
 }
+
+document.querySelector('#no')?.addEventListener('input', () => {
+  const hasil = document.querySelector('#hasil');
+  const mesej = document.querySelector('#mesejSemakan');
+  const butangSemak = document.querySelector('#btnSemakPermohonan');
+  const adaNombor = document.querySelector('#no').value.trim().length > 0;
+  if (hasil) hasil.replaceChildren();
+  if (mesej) mesej.textContent = '';
+  if (butangSemak) butangSemak.disabled = !adaNombor;
+});
 
 function lihatQR(token) {
   console.log('lihatQR dipanggil, token:', token);
@@ -744,6 +788,7 @@ function lihatQR(token) {
 const q = new URLSearchParams(location.search);
 if (document.querySelector('#no') && q.get('no')) {
   document.querySelector('#no').value = q.get('no');
+  document.querySelector('#no').dispatchEvent(new Event('input', { bubbles: true }));
   semak();
 }
 
@@ -1073,7 +1118,7 @@ function bindPengarahRowClickEvents() {
 }
 
 function pengarahLocationTypeLabel(value) {
-  const map = { LOJI: 'Loji Rawatan Air', INTAKE: 'Intake' };
+  const map = { LOJI: 'Loji Rawatan Air', INTAKE: 'Muka Sauk' };
   return map[String(value || '').toUpperCase()] || value || '-';
 }
 
@@ -1118,21 +1163,21 @@ function pengarahField(label, value) {
 }
 
 async function showPengarahDetailModal(p) {
-  const pelawatList = Array.isArray(p.pelawat) ? p.pelawat : [];
+  let detail = { ...p };
+  try {
+    const [detailRes, pelawatRes] = await Promise.all([
+      api(`api/pengarah/permohonan/${encodeURIComponent(p.id)}`),
+      api(`api/pengarah/permohonan/${encodeURIComponent(p.id)}/pelawat`)
+    ]);
+    detail = { ...p, ...detailRes };
+    if (Array.isArray(pelawatRes)) detail.pelawat = pelawatRes;
+  } catch (error) {
+    console.warn('Gagal memuat butiran pelawat pengarah, guna data senarai.', error);
+  }
+
+  const pelawatList = Array.isArray(detail.pelawat) ? detail.pelawat : [];
   const staffNoteText = (p.staffNote && p.staffNote.trim()) ? p.staffNote.trim() : 'Tidak ada catatan';
   const directorNoteText = (p.directorNote && p.directorNote.trim()) ? p.directorNote.trim() : '';
-
-  let auditTrailEntries = [];
-  if (p.nomborPermohonan) {
-    try {
-      const auditRes = await fetch(`api/public/permohonan/${encodeURIComponent(p.nomborPermohonan)}/audit-trail`);
-      if (auditRes.ok) {
-        auditTrailEntries = await auditRes.json();
-      }
-    } catch (e) {
-      console.warn('Gagal memuat audit trail permohonan.', e);
-    }
-  }
 
   const overlay = document.createElement('div');
   overlay.className = 'detail-modal-overlay';
@@ -1176,7 +1221,7 @@ async function showPengarahDetailModal(p) {
                     <span class="visitor-simple-index">${index + 1}.</span>
                     <span class="visitor-simple-name">${esc(v.namaPenuh || '-')}</span>
                     <span class="visitor-simple-sep">•</span>
-                    <span class="visitor-simple-value">${esc(v.noKadPengenalan || '-')}</span>
+                    <span class="visitor-simple-value">${esc(v.jenisPengenalanDiri === 'PASPORT' ? (v.noPermitKerja || '-') : (v.noKadPengenalan || '-'))}</span>
                     <span class="visitor-simple-sep">•</span>
                     <span class="visitor-simple-value">${esc(v.noPendaftaranKenderaan || '-')}</span>
                   </li>`).join('') : '<li class="p-3 text-muted">Tiada maklumat pelawat direkodkan.</li>'}
@@ -1188,39 +1233,6 @@ async function showPengarahDetailModal(p) {
               <div class="detail-field">
                 <label>Catatan Pengarah</label>
                 <div class="value" style="background:#fff3cd;padding:10px 12px;border-radius:8px;border:1px solid #ffe69c;white-space:pre-wrap;">${esc(directorNoteText)}</div>
-              </div>
-            </div>
-          ` : ''}
-          ${auditTrailEntries.length ? `
-            <div class="col-12">
-              <div class="detail-field">
-                <label>Jejak Audit</label>
-                <div class="value" style="padding:0;">
-                  <div class="d-flex flex-column gap-3">
-                    ${auditTrailEntries.map((entry) => {
-                      const eventType = String(entry.eventType || 'Perubahan status').toLowerCase();
-                      let badgeClass = 'bg-secondary';
-                      if (eventType.includes('lulus') || eventType.includes('approve') || eventType.includes('pas')) badgeClass = 'bg-success';
-                      else if (eventType.includes('tolak') || eventType.includes('reject')) badgeClass = 'bg-danger';
-                      else if (eventType.includes('semak') || eventType.includes('review')) badgeClass = 'bg-warning text-dark';
-                      else if (eventType.includes('hantar') || eventType.includes('submit')) badgeClass = 'bg-primary';
-                      return `
-                        <div class="position-relative ps-3">
-                          <span class="position-absolute top-2 start-0 translate-middle rounded-circle border border-2 border-primary" style="width: 12px; height: 12px; background: #fff;"></span>
-                          <div class="border-start border-2 border-primary ps-3 pb-2">
-                            <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-2">
-                              <span class="badge ${badgeClass}">${esc(entry.eventType || 'Perubahan status')}</span>
-                              <span class="small text-muted">${pengarahFormatDate(entry.createdAt)}</span>
-                            </div>
-                            <div class="fw-semibold text-dark">${esc(String(entry.fromStatus || '-').replaceAll('_', ' '))} → ${esc(String(entry.toStatus || '-').replaceAll('_', ' '))}</div>
-                            ${entry.actor ? `<div class="small text-muted mt-1">Oleh: ${esc(entry.actor)}</div>` : ''}
-                            ${entry.note ? `<div class="small text-muted mt-2" style="white-space: pre-wrap;">${esc(entry.note)}</div>` : ''}
-                          </div>
-                        </div>
-                      `;
-                    }).join('')}
-                  </div>
-                </div>
               </div>
             </div>
           ` : ''}

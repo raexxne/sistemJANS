@@ -522,7 +522,7 @@
     }
 
     function locationTypeLabel(value) {
-      const map = { LOJI: 'Loji Rawatan Air', INTAKE: 'Intake' };
+      const map = { LOJI: 'Loji Rawatan Air', INTAKE: 'Muka Sauk' };
       return map[(value || '').toUpperCase()] || value || '-';
     }
 
@@ -551,6 +551,8 @@
       }];
       const noRujukan = item.nomborPermohonan || item.noRujukan || item.rujukan || item.referenceNo || item.id || '-';
       const status = (item.status || '').toUpperCase();
+      const staffNote = (item.staffNote || item.catatanPetugas || '').trim() || 'Tidak ada catatan';
+      const directorNote = item.directorNote || item.catatanPengarah || '';
       const penyeliaNote = item.penyeliaNote || item.catatanPenyelia || '-';
 
       const modal = document.createElement('div');
@@ -569,14 +571,16 @@
             <div class="application-summary-panel">
               <div class="row g-2">
                 <div class="col-md-4">${detailField('Kementerian / Jabatan / Agensi / Universiti / Syarikat', item.organisation)}</div>
-                <div class="col-md-4">${detailField('Tarikh Permohonan', formatDisplayDate(item.applicationDate))}</div>
+                <div class="col-md-4">${detailField('Tarikh Permohonan', formatDisplayDate(item.applicationDate || item.createdAt))}</div>
                 <div class="col-md-4">${detailField('Tarikh Lawatan', formatDisplayDate(item.visitDate))}</div>
                 <div class="col-md-4">${detailField('Masa Lawatan', formatDisplayTime(item.visitTime))}</div>
                 <div class="col-md-4">${detailField('Jenis Lokasi', locationTypeLabel(item.locationType || item.jenisLokasi))}</div>
                 <div class="col-md-4">${detailField('Nama / Alamat Lokasi', item.locationName || item.lokasi || item.namaLokasi)}</div>
                 <div class="col-md-4">${detailField('No. Telefon (Pejabat)', item.phoneOffice || item.telefonPejabat)}</div>
                 <div class="col-md-4">${detailField('E-mel Untuk Dihubungi (Wakil)', item.emailWakil || item.email || item.emel)}</div>
+                <div class="col-md-4">${detailField('Dikemukakan Oleh', item.reviewedBy?.name || 'Tidak direkodkan')}</div>
                 <div class="col-md-4">${detailField('Tujuan Lawatan', item.purpose || item.tujuan || item.keterangan)}</div>
+                <div class="col-md-8">${detailField('Catatan Petugas', staffNote)}</div>
                 <div class="col-md-4">
                   <div class="detail-field">
                     <label>Status</label>
@@ -595,13 +599,21 @@
                         <span class="visitor-simple-index">${index + 1}.</span>
                         <span class="visitor-simple-name">${esc(visitor.namaPenuh || '-')}</span>
                         <span class="visitor-simple-sep">•</span>
-                        <span class="visitor-simple-value">${esc(visitor.noKadPengenalan || '-')}</span>
+                        <span class="visitor-simple-value">${esc(visitor.jenisPengenalanDiri === 'PASPORT' ? (visitor.noPermitKerja || '-') : (visitor.noKadPengenalan || '-'))}</span>
                         <span class="visitor-simple-sep">•</span>
                         <span class="visitor-simple-value">${esc(visitor.noPendaftaranKenderaan || '-')}</span>
                       </li>`).join('') : '<li class="p-3 text-muted">Tiada maklumat pelawat direkodkan.</li>'}
                   </ul>
                 </div>
               </div>
+              ${directorNote && String(directorNote).trim() && String(directorNote).trim() !== '-' ? `
+                <div class="col-12">
+                  <div class="detail-field">
+                    <label>Catatan Pengarah</label>
+                    <div class="value" style="background:#fff3cd;padding:10px 12px;border-radius:8px;border:1px solid #ffe69c;white-space:pre-wrap;">${esc(directorNote)}</div>
+                  </div>
+                </div>
+              ` : ''}
               ${penyeliaNote && String(penyeliaNote).trim() && String(penyeliaNote).trim() !== '-' ? `
                 <div class="col-12">
                   <div class="detail-field">

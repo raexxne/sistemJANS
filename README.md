@@ -1,6 +1,6 @@
 # Sistem Kebenaran Masuk JAS
 
-Aplikasi Spring Boot + MySQL untuk mengurus permohonan akses loji dan intake.
+Aplikasi Spring Boot + MySQL untuk mengurus permohonan akses loji dan muka sauk.
 
 ## Menjalankan aplikasi secara setempat
 
@@ -49,8 +49,10 @@ Konfigurasi sensitif dibaca daripada environment, bukan disimpan dalam repositor
 - `APP_BOOTSTRAP_ADMIN_EMAIL`, `APP_BOOTSTRAP_ADMIN_PASSWORD` (hanya diperlukan jika tiada admin)
 - `APP_COOKIE_SECURE` (`true` apabila aplikasi dihidangkan melalui HTTPS)
 
+Untuk notifikasi pengarah, tetapkan `SMTP_HOST`, `SMTP_PORT`, `SMTP_USERNAME` dan `SMTP_PASSWORD` pada proses aplikasi. Untuk Gmail, gunakan App Password, bukan kata laluan akaun biasa. Pastikan akaun berperanan `PENGARAH` mempunyai alamat e-mel sebenar dan `APP_PUBLIC_URL` boleh dicapai oleh pengarah (termasuk nama aplikasi jika digunakan sebagai WAR). Apabila petugas menekan **Hantar ke Pengarah**, sistem menghantar notifikasi kepada alamat e-mel pengarah yang berdaftar. Jika penghantaran gagal, petugas akan menerima mesej ralat dan boleh mencuba semula selepas konfigurasi SMTP diperbetulkan. Mod `app.mail.mock=true` hanya merekodkan e-mel dan tidak menghantarnya.
+
 Flyway menjalankan migrasi pangkalan data daripada `src/main/resources/db/migration`. Oleh sebab skema sedia ada diwujudkan melalui SQL dump, migrasi membuat baseline versi `0` secara automatik sebelum migrasi baharu.
 
-Token reset kata laluan disimpan sebagai hash dalam pangkalan data, luput selepas 10 minit, dan dihadkan kepada lima percubaan kod serta satu permintaan baharu seminit. Token CSRF digunakan untuk permintaan yang mengubah data, dan halaman web menghantar token itu secara automatik. Health check Actuator tersedia di `/actuator/health`; butiran dalaman health check tidak didedahkan.
+Token reset kata laluan dan kod akses semakan permohonan disimpan sebagai hash dalam pangkalan data, luput selepas 10 minit, dan dihadkan kepada lima percubaan serta satu permintaan baharu seminit. Status terperinci, token pas dan PDF permohonan hanya boleh dicapai selepas kod dihantar ke e-mel wakil disahkan; sesi pengesahan sah selama 15 minit. Token CSRF digunakan untuk permintaan yang mengubah data, dan halaman web menghantar token itu secara automatik. Health check Actuator tersedia di `/actuator/health`; butiran dalaman health check tidak didedahkan.
 
 Jalankan ujian dengan `mvn test`.

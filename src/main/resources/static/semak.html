@@ -37,10 +37,11 @@
                   class="form-control"
                   placeholder="Contoh: JAS-2026-000001"
                 >
-                <button class="btn btn-primary px-4" onclick="semak()" type="button">
-                  <i class="fas fa-search"></i> Semak
+                <button id="btnSemakPermohonan" class="btn btn-primary px-4" onclick="semak()" type="button" disabled>
+                  <i class="fas fa-search me-1"></i> Semak
                 </button>
               </div>
+              <p id="mesejSemakan" class="small text-muted mt-2" role="status" aria-live="polite"></p>
 
               <div id="hasil"></div>
             </div>

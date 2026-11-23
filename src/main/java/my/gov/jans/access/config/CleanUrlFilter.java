@@ -22,7 +22,7 @@ public class CleanUrlFilter extends OncePerRequestFilter {
 
     private static final Set<String> PAGES = Set.of("admin", "aduan", "faq", "forgot-password",
             "forgot-password-verify", "hubungi", "login", "mohon", "pelawat", "pengarah", "penyelia-loji",
-            "petugas", "profile", "sah", "semak");
+            "petugas", "profile", "sah", "semak", "cgso", "kpp-cawangan-pengeluar");
 
     @Override
     protected void doFilterInternal(HttpServletRequest req, HttpServletResponse res, FilterChain chain)

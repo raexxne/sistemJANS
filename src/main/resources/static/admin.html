@@ -67,7 +67,7 @@
   .bg-stat-primary { background: linear-gradient(135deg, #0d6efd 0%, #0a58ca 100%); } /* Biru (Loji) */
   .bg-stat-secondary { background: linear-gradient(135deg, #6c757d 0%, #495057 100%); } /* Kelabu (Staff) */
   .bg-stat-success { background: linear-gradient(135deg, #198754 0%, #146c43 100%); } /* Hijau (Penyelia Loji) */
-  .bg-stat-info { background: linear-gradient(135deg, #0dcaf0 0%, #087990 100%); color: #fff !important; } /* Biru Muda (Pengarah & Intake) */
+  .bg-stat-info { background: linear-gradient(135deg, #0dcaf0 0%, #087990 100%); color: #fff !important; } /* Biru Muda (Pengarah & Muka Sauk) */
   .bg-stat-danger { background: linear-gradient(135deg, #dc3545 0%, #a52834 100%); } /* Merah (Admin) */
   .bg-stat-dark { background: linear-gradient(135deg, #212529 0%, #000000 100%); } /* Hitam (Jumlah Keseluruhan) */
   /* =========================================================== */
@@ -347,7 +347,7 @@
           <div class="card admin-stat-card bg-stat-danger h-100">
             <i class="fas fa-user-cog stat-icon-bg"></i>
             <div class="card-body">
-              <div class="stat-label">Admin</div>
+              <div class="stat-label">Admin Sistem</div>
               <div id="admin-admin-count" class="display-5 fw-bold mt-2">0</div>
             </div>
           </div>
@@ -367,7 +367,7 @@
           <div class="card admin-stat-card bg-stat-success h-100">
             <i class="fas fa-user stat-icon-bg"></i>
             <div class="card-body">
-              <div class="stat-label">Penyelia Loji</div>
+              <div class="stat-label">Penyelia Loji/Ketua Loji</div>
               <div id="admin-penyelia-count" class="display-5 fw-bold mt-2">0</div>
             </div>
           </div>
@@ -379,6 +379,26 @@
             <div class="card-body">
               <div class="stat-label">Staff</div>
               <div id="admin-staff-count" class="display-5 fw-bold mt-2">0</div>
+            </div>
+          </div>
+        </div>
+        <!-- Kad CGSO -->
+        <div class="col-xl col-lg-6 col-md-6">
+          <div class="card admin-stat-card bg-stat-primary h-100">
+            <i class="fas fa-building-circle-check stat-icon-bg"></i>
+            <div class="card-body">
+              <div class="stat-label">CGSO</div>
+              <div id="admin-cgso-count" class="display-5 fw-bold mt-2">0</div>
+            </div>
+          </div>
+        </div>
+        <!-- Kad KPP Cawangan Pengeluaran -->
+        <div class="col-xl col-lg-6 col-md-6">
+          <div class="card admin-stat-card bg-stat-info h-100">
+            <i class="fas fa-clipboard-check stat-icon-bg"></i>
+            <div class="card-body">
+              <div class="stat-label">KPP Cawangan Pengeluaran</div>
+              <div id="admin-kpp-count" class="display-5 fw-bold mt-2">0</div>
             </div>
           </div>
         </div>
@@ -440,13 +460,13 @@
             </div>
           </div>
         </div>
-        <!-- Kad Intake (Info/Cyan) -->
+        <!-- Kad Muka Sauk (Info/Cyan) -->
         <div class="col-lg-4 col-md-12">
           <div class="card admin-stat-card bg-stat-info h-100">
             <i class="fas fa-water stat-icon-bg"></i>
             <div class="card-body">
-              <div class="stat-label">Intake</div>
-              <div id="admin-intake-count" class="display-5 fw-bold mt-2">0</div>
+              <div class="stat-label">Muka Sauk</div>
+              <div id="admin-muka-sauk-count" class="display-5 fw-bold mt-2">0</div>
             </div>
           </div>
         </div>
@@ -520,7 +540,9 @@
         ADMIN: 'danger',
         PENGARAH: 'info',
         STAFF: 'secondary',
-        PENYELIA_LOJI: 'success'
+        PENYELIA_LOJI: 'success',
+        CGSO: 'primary',
+        KPP_CAWANGAN_PENGELUARAN: 'warning'
       };
       const color = map[normalized] || 'secondary';
       return `<span class="badge bg-${color}">${normalized.replaceAll('_', ' ')}</span>`;
@@ -543,6 +565,8 @@
       document.querySelector('#admin-staff-count').textContent = users.filter((user) => user.role === 'STAFF').length;
       document.querySelector('#admin-director-count').textContent = users.filter((user) => user.role === 'PENGARAH').length;
       document.querySelector('#admin-penyelia-count').textContent = users.filter((user) => user.role === 'PENYELIA_LOJI').length;
+      document.querySelector('#admin-cgso-count').textContent = users.filter((user) => user.role === 'CGSO').length;
+      document.querySelector('#admin-kpp-count').textContent = users.filter((user) => user.role === 'KPP_CAWANGAN_PENGELUARAN').length;
     }
 
     function createUserPhotoCell(user) {
@@ -618,11 +642,20 @@
             createActionButton('fas fa-edit', 'Edit pengguna', 'warning', async () => {
               const result = await showEditModal(user);
               if (result) {
-                              await fetch(`api/admin/users/${user.id}`, {
+                const response = await fetch(`api/admin/users/${user.id}`, {
                   method: 'PUT',
                   headers: { 'Content-Type': 'application/json' },
                   body: JSON.stringify(result)
-                });
+                }).catch(() => null);
+                if (!response) {
+                  await showInfoModal('Ralat', '<p class="mb-0 text-danger">Sambungan kepada sistem gagal.</p>');
+                  return;
+                }
+                const updateResult = await response.json().catch(() => ({}));
+                if (!response.ok) {
+                  await showInfoModal('Ralat', `<p class="mb-0 text-danger">${updateResult.ralat || 'Gagal mengemas kini pengguna.'}</p>`);
+                  return;
+                }
                 await loadUsers();
               }
             }),
@@ -718,8 +751,10 @@
               <select name="role" id="create-user-role" class="form-select">
                 <option value="STAFF">STAFF</option>
                 <option value="PENGARAH">PENGARAH</option>
-                <option value="PENYELIA_LOJI">PENYELIA LOJI</option>
-                <option value="ADMIN">ADMIN</option>
+                <option value="PENYELIA_LOJI">PENYELIA LOJI/KETUA LOJI</option>
+                <option value="CGSO">CGSO</option>
+                <option value="KPP_CAWANGAN_PENGELUARAN">KPP Cawangan Pengeluaran</option>
+                <option value="ADMIN">ADMIN SISTEM</option>
               </select>
             </div>
             <div class="mb-2 admin-daerah-row is-hidden" id="create-user-daerah-row">
@@ -802,8 +837,10 @@
               <select name="role" id="edit-user-role" class="form-select">
                 <option value="STAFF" ${user.role === 'STAFF' ? 'selected' : ''}>STAFF</option>
                 <option value="PENGARAH" ${user.role === 'PENGARAH' ? 'selected' : ''}>PENGARAH</option>
-                <option value="PENYELIA_LOJI" ${user.role === 'PENYELIA_LOJI' ? 'selected' : ''}>PENYELIA LOJI</option>
-                <option value="ADMIN" ${user.role === 'ADMIN' ? 'selected' : ''}>ADMIN</option>
+                <option value="PENYELIA_LOJI" ${user.role === 'PENYELIA_LOJI' ? 'selected' : ''}>PENYELIA LOJI/KETUA LOJI</option>
+                <option value="CGSO" ${user.role === 'CGSO' ? 'selected' : ''}>CGSO</option>
+                <option value="KPP_CAWANGAN_PENGELUARAN" ${user.role === 'KPP_CAWANGAN_PENGELUARAN' ? 'selected' : ''}>KPP Cawangan Pengeluaran</option>
+                <option value="ADMIN" ${user.role === 'ADMIN' ? 'selected' : ''}>ADMIN SISTEM</option>
               </select>
             </div>
             <div class="mb-2 admin-daerah-row ${user.role === 'PENYELIA_LOJI' ? '' : 'is-hidden'}" id="edit-user-daerah-row">
@@ -993,7 +1030,7 @@
     function updateLokasiSummary(senaraiLokasi) {
       document.querySelector('#admin-lokasi-count').textContent = senaraiLokasi.length;
       document.querySelector('#admin-loji-count').textContent = senaraiLokasi.filter((l) => l.type === 'LOJI').length;
-      document.querySelector('#admin-intake-count').textContent = senaraiLokasi.filter((l) => l.type === 'INTAKE').length;
+      document.querySelector('#admin-muka-sauk-count').textContent = senaraiLokasi.filter((l) => l.type === 'INTAKE').length;
     }
 
     async function loadLokasi() {
@@ -1089,7 +1126,7 @@
               <label class="form-label">Jenis Lokasi</label>
               <select name="type" class="form-select" required>
                 <option value="LOJI">LOJI (Loji Rawatan Air)</option>
-                <option value="INTAKE">INTAKE</option>
+                <option value="INTAKE">Muka Sauk</option>
               </select>
             </div>
             <div class="mb-2"><label class="form-label">Nama Lokasi</label><input name="name" class="form-control" required></div>
@@ -1130,7 +1167,7 @@
               <label class="form-label">Jenis Lokasi</label>
               <select name="type" class="form-select" required>
                 <option value="LOJI" ${lokasi.type === 'LOJI' ? 'selected' : ''}>LOJI (Loji Rawatan Air)</option>
-                <option value="INTAKE" ${lokasi.type === 'INTAKE' ? 'selected' : ''}>INTAKE</option>
+                <option value="INTAKE" ${lokasi.type === 'INTAKE' ? 'selected' : ''}>Muka Sauk</option>
               </select>
             </div>
             <div class="mb-2"><label class="form-label">Nama Lokasi</label><input name="name" class="form-control" value="${lokasi.name || ''}" required></div>
@@ -1184,12 +1221,19 @@
         const daerahTerpilih = Array.isArray(payload.daerah) ? payload.daerah : [];
         delete payload.daerah;
         
-        const response = await fetch('api/admin/users', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(payload)
-        });
-        const result = await response.json();
+        let response;
+        let result = {};
+        try {
+          response = await fetch('api/admin/users', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload)
+          });
+          result = await response.json().catch(() => ({}));
+        } catch (error) {
+          await showInfoModal('Ralat', '<p class="mb-0 text-danger">Pengguna tidak dapat dicipta kerana sambungan atau token keselamatan gagal. Sila muat semula halaman dan cuba lagi.</p>');
+          return;
+        }
         if (!response.ok) {
           await showInfoModal('Ralat', `<p class="mb-0 text-danger">${result.ralat || 'Gagal mencipta pengguna'}</p>`);
           return;

@@ -33,7 +33,7 @@ public class AdminAccountInitializer {
             }
 
             Pengguna admin = new Pengguna();
-            admin.setName("Administrator");
+            admin.setName("Pentadbir Sistem");
             admin.setEmail(adminEmail.trim().toLowerCase());
             admin.setPasswordHash(passwordEncoder.encode(adminPassword));
             admin.setRole(Role.ADMIN);

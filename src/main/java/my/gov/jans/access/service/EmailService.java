@@ -18,31 +18,49 @@ public class EmailService {
     @Value("${app.mail.mock:false}")
     private boolean mockMode;
 
-    @Value("${spring.mail.username:}")
+    @Value("${SMTP_USERNAME:${spring.mail.username:}}")
     private String mailUsername;
+
+    @Value("${SMTP_PASSWORD:${spring.mail.password:}}")
+    private String mailPassword;
 
     public EmailService(JavaMailSender mailSender) {
         this.mailSender = mailSender;
     }
 
     public void hantarEmail(String penerima, String subjek, String isi, byte[] lampiran, String namaLampiran) {
-        try {
-            if (mockMode) {
-                // Mode ujian - log sahaja
-                log.info(" [EMAIL MOCK MODE]");
-                log.info("   Kepada: {}", penerima);
-                log.info("   Subjek: {}", subjek);
-                log.info("   Isi: {}", isi);
-                if (lampiran != null) {
-                    log.info("   Lampiran: {} ({} bytes)", namaLampiran, lampiran.length);
-                }
-                log.info(" Email dilog (tanpa dihantar)");
-            } else {
-                // Mode production - hantar sebenarnya
+        String penerimaBersih = Objects.requireNonNull(penerima, "Penerima email diperlukan").trim();
+        if (penerimaBersih.isBlank()) {
+            throw new IllegalArgumentException("Penerima email tidak boleh kosong");
+        }
+
+        if (mockMode) {
+            log.info(" [EMAIL MOCK MODE]");
+            log.info("   Kepada: {}", penerimaBersih);
+            log.info("   Subjek: {}", subjek);
+            log.info("   Isi: {}", isi);
+            if (lampiran != null) {
+                log.info("   Lampiran: {} ({} bytes)", namaLampiran, lampiran.length);
+            }
+            log.info(" Email dilog (tanpa dihantar)");
+            return;
+        }
+
+        if (mailUsername == null || mailUsername.isBlank()) {
+            throw new IllegalStateException("SMTP_USERNAME belum dikonfigurasi");
+        }
+        if (mailPassword == null || mailPassword.isBlank()) {
+            throw new IllegalStateException(
+                    "SMTP_PASSWORD belum dikonfigurasi. Tetapkan Gmail App Password melalui pemboleh ubah persekitaran SMTP_PASSWORD.");
+        }
+
+        RuntimeException kegagalanTerakhir = null;
+        for (int percubaan = 1; percubaan <= 2; percubaan++) {
+            try {
                 MimeMessage message = mailSender.createMimeMessage();
                 MimeMessageHelper helper = new MimeMessageHelper(message, true, "UTF-8");
 
-                helper.setTo(Objects.requireNonNull(penerima));
+                helper.setTo(penerimaBersih);
                 helper.setSubject(Objects.requireNonNull(subjek));
                 helper.setText(Objects.requireNonNull(isi), true);
                 String daripada = mailUsername;
@@ -57,11 +75,18 @@ public class EmailService {
                 }
 
                 mailSender.send(message);
-                log.info(" Email dihantar kepada: {}", penerima);
+                log.info("Email berjaya dihantar kepada {} untuk subjek '{}'", penerimaBersih, subjek);
+                return;
+            } catch (Exception e) {
+                kegagalanTerakhir = new IllegalStateException(
+                        "Email gagal dihantar: " + e.getMessage(), e);
+                log.warn("Percubaan {}/2 gagal menghantar email kepada {} untuk subjek '{}': {}",
+                        percubaan, penerimaBersih, subjek, e.getMessage());
             }
-        } catch (Exception e) {
-            log.error(" Gagal hantar email: {}", e.getMessage(), e);
-            throw new IllegalStateException("Email gagal dihantar: " + e.getMessage(), e);
         }
+
+        log.error("Gagal menghantar email selepas 2 percubaan kepada {} untuk subjek '{}'",
+                penerimaBersih, subjek);
+        throw kegagalanTerakhir;
     }
 }
