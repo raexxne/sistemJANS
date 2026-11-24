@@ -82,6 +82,10 @@
     text-align: center;
     vertical-align: middle;
   }
+  /* Align left for Subjek and Penerangan columns */
+  .admin-table th:nth-child(3), .admin-table td:nth-child(3) { text-align: left; }
+  /* For status table, align Penerangan left */
+  .admin-table th.align-left, .admin-table td.align-left { text-align: left; }
   .admin-user-photo {
     width: 42px;
     height: 42px;
@@ -299,6 +303,65 @@
   .admin-daerah-row.is-hidden {
     display: none;
   }
+  .settings-nav {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 12px;
+    margin-bottom: 2rem;
+  }
+  .settings-nav-btn {
+    padding: 1.5rem;
+    border: none;
+    border-radius: 18px;
+    background: #fff;
+    color: #334155;
+    text-align: left;
+    cursor: pointer;
+    position: relative;
+    overflow: hidden;
+    box-shadow: 0 10px 20px rgba(0,0,0,0.08);
+    transition: all 0.3s ease;
+    display: flex;
+    flex-direction: column;
+    min-height: 160px;
+  }
+  .settings-nav-btn:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 15px 30px rgba(0,0,0,0.15);
+  }
+  .settings-nav-btn.active {
+    background: linear-gradient(135deg, #0d6efd 0%, #0a58ca 100%);
+    color: #fff;
+    box-shadow: 0 10px 25px rgba(13, 110, 253, 0.3);
+  }
+  .settings-nav-btn i {
+    width: 24px;
+    font-size: 1.5rem;
+    margin-bottom: 8px;
+  }
+  .settings-nav-btn strong {
+    font-size: 1rem;
+    margin-bottom: 6px;
+  }
+  .settings-nav-btn small {
+    font-size: 0.8rem;
+    line-height: 1.3;
+    flex-grow: 1;
+  }
+  .settings-nav-btn.active small {
+    color: rgba(255,255,255,0.9);
+  }
+  .settings-value-preview {
+    max-width: 420px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  @media (max-width: 767.98px) {
+    .settings-nav {
+      grid-template-columns: 1fr;
+    }
+  }
 </style>
 <body class="internal-portal d-flex flex-column min-vh-100">
   <nav class="navbar navbar-expand-lg navbar-dark sticky-top internal-nav">
@@ -326,14 +389,41 @@
     <div class="admin-tabs mb-3">
       <button type="button" class="admin-tab-btn active" data-tab="pengguna">Pengurusan Pengguna</button>
       <button type="button" class="admin-tab-btn" data-tab="lokasi">Pengurusan Lokasi</button>
+      <button type="button" class="admin-tab-btn" data-tab="pengaturan">Pengaturan</button>
     </div>
 
     <!-- TAB PENGGUNA -->
     <div id="tab-pengguna">
-      <!-- MENGGUNAKAN COL-XL AGAR KELIMA-LIMA KAD KELIHATAN KEMAS DALAM SATU BARIS -->
-      <div class="row g-4 mb-4">
-        <!-- Kad Jumlah Pengguna (Dark) -->
-        <div class="col-xl col-lg-4 col-md-6">
+      <!-- GRID LAYOUT: 1 BESAR KIRI, 3+3 KECIL KANAN -->
+      <style>
+        .admin-user-stats {
+          display: grid;
+          grid-template-columns: 1fr 1fr 1fr 1fr;
+          gap: 1rem;
+          margin-bottom: 2rem;
+        }
+        .admin-user-stats .large-card {
+          grid-row: span 2;
+          min-height: 200px;
+        }
+        @media (max-width: 1199.98px) {
+          .admin-user-stats {
+            grid-template-columns: 1fr 1fr;
+          }
+          .admin-user-stats .large-card {
+            grid-row: auto;
+            grid-column: 1 / -1;
+          }
+        }
+        @media (max-width: 575.98px) {
+          .admin-user-stats {
+            grid-template-columns: 1fr;
+          }
+        }
+      </style>
+      <div class="admin-user-stats">
+        <!-- Kad Jumlah Pengguna (Dark) - BESAR DI KIRI -->
+        <div class="large-card">
           <div class="card admin-stat-card bg-stat-dark h-100">
             <i class="fas fa-users stat-icon-bg"></i>
             <div class="card-body">
@@ -342,8 +432,9 @@
             </div>
           </div>
         </div>
+        <!-- BARISAN PERTAMA (3 KECIL) -->
         <!-- Kad Admin (Danger/Red) -->
-        <div class="col-xl col-lg-4 col-md-6">
+        <div>
           <div class="card admin-stat-card bg-stat-danger h-100">
             <i class="fas fa-user-cog stat-icon-bg"></i>
             <div class="card-body">
@@ -353,7 +444,7 @@
           </div>
         </div>
         <!-- Kad Pengarah (Info/Cyan) -->
-        <div class="col-xl col-lg-4 col-md-6">
+        <div>
           <div class="card admin-stat-card bg-stat-info h-100">
             <i class="fas fa-user-shield stat-icon-bg"></i>
             <div class="card-body">
@@ -363,7 +454,7 @@
           </div>
         </div>
         <!-- Kad Penyelia Loji (Success/Green) -->
-        <div class="col-xl col-lg-6 col-md-6">
+        <div>
           <div class="card admin-stat-card bg-stat-success h-100">
             <i class="fas fa-user stat-icon-bg"></i>
             <div class="card-body">
@@ -372,8 +463,9 @@
             </div>
           </div>
         </div>
+        <!-- BARISAN KEDUA (3 KECIL) -->
         <!-- Kad Staff (Secondary/Grey) -->
-        <div class="col-xl col-lg-6 col-md-12">
+        <div>
           <div class="card admin-stat-card bg-stat-secondary h-100">
             <i class="fas fa-user-check stat-icon-bg"></i>
             <div class="card-body">
@@ -383,7 +475,7 @@
           </div>
         </div>
         <!-- Kad CGSO -->
-        <div class="col-xl col-lg-6 col-md-6">
+        <div>
           <div class="card admin-stat-card bg-stat-primary h-100">
             <i class="fas fa-building-circle-check stat-icon-bg"></i>
             <div class="card-body">
@@ -393,7 +485,7 @@
           </div>
         </div>
         <!-- Kad KPP Cawangan Pengeluaran -->
-        <div class="col-xl col-lg-6 col-md-6">
+        <div>
           <div class="card admin-stat-card bg-stat-info h-100">
             <i class="fas fa-clipboard-check stat-icon-bg"></i>
             <div class="card-body">
@@ -498,6 +590,52 @@
                 </tr>
               </thead>
               <tbody id="admin-lokasi-list"></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div id="tab-pengaturan" style="display: none;">
+      <div class="settings-nav mb-4" aria-label="Kategori pengaturan">
+        <button type="button" class="settings-nav-btn active" data-setting-category="announcement">
+          <i class="fas fa-bullhorn text-primary me-2"></i>
+          <strong>Pengumuman</strong>
+          <small class="d-block text-muted mt-1">Makluman yang dipaparkan pada laman utama.</small>
+        </button>
+        <button type="button" class="settings-nav-btn" data-setting-category="smtp">
+          <i class="fas fa-server text-success me-2"></i>
+          <strong>Tetapan Pengirim SMTP</strong>
+          <small class="d-block text-muted mt-1">Konfigurasi penghantaran e-mel sistem.</small>
+        </button>
+        <button type="button" class="settings-nav-btn" data-setting-category="email-template">
+          <i class="fas fa-envelope-open-text text-info me-2"></i>
+          <strong>Template E-mel &amp; Pemberitahuan</strong>
+          <small class="d-block text-muted mt-1">Subjek, kandungan dan status penghantaran.</small>
+        </button>
+        <button type="button" class="settings-nav-btn" data-setting-category="status">
+          <i class="fas fa-tags text-warning me-2"></i>
+          <strong>Konfigurasi Status</strong>
+          <small class="d-block text-muted mt-1">Label, warna lencana dan penerangan status.</small>
+        </button>
+      </div>
+      <div class="card admin-card">
+        <div class="card-header bg-white border-0 py-3 d-flex justify-content-between align-items-center gap-3">
+          <div>
+            <h2 class="h5 mb-0" id="settings-title"><i class="fas fa-bullhorn me-2 text-primary"></i>Pengurusan Pengumuman</h2>
+            <p class="text-muted mb-0 small" id="settings-description">Urus pengumuman yang dipaparkan pada halaman utama.</p>
+          </div>
+          <button type="button" id="btn-create-setting" class="btn btn-primary admin-icon-btn shadow-sm" title="Tambah tetapan">
+            <i class="fas fa-plus"></i>
+          </button>
+        </div>
+        <div class="card-body">
+          <div class="table-responsive">
+            <table class="table table-bordered table-hover align-middle admin-table">
+              <thead class="table-light">
+                <tr id="settings-table-head"></tr>
+              </thead>
+              <tbody id="settings-list"></tbody>
             </table>
           </div>
         </div>
@@ -1200,6 +1338,256 @@
       });
     }
 
+    const SETTING_CATEGORIES = {
+      announcement: {
+        title: 'Pengurusan Pengumuman',
+        description: 'Urus pengumuman yang dipaparkan pada halaman utama.',
+        icon: 'fa-bullhorn',
+        columns: ['Kunci', 'Tajuk', 'Pratonton', 'Status', 'Urutan', 'Tindakan'],
+        fields: [
+          { name: 'key', label: 'Kunci Unik', type: 'text', required: true },
+          { name: 'title', label: 'Tajuk', type: 'text', required: true },
+          { name: 'message', label: 'Kandungan Pengumuman', type: 'textarea', required: true },
+          { name: 'active', label: 'Aktifkan pengumuman', type: 'checkbox' },
+          { name: 'sortOrder', label: 'Urutan Paparan', type: 'number', required: true }
+        ]
+      },
+      smtp: {
+        title: 'Tetapan Pengirim SMTP',
+        description: 'Konfigurasi pelayan SMTP yang digunakan untuk semua e-mel sistem.',
+        icon: 'fa-server',
+        columns: ['Profil', 'Pelayan', 'Port', 'Pengguna / Pengirim', 'TLS', 'Tindakan'],
+        fields: [
+          { name: 'key', label: 'Nama Profil', type: 'text', required: true },
+          { name: 'host', label: 'Hos SMTP', type: 'text', required: true },
+          { name: 'port', label: 'Port', type: 'number', required: true },
+          { name: 'username', label: 'Nama Pengguna / E-mel Pengirim', type: 'email' },
+          { name: 'password', label: 'Kata Laluan / App Password', type: 'password' },
+          { name: 'fromName', label: 'Nama Pengirim', type: 'text' },
+          { name: 'auth', label: 'Gunakan pengesahan SMTP', type: 'checkbox' },
+          { name: 'startTls', label: 'Gunakan STARTTLS', type: 'checkbox' }
+        ]
+      },
+      'email-template': {
+        title: 'Pengurusan Template E-mel & Pemberitahuan',
+        description: 'Urus subjek dan kandungan semua template e-mel serta pemberitahuan sistem.',
+        icon: 'fa-envelope-open-text',
+        columns: ['Kunci', 'Nama', 'Subjek', 'Status', 'Tindakan'],
+        fields: [
+          { name: 'key', label: 'Kunci Template', type: 'text', required: true },
+          { name: 'name', label: 'Nama Template', type: 'text', required: true },
+          { name: 'subject', label: 'Subjek E-mel', type: 'text', required: true },
+          { name: 'body', label: 'Kandungan HTML (placeholder {{applicationNo}}, {{reason}}, {{code}}, {{link}})', type: 'textarea', required: true },
+          { name: 'enabled', label: 'Aktifkan penghantaran template', type: 'checkbox' }
+        ]
+      },
+      status: {
+        title: 'Pengurusan Konfigurasi Status',
+        description: 'Urus label, warna lencana dan penerangan status aplikasi.',
+        icon: 'fa-tags',
+        columns: ['Kod Status', 'Pratonton', 'Penerangan', 'Tindakan'],
+        fields: [
+          { name: 'key', label: 'Kod Status Sistem', type: 'text', required: true },
+          { name: 'label', label: 'Label Paparan', type: 'text', required: true },
+          { name: 'color', label: 'Warna Lencana Bootstrap', type: 'select', required: true, options: ['primary', 'secondary', 'success', 'danger', 'warning', 'info', 'dark'] },
+          { name: 'description', label: 'Penerangan Status', type: 'textarea', required: true }
+        ]
+      }
+    };
+
+    let activeSettingCategory = 'announcement';
+    let currentSettings = [];
+
+    function settingEscape(value) {
+      return String(value ?? '').replace(/[&<>"']/g, (character) => ({
+        '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#039;'
+      }[character]));
+    }
+
+    function renderSettingField(field, value = '') {
+      const id = `setting-${field.name}`;
+      if (field.type === 'textarea') {
+        return `<div class="mb-2"><label class="form-label" for="${id}">${field.label}</label><textarea class="form-control" id="${id}" name="${field.name}" rows="5" ${field.required ? 'required' : ''}>${settingEscape(value)}</textarea></div>`;
+      }
+      if (field.type === 'checkbox') {
+        return `<div class="form-check mb-3"><input class="form-check-input" type="checkbox" id="${id}" name="${field.name}" ${value ? 'checked' : ''}><label class="form-check-label" for="${id}">${field.label}</label></div>`;
+      }
+      if (field.type === 'select') {
+        return `<div class="mb-2"><label class="form-label" for="${id}">${field.label}</label><select class="form-select" id="${id}" name="${field.name}" ${field.required ? 'required' : ''}>${field.options.map((option) => `<option value="${option}" ${option === value ? 'selected' : ''}>${option}</option>`).join('')}</select></div>`;
+      }
+      return `<div class="mb-2"><label class="form-label" for="${id}">${field.label}</label><input class="form-control" id="${id}" name="${field.name}" type="${field.type}" value="${settingEscape(value)}" ${field.required ? 'required' : ''}></div>`;
+    }
+
+    async function loadSettings(category = activeSettingCategory) {
+      activeSettingCategory = category;
+      const config = SETTING_CATEGORIES[category];
+      const tbody = document.querySelector('#settings-list');
+      document.querySelector('#settings-title').innerHTML = `<i class="fas ${config.icon} me-2 text-primary"></i>${config.title}`;
+      document.querySelector('#settings-description').textContent = config.description;
+      
+      // Add alignment classes for specific columns
+      const headerHTML = config.columns.map((column, index) => {
+        // For email-template: Subjek is column index 2
+        // For status: Penerangan is column index 2
+        const isLeftAlign = (activeSettingCategory === 'email-template' && index === 2) || 
+                           (activeSettingCategory === 'status' && index === 2);
+        const alignClass = isLeftAlign ? 'align-left' : '';
+        return `<th class="${alignClass}">${column}</th>`;
+      }).join('');
+      document.querySelector('#settings-table-head').innerHTML = headerHTML;
+      tbody.innerHTML = `<tr><td colspan="${config.columns.length}" class="text-center text-muted">Memuatkan...</td></tr>`;
+
+      try {
+        const response = await fetch(`api/admin/settings/${encodeURIComponent(category)}`);
+        const result = await response.json();
+        if (!response.ok) throw new Error(result.ralat || 'Gagal memuat tetapan');
+        currentSettings = result;
+        renderSettings();
+      } catch (error) {
+        tbody.innerHTML = `<tr><td colspan="${config.columns.length}" class="text-center text-danger">${settingEscape(error.message)}</td></tr>`;
+      }
+    }
+
+    function settingCells(item) {
+      const value = item.value || {};
+      switch (activeSettingCategory) {
+        case 'announcement':
+          return [
+            settingEscape(item.key),
+            settingEscape(value.title),
+            `<div class="settings-value-preview" title="${settingEscape(value.message)}">${settingEscape(value.message)}</div>`,
+            `<span class="badge bg-${value.active ? 'success' : 'secondary'}">${value.active ? 'Aktif' : 'Nyahaktif'}</span>`,
+            settingEscape(value.sortOrder ?? 0)
+          ];
+        case 'smtp':
+          return [
+            settingEscape(item.key),
+            settingEscape(value.host),
+            settingEscape(value.port),
+            settingEscape(value.username || 'Belum ditetapkan'),
+            `<span class="badge bg-${value.startTls ? 'success' : 'secondary'}">${value.startTls ? 'STARTTLS' : 'Tiada TLS'}</span>`
+          ];
+        case 'email-template':
+          return [
+            settingEscape(item.key),
+            settingEscape(value.name),
+            `<div class="settings-value-preview" title="${settingEscape(value.subject)}">${settingEscape(value.subject)}</div>`,
+            `<span class="badge bg-${value.enabled ? 'success' : 'secondary'}">${value.enabled ? 'Aktif' : 'Nyahaktif'}</span>`
+          ];
+        case 'status':
+          return [
+            settingEscape(item.key),
+            `<span class="badge bg-${settingEscape(value.color || 'secondary')}">${settingEscape(value.label || item.key)}</span>`,
+            `<div class="settings-value-preview" title="${settingEscape(value.description)}">${settingEscape(value.description)}</div>`
+          ];
+        default:
+          return [];
+      }
+    }
+
+    function renderSettings() {
+      const tbody = document.querySelector('#settings-list');
+      const config = SETTING_CATEGORIES[activeSettingCategory];
+      if (!currentSettings.length) {
+        tbody.innerHTML = `<tr><td colspan="${config.columns.length}" class="text-center text-muted">Tiada tetapan dijumpai.</td></tr>`;
+        return;
+      }
+      tbody.innerHTML = '';
+      currentSettings.forEach((item) => {
+        const row = document.createElement('tr');
+        const cells = settingCells(item);
+        const cellsHTML = cells.map((cell, index) => {
+          // For email-template: Subjek is column index 2
+          // For status: Penerangan is column index 2
+          const isLeftAlign = (activeSettingCategory === 'email-template' && index === 2) || 
+                             (activeSettingCategory === 'status' && index === 2);
+          const alignClass = isLeftAlign ? 'align-left' : '';
+          return `<td class="${alignClass}">${cell}</td>`;
+        }).join('') + '<td></td>';
+        row.innerHTML = cellsHTML;
+        const actionCell = row.querySelector('td:last-child');
+        actionCell.appendChild(createActionButton('fas fa-edit', 'Edit tetapan', 'warning', async () => {
+          const payload = await showSettingModal(item);
+          if (!payload) return;
+          const response = await fetch(`api/admin/settings/${encodeURIComponent(activeSettingCategory)}/${item.id}`, {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload)
+          });
+          const result = await response.json();
+          if (!response.ok) {
+            await showInfoModal('Ralat', `<p class="mb-0 text-danger">${settingEscape(result.ralat || 'Gagal mengemas kini tetapan')}</p>`);
+            return;
+          }
+          await loadSettings();
+        }));
+        actionCell.appendChild(createActionButton('fas fa-trash', 'Padam tetapan', 'danger', async () => {
+          const confirmed = await showConfirmModal({
+            title: 'Padam Tetapan',
+            message: `Padam tetapan "${settingEscape(item.key)}"?`,
+            type: 'danger',
+            confirmText: 'Padam'
+          });
+          if (!confirmed) return;
+          const response = await fetch(`api/admin/settings/${encodeURIComponent(activeSettingCategory)}/${item.id}`, {
+            method: 'DELETE'
+          });
+          const result = await response.json();
+          if (!response.ok) {
+            await showInfoModal('Ralat', `<p class="mb-0 text-danger">${settingEscape(result.ralat || 'Gagal memadam tetapan')}</p>`);
+            return;
+          }
+          await loadSettings();
+        }));
+        tbody.appendChild(row);
+      });
+    }
+
+    function showSettingModal(item = null) {
+      const config = SETTING_CATEGORIES[activeSettingCategory];
+      const value = item?.value || {};
+      const fields = config.fields.map((field) => renderSettingField(
+        field,
+        field.name === 'key' ? (item?.key || '') : value[field.name]
+      )).join('');
+      return new Promise((resolve) => {
+        const { overlay, card, close } = createModalShell(
+          `${item ? 'Edit' : 'Tambah'} ${config.title}`,
+          `<form id="setting-form">${fields}</form>`
+        );
+        const footer = document.createElement('div');
+        footer.className = 'admin-modal-footer';
+        footer.innerHTML = `
+          <button type="button" class="btn btn-outline-secondary" id="setting-cancel">Batal</button>
+          <button type="submit" form="setting-form" class="btn btn-primary">Simpan</button>`;
+        card.appendChild(footer);
+        const form = overlay.querySelector('#setting-form');
+        const finish = (payload) => {
+          close();
+          resolve(payload);
+        };
+        footer.querySelector('#setting-cancel').addEventListener('click', () => finish(false));
+        form.addEventListener('submit', (event) => {
+          event.preventDefault();
+          const formData = new FormData(form);
+          const newValue = {};
+          config.fields.filter((field) => field.name !== 'key').forEach((field) => {
+            if (field.type === 'checkbox') {
+              newValue[field.name] = formData.has(field.name);
+            } else if (field.type === 'number') {
+              newValue[field.name] = Number(formData.get(field.name));
+            } else {
+              newValue[field.name] = String(formData.get(field.name) || '').trim();
+            }
+          });
+          finish({ key: String(formData.get('key') || '').trim(), value: newValue });
+        });
+        overlay.addEventListener('click', (event) => {
+          if (event.target === overlay) finish(false);
+        });
+      });
+    }
+
     document.addEventListener('DOMContentLoaded', async () => {
       await loadProfile();
       await loadUsers();
@@ -1211,7 +1599,33 @@
           btn.classList.add('active');
           document.querySelector('#tab-pengguna').style.display = btn.dataset.tab === 'pengguna' ? '' : 'none';
           document.querySelector('#tab-lokasi').style.display = btn.dataset.tab === 'lokasi' ? '' : 'none';
+          document.querySelector('#tab-pengaturan').style.display = btn.dataset.tab === 'pengaturan' ? '' : 'none';
+          if (btn.dataset.tab === 'pengaturan') loadSettings();
         });
+      });
+
+      document.querySelectorAll('.settings-nav-btn').forEach((button) => {
+        button.addEventListener('click', () => {
+          document.querySelectorAll('.settings-nav-btn').forEach((item) => item.classList.remove('active'));
+          button.classList.add('active');
+          loadSettings(button.dataset.settingCategory);
+        });
+      });
+
+      document.querySelector('#btn-create-setting').addEventListener('click', async () => {
+        const payload = await showSettingModal();
+        if (!payload) return;
+        const response = await fetch(`api/admin/settings/${encodeURIComponent(activeSettingCategory)}`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload)
+        });
+        const result = await response.json();
+        if (!response.ok) {
+          await showInfoModal('Ralat', `<p class="mb-0 text-danger">${settingEscape(result.ralat || 'Gagal menambah tetapan')}</p>`);
+          return;
+        }
+        await loadSettings();
       });
 
       document.querySelector('#btn-create-user').addEventListener('click', async () => {
