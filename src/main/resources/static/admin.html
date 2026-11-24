@@ -357,7 +357,62 @@
     text-overflow: ellipsis;
     white-space: nowrap;
   }
+  /* Settings Add Button Card */
+  .settings-add-card-wrapper {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 12px;
+    margin-bottom: 2rem;
+  }
+  .settings-add-card-btn {
+    padding: 1.5rem;
+    border: none;
+    border-radius: 18px;
+    background: #fff;
+    color: #334155;
+    text-align: center;
+    cursor: pointer;
+    position: relative;
+    overflow: hidden;
+    box-shadow: 0 10px 20px rgba(0,0,0,0.08);
+    transition: all 0.3s ease;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    min-height: 160px;
+  }
+  .settings-add-card-btn:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 15px 30px rgba(0,0,0,0.15);
+  }
+  .settings-add-card-btn.active {
+    background: linear-gradient(135deg, #198754 0%, #146c43 100%);
+    color: #fff;
+    box-shadow: 0 10px 25px rgba(25, 135, 84, 0.3);
+  }
+  .settings-add-card-btn i {
+    font-size: 2.5rem;
+    margin-bottom: 12px;
+  }
+  .settings-add-card-btn strong {
+    font-size: 1rem;
+    font-weight: 600;
+  }
+  .settings-add-card-btn small {
+    font-size: 0.8rem;
+    line-height: 1.3;
+    margin-top: 6px;
+  }
+  @media (max-width: 1199.98px) {
+    .settings-add-card-wrapper {
+      grid-template-columns: repeat(2, 1fr);
+    }
+  }
   @media (max-width: 767.98px) {
+    .settings-add-card-wrapper {
+      grid-template-columns: 1fr;
+    }
     .settings-nav {
       grid-template-columns: 1fr;
     }
@@ -394,25 +449,17 @@
 
     <!-- TAB PENGGUNA -->
     <div id="tab-pengguna">
-      <!-- GRID LAYOUT: 1 BESAR KIRI, 3+3 KECIL KANAN -->
+      <!-- GRID LAYOUT: 4 ATAS, 3 BAWAH -->
       <style>
         .admin-user-stats {
           display: grid;
-          grid-template-columns: 1fr 1fr 1fr 1fr;
+          grid-template-columns: repeat(4, 1fr);
           gap: 1rem;
           margin-bottom: 2rem;
         }
-        .admin-user-stats .large-card {
-          grid-row: span 2;
-          min-height: 200px;
-        }
         @media (max-width: 1199.98px) {
           .admin-user-stats {
-            grid-template-columns: 1fr 1fr;
-          }
-          .admin-user-stats .large-card {
-            grid-row: auto;
-            grid-column: 1 / -1;
+            grid-template-columns: repeat(2, 1fr);
           }
         }
         @media (max-width: 575.98px) {
@@ -422,8 +469,8 @@
         }
       </style>
       <div class="admin-user-stats">
-        <!-- Kad Jumlah Pengguna (Dark) - BESAR DI KIRI -->
-        <div class="large-card">
+        <!-- Kad Jumlah Pengguna (Dark) -->
+        <div>
           <div class="card admin-stat-card bg-stat-dark h-100">
             <i class="fas fa-users stat-icon-bg"></i>
             <div class="card-body">
@@ -432,7 +479,6 @@
             </div>
           </div>
         </div>
-        <!-- BARISAN PERTAMA (3 KECIL) -->
         <!-- Kad Admin (Danger/Red) -->
         <div>
           <div class="card admin-stat-card bg-stat-danger h-100">
@@ -463,7 +509,6 @@
             </div>
           </div>
         </div>
-        <!-- BARISAN KEDUA (3 KECIL) -->
         <!-- Kad Staff (Secondary/Grey) -->
         <div>
           <div class="card admin-stat-card bg-stat-secondary h-100">
@@ -619,15 +664,22 @@
           <small class="d-block text-muted mt-1">Label, warna lencana dan penerangan status.</small>
         </button>
       </div>
+
+      <!-- Tambah Tetapan Card -->
+      <div class="settings-add-card-wrapper mb-4">
+        <button type="button" id="btn-create-setting" class="settings-add-card-btn active" title="Tambah tetapan">
+          <i class="fas fa-plus text-success"></i>
+          <strong>Tambah Tetapan</strong>
+          <small class="text-muted">Tambahkan tetapan baharu</small>
+        </button>
+      </div>
+
       <div class="card admin-card">
         <div class="card-header bg-white border-0 py-3 d-flex justify-content-between align-items-center gap-3">
           <div>
             <h2 class="h5 mb-0" id="settings-title"><i class="fas fa-bullhorn me-2 text-primary"></i>Pengurusan Pengumuman</h2>
             <p class="text-muted mb-0 small" id="settings-description">Urus pengumuman yang dipaparkan pada halaman utama.</p>
           </div>
-          <button type="button" id="btn-create-setting" class="btn btn-primary admin-icon-btn shadow-sm" title="Tambah tetapan">
-            <i class="fas fa-plus"></i>
-          </button>
         </div>
         <div class="card-body">
           <div class="table-responsive">
