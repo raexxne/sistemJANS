@@ -135,24 +135,25 @@
     .notification-item.unread {
       background: #f2f8fc;
     }
-    .notification-message {
-      min-width: 0;
+    .notification-text {
+      display: -webkit-box;
       overflow: hidden;
-      text-overflow: ellipsis;
-      white-space: nowrap;
+      overflow-wrap: anywhere;
+      -webkit-box-orient: vertical;
+      -webkit-line-clamp: 2;
     }
     .notification-main {
-      display: flex;
-      align-items: baseline;
+      display: block;
       min-width: 0;
       color: inherit;
+      font-size: 0.875rem;
+      line-height: 1.35;
       text-decoration: none;
     }
     .notification-main:hover .notification-message {
       color: #0d6efd;
     }
     .notification-time {
-      flex: 0 0 auto;
       white-space: nowrap;
     }
     .notification-actions {
@@ -2108,9 +2109,9 @@
         entry.className = `notification-item ${isRead ? '' : 'unread'}`;
         entry.innerHTML = `
           <div class="d-flex align-items-center gap-2">
-            <button type="button" class="notification-main btn btn-link p-0 text-start flex-grow-1 kpp-notification-link" title="${escapeHtml(message)}">
-              <span class="notification-message">${escapeHtml(message)}</span>
-              <span class="notification-time text-muted">&nbsp; &middot; ${escapeHtml(relativeTime)}</span>
+            <button type="button" class="notification-main btn btn-link p-0 text-start flex-grow-1 kpp-notification-link">
+              <span class="notification-text"><span class="notification-message">${escapeHtml(message)}</span>
+              <span class="notification-time text-muted">&nbsp; &middot; ${escapeHtml(relativeTime)}</span></span>
             </button>
             <div class="notification-actions">
               <button type="button" class="notification-menu-btn kpp-notification-menu-btn" aria-label="Menu notifikasi" aria-expanded="false">
