@@ -28,6 +28,7 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.inOrder;
+import static org.mockito.Mockito.lenient;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -229,13 +230,14 @@ class PermohonanServiceTest {
     void shouldEmailApplicantWhenDirectorApprovesApplication() {
         PermohonanRepository repo = mock(PermohonanRepository.class);
         PenggunaRepository penggunaRepository = mock(PenggunaRepository.class);
-        EmailService emailService = mock(EmailService.class);
+        EmailService emailService = emailServiceDenganTemplate();
         Permohonan permohonan = permohonanMenungguKeputusan(3L);
         Pengguna director = new Pengguna();
         director.setEmail("director@example.com");
 
         when(repo.findById(3L)).thenReturn(Optional.of(permohonan));
         when(penggunaRepository.findByEmail("director@example.com")).thenReturn(Optional.of(director));
+        when(penggunaRepository.findByRole(Role.STAFF)).thenReturn(List.of(pengguna("staff@example.com")));
 
         PermohonanService service = new PermohonanService(repo, penggunaRepository, emailService);
         Permohonan result = service.keputusan(3L, true, null, "director@example.com");
@@ -247,19 +249,22 @@ class PermohonanServiceTest {
                 contains("diluluskan"),
                 isNull(),
                 isNull());
+        verify(emailService).hantarEmail(eq("staff@example.com"), contains("diluluskan"),
+                contains("Pengarah telah meluluskan"), isNull(), isNull());
     }
 
     @Test
     void shouldEmailApplicantWhenDirectorRejectsApplication() {
         PermohonanRepository repo = mock(PermohonanRepository.class);
         PenggunaRepository penggunaRepository = mock(PenggunaRepository.class);
-        EmailService emailService = mock(EmailService.class);
+        EmailService emailService = emailServiceDenganTemplate();
         Permohonan permohonan = permohonanMenungguKeputusan(4L);
         Pengguna director = new Pengguna();
         director.setEmail("director@example.com");
 
         when(repo.findById(4L)).thenReturn(Optional.of(permohonan));
         when(penggunaRepository.findByEmail("director@example.com")).thenReturn(Optional.of(director));
+        when(penggunaRepository.findByRole(Role.STAFF)).thenReturn(List.of(pengguna("staff@example.com")));
 
         PermohonanService service = new PermohonanService(repo, penggunaRepository, emailService);
         Permohonan result = service.keputusan(4L, false, "Dokumen tidak lengkap", "director@example.com");
@@ -271,27 +276,153 @@ class PermohonanServiceTest {
                 contains("tidak diluluskan"),
                 isNull(),
                 isNull());
+        verify(emailService).hantarEmail(eq("staff@example.com"), contains("ditolak"),
+                contains("Pengarah telah menolak"), isNull(), isNull());
     }
 
     @Test
-    void shouldKeepDirectorDecisionWhenNotificationEmailFails() {
+    void shouldFailDirectorDecisionWhenApplicantNotificationFails() {
         PermohonanRepository repo = mock(PermohonanRepository.class);
         PenggunaRepository penggunaRepository = mock(PenggunaRepository.class);
-        EmailService emailService = mock(EmailService.class);
+        EmailService emailService = emailServiceDenganTemplate();
         Permohonan permohonan = permohonanMenungguKeputusan(5L);
         Pengguna director = new Pengguna();
         director.setEmail("director@example.com");
 
         when(repo.findById(5L)).thenReturn(Optional.of(permohonan));
         when(penggunaRepository.findByEmail("director@example.com")).thenReturn(Optional.of(director));
+        when(penggunaRepository.findByRole(Role.STAFF)).thenReturn(List.of(pengguna("staff@example.com")));
         doThrow(new IllegalStateException("SMTP unavailable")).when(emailService).hantarEmail(
                 eq("applicant@example.com"), anyString(), anyString(), isNull(), isNull());
 
         PermohonanService service = new PermohonanService(repo, penggunaRepository, emailService);
-        Permohonan result = service.keputusan(5L, false, "Dokumen tidak lengkap", "director@example.com");
+        assertThrows(IllegalStateException.class,
+                () -> service.keputusan(5L, false, "Dokumen tidak lengkap", "director@example.com"));
+        verify(emailService, never()).hantarEmail(eq("staff@example.com"), anyString(), anyString(), any(), any());
+    }
 
-        assertEquals(StatusPermohonan.DITOLAK, result.getStatus());
-        verify(repo).save(permohonan);
+    @Test
+    void shouldCheckStaffRecipientsBeforeSendingDecisionToApplicant() {
+        PermohonanRepository repo = mock(PermohonanRepository.class);
+        PenggunaRepository users = mock(PenggunaRepository.class);
+        EmailService emailService = emailServiceDenganTemplate();
+        Permohonan p = permohonanMenungguKeputusan(5L);
+        when(repo.findById(5L)).thenReturn(Optional.of(p));
+        when(users.findByEmail("director@example.com")).thenReturn(Optional.of(pengguna("director@example.com")));
+        PermohonanService service = new PermohonanService(repo, users, emailService);
+
+        assertThrows(IllegalStateException.class, () -> service.keputusan(5L, true, null, "director@example.com"));
+        verify(emailService, never()).hantarEmail(anyString(), anyString(), anyString(), any(), any());
+    }
+
+    @Test
+    void shouldNotifyAllRecipientsAtEachWorkflowStage() {
+        PermohonanRepository repo = mock(PermohonanRepository.class);
+        PenggunaRepository penggunaRepository = mock(PenggunaRepository.class);
+        EmailService emailService = emailServiceDenganTemplate();
+        Permohonan p = new Permohonan();
+        p.setNomborPermohonan("JAS-2026-000001");
+        p.setStatus(StatusPermohonan.DIHANTAR);
+        when(repo.findById(1L)).thenReturn(Optional.of(p));
+        when(penggunaRepository.findByEmail(anyString())).thenReturn(Optional.of(pengguna("actor@example.com")));
+        when(penggunaRepository.findByRole(Role.CGSO)).thenReturn(List.of(pengguna("cgso@example.com")));
+        when(penggunaRepository.findByRole(Role.KPP_CAWANGAN_PENGELUARAN))
+                .thenReturn(List.of(pengguna("kpp@example.com")));
+        when(penggunaRepository.findByRole(Role.STAFF))
+                .thenReturn(List.of(pengguna("staff1@example.com"), pengguna("staff2@example.com")));
+        PermohonanService service = new PermohonanService(repo, penggunaRepository, emailService);
+
+        service.hantarCgso(1L, "Semakan", "actor@example.com");
+        service.hantarKpp(1L, "Maklum balas CGSO", "actor@example.com");
+        service.hantarKembaliPetugas(1L, "Maklum balas KPP", "actor@example.com");
+        p.setStatus(StatusPermohonan.PAS_DIKELUARKAN);
+        service.catatanPenyelia(1L, "Selesai", "actor@example.com");
+
+        verify(emailService).hantarEmail(eq("cgso@example.com"), contains("CGSO"), contains("Petugas"),
+                isNull(), isNull());
+        verify(emailService).hantarEmail(eq("kpp@example.com"), contains("KPP"), contains("CGSO"),
+                isNull(), isNull());
+        for (String email : List.of("staff1@example.com", "staff2@example.com")) {
+            verify(emailService).hantarEmail(eq(email), contains("KPP"), contains("maklum balas"),
+                    isNull(), isNull());
+            verify(emailService).hantarEmail(eq(email), contains("Lawatan selesai"), contains("Penyelia loji"),
+                    isNull(), isNull());
+        }
+    }
+
+    @Test
+    void shouldBlockWorkflowWhenRecipientOrEmailIsUnavailable() {
+        PermohonanRepository repo = mock(PermohonanRepository.class);
+        PenggunaRepository users = mock(PenggunaRepository.class);
+        EmailService emailService = emailServiceDenganTemplate();
+        Permohonan p = new Permohonan();
+        p.setStatus(StatusPermohonan.DIHANTAR);
+        p.setNomborPermohonan("JAS-2026-000001");
+        when(repo.findById(1L)).thenReturn(Optional.of(p));
+        when(users.findByEmail("staff@example.com")).thenReturn(Optional.of(pengguna("staff@example.com")));
+        PermohonanService service = new PermohonanService(repo, users, emailService);
+
+        assertThrows(IllegalStateException.class, () -> service.hantarCgso(1L, "", "staff@example.com"));
+        verify(emailService, never()).hantarEmail(anyString(), anyString(), anyString(), any(), any());
+
+        p.setStatus(StatusPermohonan.DIHANTAR);
+        when(users.findByRole(Role.CGSO)).thenReturn(List.of(pengguna("cgso@example.com")));
+        doThrow(new IllegalStateException("SMTP unavailable")).when(emailService)
+                .hantarEmail(eq("cgso@example.com"), anyString(), anyString(), isNull(), isNull());
+        assertThrows(IllegalStateException.class, () -> service.hantarCgso(1L, "", "staff@example.com"));
+    }
+
+    @Test
+    void shouldBlockWorkflowWhenRequiredTemplateIsDisabled() {
+        PermohonanRepository repo = mock(PermohonanRepository.class);
+        PenggunaRepository users = mock(PenggunaRepository.class);
+        EmailService emailService = mock(EmailService.class);
+        Permohonan p = new Permohonan();
+        p.setStatus(StatusPermohonan.DIHANTAR);
+        p.setNomborPermohonan("JAS-2026-000001");
+        when(repo.findById(1L)).thenReturn(Optional.of(p));
+        when(users.findByEmail("staff@example.com")).thenReturn(Optional.of(pengguna("staff@example.com")));
+        when(users.findByRole(Role.CGSO)).thenReturn(List.of(pengguna("cgso@example.com")));
+        when(emailService.renderEmailTemplate(eq("cgso-review"), any(), anyString(), anyString()))
+                .thenReturn(new EmailService.RenderedEmail("", "", false));
+
+        PermohonanService service = new PermohonanService(repo, users, emailService);
+        assertThrows(IllegalStateException.class, () -> service.hantarCgso(1L, "", "staff@example.com"));
+        verify(emailService, never()).hantarEmail(anyString(), anyString(), anyString(), any(), any());
+    }
+
+    @Test
+    void shouldNotNotifyWhenWorkflowStateOrDatabaseSaveIsInvalid() {
+        PermohonanRepository repo = mock(PermohonanRepository.class);
+        PenggunaRepository users = mock(PenggunaRepository.class);
+        EmailService emailService = mock(EmailService.class);
+        Permohonan p = new Permohonan();
+        p.setStatus(StatusPermohonan.DITOLAK);
+        when(repo.findById(1L)).thenReturn(Optional.of(p));
+        PermohonanService service = new PermohonanService(repo, users, emailService);
+
+        assertThrows(IllegalStateException.class, () -> service.hantarCgso(1L, "", "staff@example.com"));
+        verify(repo, never()).save(any(Permohonan.class));
+
+        p.setStatus(StatusPermohonan.DIHANTAR);
+        when(users.findByEmail("staff@example.com")).thenReturn(Optional.of(pengguna("staff@example.com")));
+        doThrow(new IllegalStateException("Database unavailable")).when(repo).flush();
+        assertThrows(IllegalStateException.class, () -> service.hantarCgso(1L, "", "staff@example.com"));
+        verify(emailService, never()).hantarEmail(anyString(), anyString(), anyString(), any(), any());
+    }
+
+    private Pengguna pengguna(String email) {
+        Pengguna pengguna = new Pengguna();
+        pengguna.setEmail(email);
+        return pengguna;
+    }
+
+    private EmailService emailServiceDenganTemplate() {
+        EmailService service = mock(EmailService.class);
+        lenient().when(service.renderEmailTemplate(anyString(), any(), anyString(), anyString()))
+                .thenAnswer(invocation -> new EmailService.RenderedEmail(
+                        invocation.getArgument(2), invocation.getArgument(3), true));
+        return service;
     }
 
     private Permohonan permohonanMenungguKeputusan(Long id) {

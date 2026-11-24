@@ -66,7 +66,9 @@ public class AkaunService {
                 + "<p>Kod ini sah selama <b>10 minit</b>.</p>"
                 + "<p>Jika anda tidak meminta reset kata laluan, sila abaikan e-mel ini.</p>";
 
-        emailService.hantarEmail(
+        hantarEmailDenganTemplate(
+                "password-reset-code",
+                Map.of("code", kod),
                 pengguna.getEmail(),
                 "Kod Reset Kata Laluan JAS",
                 isi,
@@ -111,12 +113,29 @@ public class AkaunService {
                 + "<p><small>Tip: Kata laluan ini hanya mengandungi huruf kecil dan nombor.</small></p>"
                 + "<p>Terima kasih.</p>";
 
-        emailService.hantarEmail(
+        hantarEmailDenganTemplate(
+                "password-reset-complete",
+                Map.of("password", kataLaluanBaharu),
                 pengguna.getEmail(),
                 "Reset Kata Laluan JAS",
                 isi,
                 null,
                 null);
+    }
+
+    private void hantarEmailDenganTemplate(String templateKey, Map<String, String> variables, String recipient,
+            String fallbackSubject, String fallbackBody, byte[] attachment, String attachmentName) {
+        EmailService.RenderedEmail rendered = emailService.renderEmailTemplate(
+                templateKey, variables, fallbackSubject, fallbackBody);
+        if (rendered != null && !rendered.enabled()) {
+            return;
+        }
+        emailService.hantarEmail(
+                recipient,
+                rendered == null ? fallbackSubject : rendered.subject(),
+                rendered == null ? fallbackBody : rendered.body(),
+                attachment,
+                attachmentName);
     }
 
     @Transactional

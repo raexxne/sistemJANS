@@ -43,6 +43,22 @@ import static org.mockito.Mockito.when;
 class ApiControllerTest {
 
     @Test
+    void shouldReturnNotificationFailureToDirector() {
+        PermohonanService service = mock(PermohonanService.class);
+        when(service.keputusan(1L, true, null, "director@example.com"))
+                .thenThrow(new IllegalStateException("E-mel keputusan gagal dihantar"));
+        ApiController controller = new ApiController(service, mock(PermohonanAccessCodeService.class),
+                mock(AkaunService.class), mock(PenggunaRepository.class), mock(LokasRepository.class),
+                mock(PermohonanRepository.class), mock(PenyeliaLojiRepository.class), mock(PasswordEncoder.class));
+
+        ResponseEntity<?> response = controller.putus(1L, Map.of("lulus", true),
+                new TestingAuthenticationToken("director@example.com", "password"));
+
+        assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
+        assertEquals(Map.of("ralat", "E-mel keputusan gagal dihantar"), response.getBody());
+    }
+
+    @Test
     @SuppressWarnings("unchecked")
     void shouldReturnOnlyStatusFieldsAfterEmailCodeVerification() {
         PermohonanService permohonanService = mock(PermohonanService.class);

@@ -32,11 +32,6 @@
     overflow: hidden;
     position: relative;
     box-shadow: 0 10px 20px rgba(0,0,0,0.08);
-    transition: transform 0.3s ease, box-shadow 0.3s ease;
-  }
-  .admin-stat-card:hover {
-    transform: translateY(-5px) !important;
-    box-shadow: 0 15px 30px rgba(0,0,0,0.2) !important;
   }
   .admin-stat-card .card-body {
     padding: 1.5rem;
@@ -69,6 +64,7 @@
   .bg-stat-success { background: linear-gradient(135deg, #198754 0%, #146c43 100%); } /* Hijau (Penyelia Loji) */
   .bg-stat-info { background: linear-gradient(135deg, #0dcaf0 0%, #087990 100%); color: #fff !important; } /* Biru Muda (Pengarah & Muka Sauk) */
   .bg-stat-danger { background: linear-gradient(135deg, #dc3545 0%, #a52834 100%); } /* Merah (Admin) */
+  .bg-stat-warning { background: linear-gradient(135deg, #ffc107 0%, #d39e00 100%); color: #212529 !important; } /* Kuning (KPP Cawangan Pengeluaran) */
   .bg-stat-dark { background: linear-gradient(135deg, #212529 0%, #000000 100%); } /* Hitam (Jumlah Keseluruhan) */
   /* =========================================================== */
 
@@ -84,6 +80,7 @@
   }
   /* Align left for Subjek and Penerangan columns */
   .admin-table th:nth-child(3), .admin-table td:nth-child(3) { text-align: left; }
+  .admin-users-table th:nth-child(3), .admin-users-table td:nth-child(3) { text-align: center; }
   /* For status table, align Penerangan left */
   .admin-table th.align-left, .admin-table td.align-left { text-align: left; }
   .admin-user-photo {
@@ -303,53 +300,191 @@
   .admin-daerah-row.is-hidden {
     display: none;
   }
-  .settings-nav {
+  .settings-layout {
     display: grid;
-    grid-template-columns: repeat(4, minmax(0, 1fr));
-    gap: 12px;
-    margin-bottom: 2rem;
+    grid-template-columns: minmax(250px, 300px) minmax(0, 1fr);
+    gap: 24px;
+    align-items: start;
+  }
+  .settings-layout.settings-panel-collapsed {
+    grid-template-columns: 68px minmax(0, 1fr);
+  }
+  #settings-layout > aside {
+    position: static;
+  }
+  .settings-header-actions {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  .settings-search {
+    width: 260px;
+  }
+  .settings-search.settings-search-wide {
+    width: min(520px, 55vw);
+  }
+  .settings-search .input-group-text,
+  .settings-search .form-control {
+    min-height: 44px;
+  }
+  .settings-search .input-group-text {
+    border-radius: 10px 0 0 10px;
+  }
+  .settings-search .form-control {
+    border-radius: 0 10px 10px 0;
+  }
+  .settings-guidance {
+    border: 1px solid #dbe8f5;
+    border-left: 4px solid #0d5ba5;
+    border-radius: 10px;
+    background: #f7fbff;
+    color: #475569;
+    padding: 10px 12px;
+    margin: 0 0 14px;
+    font-size: 0.82rem;
+  }
+  .settings-guidance strong {
+    color: #244d70;
+  }
+  .settings-layout.settings-panel-collapsed .settings-nav {
+    align-items: center;
+  }
+  .settings-layout.settings-panel-collapsed .settings-nav-btn {
+    grid-template-columns: 42px;
+    justify-content: center;
+    padding: 12px;
+  }
+  .settings-layout.settings-panel-collapsed .settings-nav-copy,
+  .settings-layout.settings-panel-collapsed .settings-nav-chevron {
+    display: none;
+  }
+  .settings-layout.settings-panel-collapsed .settings-nav-btn {
+    width: 66px;
+  }
+  .settings-layout.settings-panel-collapsed .settings-nav-btn.active {
+    box-shadow: inset 0 -4px 0 #0d5ba5, 0 5px 16px rgba(13, 91, 165, 0.1);
+  }
+  .settings-nav {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
   }
   .settings-nav-btn {
-    padding: 1.5rem;
-    border: none;
-    border-radius: 18px;
+    width: 100%;
+    display: grid;
+    grid-template-columns: 42px minmax(0, 1fr) 18px;
+    align-items: center;
+    gap: 12px;
+    padding: 14px;
+    border: 1px solid #dbe3ec;
+    border-radius: 12px;
     background: #fff;
     color: #334155;
     text-align: left;
     cursor: pointer;
-    position: relative;
-    overflow: hidden;
-    box-shadow: 0 10px 20px rgba(0,0,0,0.08);
-    transition: all 0.3s ease;
-    display: flex;
-    flex-direction: column;
-    min-height: 160px;
+    box-shadow: 0 3px 12px rgba(15, 23, 42, 0.04);
+    transition: background-color 0.18s ease, border-color 0.18s ease, box-shadow 0.18s ease;
   }
   .settings-nav-btn:hover {
-    transform: translateY(-5px);
-    box-shadow: 0 15px 30px rgba(0,0,0,0.15);
+    border-color: #8bb8e5;
+    background: #f5faff;
+    box-shadow: 0 5px 16px rgba(13, 91, 165, 0.1);
+  }
+  .settings-nav-btn:focus-visible {
+    outline: 3px solid rgba(13, 110, 253, 0.3);
+    outline-offset: 2px;
   }
   .settings-nav-btn.active {
-    background: linear-gradient(135deg, #0d6efd 0%, #0a58ca 100%);
-    color: #fff;
-    box-shadow: 0 10px 25px rgba(13, 110, 253, 0.3);
+    border-color: #0d5ba5;
+    background: #eef6ff;
+    color: #084a86;
+    box-shadow: inset 4px 0 0 #0d5ba5, 0 5px 16px rgba(13, 91, 165, 0.1);
   }
-  .settings-nav-btn i {
-    width: 24px;
-    font-size: 1.5rem;
-    margin-bottom: 8px;
+  .settings-nav-icon {
+    width: 42px;
+    height: 42px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 10px;
+    background: #edf3f9;
+    color: #0d5ba5;
+    font-size: 1.05rem;
+  }
+  .settings-nav-btn.active .settings-nav-icon {
+    background: #0d5ba5;
+    color: #fff;
+  }
+  .settings-nav-copy {
+    min-width: 0;
+  }
+  .settings-nav-btn strong,
+  .settings-nav-btn small {
+    display: block;
   }
   .settings-nav-btn strong {
-    font-size: 1rem;
-    margin-bottom: 6px;
+    font-size: 0.92rem;
+    line-height: 1.25;
+    margin-bottom: 3px;
   }
   .settings-nav-btn small {
-    font-size: 0.8rem;
-    line-height: 1.3;
-    flex-grow: 1;
+    color: #64748b;
+    font-size: 0.76rem;
+    line-height: 1.35;
   }
-  .settings-nav-btn.active small {
-    color: rgba(255,255,255,0.9);
+  .settings-nav-chevron {
+    color: #94a3b8;
+    font-size: 0.8rem;
+  }
+  .settings-nav-btn.active .settings-nav-chevron {
+    color: #0d5ba5;
+  }
+  .settings-content {
+    min-width: 0;
+  }
+  .settings-create-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 44px;
+    height: 44px;
+    min-height: 40px;
+    padding: 0;
+    border-radius: 10px;
+    font-size: 1.05rem;
+  }
+  .back-to-top-btn {
+    position: fixed;
+    right: 24px;
+    bottom: 24px;
+    z-index: 1900;
+    width: 46px;
+    height: 46px;
+    padding: 0;
+    border: 0;
+    border-radius: 50%;
+    background: #0d5ba5;
+    color: #fff;
+    box-shadow: 0 8px 20px rgba(13, 91, 165, 0.28);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    opacity: 0;
+    visibility: hidden;
+    transform: translateY(12px);
+    transition: opacity 0.2s ease, visibility 0.2s ease, transform 0.2s ease, background-color 0.2s ease;
+  }
+  .back-to-top-btn.is-visible {
+    opacity: 1;
+    visibility: visible;
+    transform: translateY(0);
+  }
+  .back-to-top-btn:hover {
+    background: #084a86;
+  }
+  .back-to-top-btn:focus-visible {
+    outline: 3px solid rgba(13, 91, 165, 0.28);
+    outline-offset: 3px;
   }
   .settings-value-preview {
     max-width: 420px;
@@ -357,64 +492,59 @@
     text-overflow: ellipsis;
     white-space: nowrap;
   }
-  /* Settings Add Button Card */
-  .settings-add-card-wrapper {
-    display: grid;
-    grid-template-columns: repeat(4, 1fr);
-    gap: 12px;
-    margin-bottom: 2rem;
-  }
-  .settings-add-card-btn {
-    padding: 1.5rem;
-    border: none;
-    border-radius: 18px;
-    background: #fff;
-    color: #334155;
-    text-align: center;
-    cursor: pointer;
-    position: relative;
-    overflow: hidden;
-    box-shadow: 0 10px 20px rgba(0,0,0,0.08);
-    transition: all 0.3s ease;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    min-height: 160px;
-  }
-  .settings-add-card-btn:hover {
-    transform: translateY(-5px);
-    box-shadow: 0 15px 30px rgba(0,0,0,0.15);
-  }
-  .settings-add-card-btn.active {
-    background: linear-gradient(135deg, #198754 0%, #146c43 100%);
-    color: #fff;
-    box-shadow: 0 10px 25px rgba(25, 135, 84, 0.3);
-  }
-  .settings-add-card-btn i {
-    font-size: 2.5rem;
-    margin-bottom: 12px;
-  }
-  .settings-add-card-btn strong {
-    font-size: 1rem;
-    font-weight: 600;
-  }
-  .settings-add-card-btn small {
-    font-size: 0.8rem;
-    line-height: 1.3;
-    margin-top: 6px;
-  }
-  @media (max-width: 1199.98px) {
-    .settings-add-card-wrapper {
-      grid-template-columns: repeat(2, 1fr);
+  @media (max-width: 991.98px) {
+    .settings-layout {
+      grid-template-columns: 1fr;
+    }
+    .settings-layout.settings-panel-collapsed {
+      grid-template-columns: 68px minmax(0, 1fr);
+    }
+    .settings-nav {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+    .settings-layout.settings-panel-collapsed .settings-nav {
+      display: flex;
     }
   }
-  @media (max-width: 767.98px) {
-    .settings-add-card-wrapper {
+  @media (max-width: 575.98px) {
+    .settings-layout.settings-panel-collapsed {
       grid-template-columns: 1fr;
+    }
+    .settings-layout.settings-panel-collapsed .settings-nav {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+    }
+    .settings-layout.settings-panel-collapsed .settings-nav-btn {
+      width: 100%;
     }
     .settings-nav {
       grid-template-columns: 1fr;
+    }
+    .settings-nav-btn {
+      grid-template-columns: 38px minmax(0, 1fr) 16px;
+      padding: 12px;
+    }
+    .settings-nav-icon {
+      width: 38px;
+      height: 38px;
+    }
+    .settings-content .card-header {
+      align-items: flex-start !important;
+      flex-direction: column;
+    }
+    .settings-create-btn {
+      align-self: flex-end;
+    }
+    .settings-header-actions {
+      width: 100%;
+    }
+    .settings-search {
+      width: auto;
+      flex: 1 1 auto;
+    }
+    .settings-search.settings-search-wide {
+      width: auto;
     }
   }
 </style>
@@ -531,7 +661,7 @@
         </div>
         <!-- Kad KPP Cawangan Pengeluaran -->
         <div>
-          <div class="card admin-stat-card bg-stat-info h-100">
+          <div class="card admin-stat-card bg-stat-warning h-100">
             <i class="fas fa-clipboard-check stat-icon-bg"></i>
             <div class="card-body">
               <div class="stat-label">KPP Cawangan Pengeluaran</div>
@@ -557,7 +687,7 @@
         </div>
         <div class="card-body">
           <div class="table-responsive">
-            <table class="table table-bordered table-hover align-middle admin-table">
+            <table class="table table-bordered table-hover align-middle admin-table admin-users-table">
               <thead class="table-light">
                 <tr>
                   <th>Gambar</th>
@@ -642,58 +772,82 @@
     </div>
 
     <div id="tab-pengaturan" style="display: none;">
-      <div class="settings-nav mb-4" aria-label="Kategori pengaturan">
-        <button type="button" class="settings-nav-btn active" data-setting-category="announcement">
-          <i class="fas fa-bullhorn text-primary me-2"></i>
-          <strong>Pengumuman</strong>
-          <small class="d-block text-muted mt-1">Makluman yang dipaparkan pada laman utama.</small>
-        </button>
-        <button type="button" class="settings-nav-btn" data-setting-category="smtp">
-          <i class="fas fa-server text-success me-2"></i>
-          <strong>Tetapan Pengirim SMTP</strong>
-          <small class="d-block text-muted mt-1">Konfigurasi penghantaran e-mel sistem.</small>
-        </button>
-        <button type="button" class="settings-nav-btn" data-setting-category="email-template">
-          <i class="fas fa-envelope-open-text text-info me-2"></i>
-          <strong>Template E-mel &amp; Pemberitahuan</strong>
-          <small class="d-block text-muted mt-1">Subjek, kandungan dan status penghantaran.</small>
-        </button>
-        <button type="button" class="settings-nav-btn" data-setting-category="status">
-          <i class="fas fa-tags text-warning me-2"></i>
-          <strong>Konfigurasi Status</strong>
-          <small class="d-block text-muted mt-1">Label, warna lencana dan penerangan status.</small>
-        </button>
-      </div>
-
-      <!-- Tambah Tetapan Card -->
-      <div class="settings-add-card-wrapper mb-4">
-        <button type="button" id="btn-create-setting" class="settings-add-card-btn active" title="Tambah tetapan">
-          <i class="fas fa-plus text-success"></i>
-          <strong>Tambah Tetapan</strong>
-          <small class="text-muted">Tambahkan tetapan baharu</small>
-        </button>
-      </div>
-
-      <div class="card admin-card">
-        <div class="card-header bg-white border-0 py-3 d-flex justify-content-between align-items-center gap-3">
-          <div>
-            <h2 class="h5 mb-0" id="settings-title"><i class="fas fa-bullhorn me-2 text-primary"></i>Pengurusan Pengumuman</h2>
-            <p class="text-muted mb-0 small" id="settings-description">Urus pengumuman yang dipaparkan pada halaman utama.</p>
+      <div class="settings-layout settings-panel-collapsed" id="settings-layout">
+        <aside>
+          <div class="settings-nav" id="settings-panel-nav" aria-label="Kategori pengaturan">
+            <button type="button" class="settings-nav-btn active" data-setting-category="announcement" aria-pressed="true">
+              <span class="settings-nav-icon"><i class="fas fa-bullhorn"></i></span>
+              <span class="settings-nav-copy">
+                <strong>Pengumuman</strong>
+                <small>Makluman pada laman utama</small>
+              </span>
+              <i class="fas fa-chevron-right settings-nav-chevron" aria-hidden="true"></i>
+            </button>
+            <button type="button" class="settings-nav-btn" data-setting-category="smtp" aria-pressed="false">
+              <span class="settings-nav-icon"><i class="fas fa-server"></i></span>
+              <span class="settings-nav-copy">
+                <strong>Tetapan Pengirim SMTP</strong>
+                <small>Konfigurasi penghantaran e-mel</small>
+              </span>
+              <i class="fas fa-chevron-right settings-nav-chevron" aria-hidden="true"></i>
+            </button>
+            <button type="button" class="settings-nav-btn" data-setting-category="email-template" aria-pressed="false">
+              <span class="settings-nav-icon"><i class="fas fa-envelope-open-text"></i></span>
+              <span class="settings-nav-copy">
+                <strong>Template E-mel &amp; Pemberitahuan</strong>
+                <small>Subjek, kandungan dan status</small>
+              </span>
+              <i class="fas fa-chevron-right settings-nav-chevron" aria-hidden="true"></i>
+            </button>
+            <button type="button" class="settings-nav-btn" data-setting-category="status" aria-pressed="false">
+              <span class="settings-nav-icon"><i class="fas fa-tags"></i></span>
+              <span class="settings-nav-copy">
+                <strong>Konfigurasi Status</strong>
+                <small>Label, warna dan penerangan</small>
+              </span>
+              <i class="fas fa-chevron-right settings-nav-chevron" aria-hidden="true"></i>
+            </button>
           </div>
-        </div>
-        <div class="card-body">
-          <div class="table-responsive">
-            <table class="table table-bordered table-hover align-middle admin-table">
-              <thead class="table-light">
-                <tr id="settings-table-head"></tr>
-              </thead>
-              <tbody id="settings-list"></tbody>
-            </table>
+        </aside>
+
+        <section class="settings-content" aria-live="polite">
+          <div class="card admin-card">
+            <div class="card-header bg-white border-0 py-3 d-flex justify-content-between align-items-center gap-3">
+              <div>
+                <h2 class="h5 mb-0" id="settings-title"><i class="fas fa-bullhorn me-2 text-primary"></i>Pengurusan Pengumuman</h2>
+                <p class="text-muted mb-0 small" id="settings-description">Urus pengumuman yang dipaparkan pada halaman utama.</p>
+              </div>
+              <div class="settings-header-actions">
+                <div class="input-group settings-search">
+                  <span class="input-group-text"><i class="fas fa-search" aria-hidden="true"></i></span>
+                  <input type="search" id="settings-search" class="form-control" placeholder="Cari pengumuman..." autocomplete="off">
+                </div>
+                <button type="button" id="btn-create-setting" class="btn btn-primary settings-create-btn" title="Tambah tetapan">
+                  <i class="fas fa-plus" aria-hidden="true"></i>
+                  <span class="visually-hidden">Tambah Tetapan</span>
+                </button>
+              </div>
+            </div>
+            <div class="card-body">
+              <div class="settings-guidance" id="settings-guidance" role="note"></div>
+              <div class="table-responsive">
+                <table class="table table-bordered table-hover align-middle admin-table">
+                  <thead class="table-light">
+                    <tr id="settings-table-head"></tr>
+                  </thead>
+                  <tbody id="settings-list"></tbody>
+                </table>
+              </div>
+            </div>
           </div>
-        </div>
+        </section>
       </div>
     </div>
   </main>
+
+  <button type="button" id="back-to-top-btn" class="back-to-top-btn" title="Kembali ke atas" aria-label="Kembali ke atas">
+    <i class="fas fa-arrow-up" aria-hidden="true"></i>
+  </button>
 
   <footer class="bg-dark text-white py-4 mt-auto">
     <div class="container-fluid text-center">
@@ -1394,6 +1548,7 @@
       announcement: {
         title: 'Pengurusan Pengumuman',
         description: 'Urus pengumuman yang dipaparkan pada halaman utama.',
+        guidance: '<strong>Panduan:</strong> Klik simbol + untuk menambah pengumuman baharu. Gunakan Kunci Unik dan Urutan supaya pengumuman mudah dikenali dan dipaparkan mengikut susunan.',
         icon: 'fa-bullhorn',
         columns: ['Kunci', 'Tajuk', 'Pratonton', 'Status', 'Urutan', 'Tindakan'],
         fields: [
@@ -1407,6 +1562,7 @@
       smtp: {
         title: 'Tetapan Pengirim SMTP',
         description: 'Konfigurasi pelayan SMTP yang digunakan untuk semua e-mel sistem.',
+        guidance: '<strong>Panduan:</strong> Masukkan maklumat e-mel yang diberikan oleh pentadbir atau penyedia e-mel. Semak hos, port dan pilihan STARTTLS sebelum menyimpan.',
         icon: 'fa-server',
         columns: ['Profil', 'Pelayan', 'Port', 'Pengguna / Pengirim', 'TLS', 'Tindakan'],
         fields: [
@@ -1423,6 +1579,7 @@
       'email-template': {
         title: 'Pengurusan Template E-mel & Pemberitahuan',
         description: 'Urus subjek dan kandungan semua template e-mel serta pemberitahuan sistem.',
+        guidance: '<strong>Panduan:</strong> Pilih Edit untuk mengubah nama atau subjek template. Kekalkan placeholder seperti {{applicationNo}} dan {{code}} supaya maklumat tetap dijana oleh sistem.',
         icon: 'fa-envelope-open-text',
         columns: ['Kunci', 'Nama', 'Subjek', 'Status', 'Tindakan'],
         fields: [
@@ -1436,6 +1593,7 @@
       status: {
         title: 'Pengurusan Konfigurasi Status',
         description: 'Urus label, warna lencana dan penerangan status aplikasi.',
+        guidance: '<strong>Panduan:</strong> Pilih Edit untuk menukar nama atau warna status. Pastikan Kod Status tidak ditukar kerana ia digunakan oleh aliran permohonan sistem.',
         icon: 'fa-tags',
         columns: ['Kod Status', 'Pratonton', 'Penerangan', 'Tindakan'],
         fields: [
@@ -1449,6 +1607,12 @@
 
     let activeSettingCategory = 'announcement';
     let currentSettings = [];
+    const settingSearchTerms = {
+      announcement: 'tajuk atau pratonton',
+      smtp: 'pengguna atau pengirim',
+      'email-template': 'nama atau subjek',
+      status: 'pratonton atau penerangan'
+    };
 
     function settingEscape(value) {
       return String(value ?? '').replace(/[&<>"']/g, (character) => ({
@@ -1467,15 +1631,26 @@
       if (field.type === 'select') {
         return `<div class="mb-2"><label class="form-label" for="${id}">${field.label}</label><select class="form-select" id="${id}" name="${field.name}" ${field.required ? 'required' : ''}>${field.options.map((option) => `<option value="${option}" ${option === value ? 'selected' : ''}>${option}</option>`).join('')}</select></div>`;
       }
-      return `<div class="mb-2"><label class="form-label" for="${id}">${field.label}</label><input class="form-control" id="${id}" name="${field.name}" type="${field.type}" value="${settingEscape(value)}" ${field.required ? 'required' : ''}></div>`;
+      return `<div class="mb-2"><label class="form-label" for="${id}">${field.label}</label><input class="form-control" id="${id}" name="${field.name}" type="${field.type}" value="${settingEscape(value)}" ${field.required ? 'required' : ''} ${field.readonly ? 'readonly' : ''}></div>`;
     }
 
     async function loadSettings(category = activeSettingCategory) {
       activeSettingCategory = category;
       const config = SETTING_CATEGORIES[category];
       const tbody = document.querySelector('#settings-list');
+      document.querySelectorAll('.settings-nav-btn').forEach((button) => {
+        const isActive = button.dataset.settingCategory === category;
+        button.classList.toggle('active', isActive);
+        button.setAttribute('aria-pressed', String(isActive));
+      });
       document.querySelector('#settings-title').innerHTML = `<i class="fas ${config.icon} me-2 text-primary"></i>${config.title}`;
       document.querySelector('#settings-description').textContent = config.description;
+      document.querySelector('#settings-guidance').innerHTML = config.guidance;
+      document.querySelector('#btn-create-setting').hidden = category !== 'announcement';
+      const searchInput = document.querySelector('#settings-search');
+      searchInput.value = '';
+      searchInput.placeholder = `Cari ${settingSearchTerms[category]}...`;
+      document.querySelector('.settings-search')?.classList.add('settings-search-wide');
       
       // Add alignment classes for specific columns
       const headerHTML = config.columns.map((column, index) => {
@@ -1544,8 +1719,33 @@
         tbody.innerHTML = `<tr><td colspan="${config.columns.length}" class="text-center text-muted">Tiada tetapan dijumpai.</td></tr>`;
         return;
       }
+      const keyword = (document.querySelector('#settings-search')?.value || '').trim().toLowerCase();
+      const visibleSettings = currentSettings.filter((item) => {
+        if (!keyword) return true;
+        const value = item.value || {};
+        let searchable = '';
+        switch (activeSettingCategory) {
+          case 'announcement':
+            searchable = `${value.title || ''} ${value.message || ''}`;
+            break;
+          case 'smtp':
+            searchable = `${value.username || ''} ${value.fromName || ''}`;
+            break;
+          case 'email-template':
+            searchable = `${value.name || ''} ${value.subject || ''}`;
+            break;
+          case 'status':
+            searchable = `${value.label || item.key || ''} ${value.description || ''}`;
+            break;
+        }
+        return searchable.toLowerCase().includes(keyword);
+      });
+      if (!visibleSettings.length) {
+        tbody.innerHTML = `<tr><td colspan="${config.columns.length}" class="text-center text-muted">Tiada tetapan sepadan dengan carian.</td></tr>`;
+        return;
+      }
       tbody.innerHTML = '';
-      currentSettings.forEach((item) => {
+      visibleSettings.forEach((item) => {
         const row = document.createElement('tr');
         const cells = settingCells(item);
         const cellsHTML = cells.map((cell, index) => {
@@ -1598,10 +1798,15 @@
     function showSettingModal(item = null) {
       const config = SETTING_CATEGORIES[activeSettingCategory];
       const value = item?.value || {};
-      const fields = config.fields.map((field) => renderSettingField(
-        field,
-        field.name === 'key' ? (item?.key || '') : value[field.name]
-      )).join('');
+      const fields = config.fields.map((field) => {
+        const fieldConfig = item && activeSettingCategory !== 'announcement' && field.name === 'key'
+          ? { ...field, readonly: true }
+          : field;
+        return renderSettingField(
+          fieldConfig,
+          field.name === 'key' ? (item?.key || '') : value[field.name]
+        );
+      }).join('');
       return new Promise((resolve) => {
         const { overlay, card, close } = createModalShell(
           `${item ? 'Edit' : 'Tambah'} ${config.title}`,
@@ -1644,6 +1849,21 @@
       await loadProfile();
       await loadUsers();
       await loadLokasi();
+
+      const backToTopButton = document.querySelector('#back-to-top-btn');
+      const updateBackToTopButton = () => {
+        backToTopButton.classList.toggle('is-visible', window.scrollY > 300);
+      };
+      window.addEventListener('scroll', updateBackToTopButton, { passive: true });
+      backToTopButton.addEventListener('click', () => {
+        const activeTab = document.querySelector('.admin-tab-btn.active')?.dataset.tab;
+        if (activeTab === 'pengaturan') {
+          document.querySelector('#tab-pengaturan')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+          return;
+        }
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+      });
+      updateBackToTopButton();
       
       document.querySelectorAll('.admin-tab-btn').forEach((btn) => {
         btn.addEventListener('click', () => {
@@ -1653,16 +1873,17 @@
           document.querySelector('#tab-lokasi').style.display = btn.dataset.tab === 'lokasi' ? '' : 'none';
           document.querySelector('#tab-pengaturan').style.display = btn.dataset.tab === 'pengaturan' ? '' : 'none';
           if (btn.dataset.tab === 'pengaturan') loadSettings();
+          updateBackToTopButton();
         });
       });
 
       document.querySelectorAll('.settings-nav-btn').forEach((button) => {
         button.addEventListener('click', () => {
-          document.querySelectorAll('.settings-nav-btn').forEach((item) => item.classList.remove('active'));
-          button.classList.add('active');
           loadSettings(button.dataset.settingCategory);
         });
       });
+
+      document.querySelector('#settings-search').addEventListener('input', renderSettings);
 
       document.querySelector('#btn-create-setting').addEventListener('click', async () => {
         const payload = await showSettingModal();

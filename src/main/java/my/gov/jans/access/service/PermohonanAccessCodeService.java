@@ -13,6 +13,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.security.SecureRandom;
 import java.time.Instant;
 import java.util.Locale;
+import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 
@@ -71,7 +72,9 @@ public class PermohonanAccessCodeService {
                 + "<p>Kod ini sah selama 10 minit. Jangan kongsi kod ini dengan orang lain.</p>"
                 + "<p>Jika anda tidak meminta kod ini, sila abaikan e-mel ini.</p>";
         try {
-            emailService.hantarEmail(
+            hantarEmailDenganTemplate(
+                    "application-access-code",
+                    Map.of("code", kod),
                     permohonan.getEmailWakil(),
                     "Kod Pengesahan Semakan Permohonan JAS",
                     isi,
@@ -80,6 +83,21 @@ public class PermohonanAccessCodeService {
         } catch (RuntimeException e) {
             LOG.error("Kod pengesahan untuk permohonan {} gagal dihantar", nomborBersih, e);
         }
+    }
+
+    private void hantarEmailDenganTemplate(String templateKey, Map<String, String> variables, String recipient,
+            String fallbackSubject, String fallbackBody, byte[] attachment, String attachmentName) {
+        EmailService.RenderedEmail rendered = emailService.renderEmailTemplate(
+                templateKey, variables, fallbackSubject, fallbackBody);
+        if (rendered != null && !rendered.enabled()) {
+            return;
+        }
+        emailService.hantarEmail(
+                recipient,
+                rendered == null ? fallbackSubject : rendered.subject(),
+                rendered == null ? fallbackBody : rendered.body(),
+                attachment,
+                attachmentName);
     }
 
     @Transactional(noRollbackFor = IllegalStateException.class)

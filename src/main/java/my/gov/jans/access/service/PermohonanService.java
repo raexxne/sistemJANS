@@ -11,6 +11,7 @@ import java.time.Year;
 import java.util.Base64;
 import java.util.List;
 import java.util.Locale;
+import java.util.Map;
 import java.util.Objects;
 
 import org.slf4j.Logger;
@@ -132,7 +133,9 @@ public class PermohonanService {
                     + "<p><b>No. Permohonan:</b> " + p.getNomborPermohonan() + "</p>"
                     + "<p>Sila simpan nombor permohonan ini untuk semakan status permohonan anda pada bila-bila masa.</p>"
                     + "<p>Terima kasih.</p>";
-            emailService.hantarEmail(
+            hantarEmailDenganTemplate(
+                    "application-submitted",
+                    Map.of("applicationNo", p.getNomborPermohonan()),
                     p.getEmailWakil(),
                     "Permohonan Berjaya Dihantar - " + p.getNomborPermohonan(),
                     isi,
@@ -152,7 +155,9 @@ public class PermohonanService {
                     + "<p><b>Sebab:</b> " + (sebab == null || sebab.isBlank() ? "Ralat sistem" : sebab) + "</p>"
                     + "<p>Sila cuba semula atau hubungi pihak JAS jika masalah berterusan.</p>"
                     + "<p>Terima kasih.</p>";
-            emailService.hantarEmail(
+            hantarEmailDenganTemplate(
+                    "application-failed",
+                    Map.of("reason", Objects.toString(sebab, "Ralat sistem")),
                     email,
                     "Permohonan Tidak Berjaya Dihantar - JAS",
                     isi,
@@ -195,7 +200,12 @@ public class PermohonanService {
         p.setStatus(StatusPermohonan.SEMAKAN_STAFF);
         p.setCgsoNote(null);
         p.setKppNote(null);
-        return repo.save(p);
+        repo.save(p);
+        repo.flush();
+        hantarNotifikasiPeranan(p, Role.CGSO, "cgso-review",
+                "Permohonan untuk semakan CGSO",
+                "Petugas telah menyemak permohonan ini dan menghantarnya untuk semakan CGSO.");
+        return p;
     }
 
     @Transactional
@@ -206,7 +216,12 @@ public class PermohonanService {
         }
         p.setCgsoNote((catatan == null || catatan.trim().isBlank()) ? "Tiada komen CGSO" : catatan.trim());
         p.setKppNote(null);
-        return repo.save(p);
+        repo.save(p);
+        repo.flush();
+        hantarNotifikasiPeranan(p, Role.KPP_CAWANGAN_PENGELUARAN, "kpp-review",
+                "Permohonan untuk semakan KPP",
+                "CGSO telah membuat semakan dan menghantar permohonan ini kepada KPP Cawangan Pengeluaran.");
+        return p;
     }
 
     @Transactional
@@ -218,7 +233,12 @@ public class PermohonanService {
         }
         p.setKppNote((catatan == null || catatan.trim().isBlank()) ? "Tiada komen KPP" : catatan.trim());
         p.setStatus(StatusPermohonan.DIHANTAR);
-        return repo.save(p);
+        repo.save(p);
+        repo.flush();
+        hantarNotifikasiPeranan(p, Role.STAFF, "kpp-feedback",
+                "Maklum balas KPP diterima",
+                "KPP Cawangan Pengeluaran telah memberi maklum balas untuk permohonan ini.");
+        return p;
     }
 
     @Transactional
@@ -257,7 +277,9 @@ public class PermohonanService {
             }
             adaPenerima = true;
             try {
-                emailService.hantarEmail(
+                hantarEmailDenganTemplate(
+                        "director-review",
+                        Map.of("applicationNo", p.getNomborPermohonan(), "link", linkLogin),
                         emailPengarah,
                         "Permohonan baru diterima - " + p.getNomborPermohonan(),
                         isi,
@@ -302,7 +324,12 @@ public class PermohonanService {
         p.setCompletedBy(pengguna.findByEmail(email).orElseThrow());
         p.setCompletedAt(LocalDateTime.now());
         p.setStatus(StatusPermohonan.SELESAI);
-        return repo.save(p);
+        repo.save(p);
+        repo.flush();
+        hantarNotifikasiPeranan(p, Role.STAFF, "visit-completed",
+                "Lawatan selesai",
+                "Penyelia loji telah mengemas kini ulasan dan menandakan lawatan ini sebagai selesai.");
+        return p;
     }
 
     @Transactional
@@ -346,10 +373,17 @@ public class PermohonanService {
                     + "<p>Terima kasih.</p>";
         }
 
+        List<Pengguna> staff = penerimaPeranan(Role.STAFF);
         repo.save(p);
+        repo.flush();
 
         try {
-            emailService.hantarEmail(
+            hantarEmailWajib(
+                    lulus ? "decision-approved" : "decision-rejected",
+                    Map.of(
+                            "applicationNo", p.getNomborPermohonan(),
+                            "link", linkSemak,
+                            "reason", catatan == null || catatan.isBlank() ? "Tiada sebab diberikan" : catatan),
                     p.getEmailWakil(),
                     subjek,
                     isi,
@@ -358,9 +392,70 @@ public class PermohonanService {
         } catch (RuntimeException e) {
             LOG.error("E-mel keputusan permohonan {} gagal dihantar kepada {}",
                     p.getNomborPermohonan(), p.getEmailWakil(), e);
+            throw new IllegalStateException("E-mel keputusan kepada pemohon gagal dihantar. Semak tetapan e-mel.", e);
         }
 
+        hantarNotifikasiPeranan(p, Role.STAFF, staff,
+                lulus ? "staff-decision-approved" : "staff-decision-rejected",
+                lulus ? "Permohonan diluluskan" : "Permohonan ditolak",
+                lulus ? "Pengarah telah meluluskan permohonan ini dan pas telah dikeluarkan."
+                        : "Pengarah telah menolak permohonan ini.");
         return p;
+    }
+
+    private void hantarNotifikasiPeranan(Permohonan p, Role role, String templateKey, String tajuk, String mesej) {
+        hantarNotifikasiPeranan(p, role, penerimaPeranan(role), templateKey, tajuk, mesej);
+    }
+
+    private List<Pengguna> penerimaPeranan(Role role) {
+        List<Pengguna> penerima = pengguna.findByRole(role);
+        if (penerima.isEmpty() || penerima.stream().anyMatch(u -> u.getEmail() == null || u.getEmail().isBlank())) {
+            throw new IllegalStateException("Alamat e-mel penerima bagi peranan " + role + " tidak lengkap atau tidak ditemui.");
+        }
+        return penerima;
+    }
+
+    private void hantarNotifikasiPeranan(Permohonan p, Role role, List<Pengguna> penerima,
+            String templateKey, String tajuk, String mesej) {
+        String link = (publicUrl == null || publicUrl.isBlank()) ? "/login.html" : publicUrl + "/login.html";
+        String isi = "<p>Tuan/Puan,</p><p>" + mesej + "</p>"
+                + "<p><b>No. Permohonan:</b> " + p.getNomborPermohonan() + "</p>"
+                + "<p>Sila log masuk ke sistem untuk melihat butiran permohonan.</p><p>Terima kasih.</p>";
+        for (Pengguna user : penerima) {
+            try {
+                hantarEmailWajib(templateKey, Map.of("applicationNo", p.getNomborPermohonan(), "link", link),
+                        user.getEmail(), tajuk + " - " + p.getNomborPermohonan(), isi, null, null);
+            } catch (RuntimeException e) {
+                LOG.error("Notifikasi permohonan {} kepada {} gagal", p.getNomborPermohonan(), user.getEmail(), e);
+                throw new IllegalStateException(
+                        "E-mel notifikasi kepada " + role + " gagal dihantar. Semak tetapan e-mel.", e);
+            }
+        }
+    }
+
+    private void hantarEmailWajib(String templateKey, Map<String, String> variables, String recipient,
+            String fallbackSubject, String fallbackBody, byte[] attachment, String attachmentName) {
+        EmailService.RenderedEmail rendered = Objects.requireNonNull(emailService.renderEmailTemplate(
+                templateKey, variables, fallbackSubject, fallbackBody), "Template e-mel tidak dapat dimuatkan");
+        if (!rendered.enabled()) {
+            throw new IllegalStateException("Template e-mel " + templateKey + " dilumpuhkan");
+        }
+        emailService.hantarEmail(recipient, rendered.subject(), rendered.body(), attachment, attachmentName);
+    }
+
+    private void hantarEmailDenganTemplate(String templateKey, Map<String, String> variables, String recipient,
+            String fallbackSubject, String fallbackBody, byte[] attachment, String attachmentName) {
+        EmailService.RenderedEmail rendered = emailService.renderEmailTemplate(
+                templateKey, variables, fallbackSubject, fallbackBody);
+        if (rendered != null && !rendered.enabled()) {
+            return;
+        }
+        emailService.hantarEmail(
+                recipient,
+                rendered == null ? fallbackSubject : rendered.subject(),
+                rendered == null ? fallbackBody : rendered.body(),
+                attachment,
+                attachmentName);
     }
 
     // FIX Isu #3: pdfPermohonan() dahulu cuma wrapper kosong yang panggil
@@ -711,23 +806,35 @@ public class PermohonanService {
     public void hantarEmailHubungi(String emailPengirim, String nama, String subjek, String isi) {
         String penerimaSokongan = "jansofficial86@gmail.com";
         String subjekLengkap = "[Pertanyaan JAS] " + subjek + " - daripada " + nama;
-        emailService.hantarEmail(penerimaSokongan, subjekLengkap, isi, null, null);
+        hantarEmailDenganTemplate(
+                "contact-notification",
+                Map.of("subject", subjek, "name", nama, "message", isi),
+                penerimaSokongan, subjekLengkap, isi, null, null);
         String isiAck = "<p>Terima kasih, <b>" + nama + "</b>.</p>"
                 + "<p>Mesej anda telah kami terima dan akan ditangani dalam masa 2 hari bekerja.</p>"
                 + "<p>Jika pertanyaan mendesak, sila hubungi kami terus di jansofficial86@gmail.com.</p>"
                 + "<p>Salam hormat,<br>Pasukan JAS</p>";
-        emailService.hantarEmail(emailPengirim, "Pengesahan penerimaan mesej - JAS", isiAck, null, null);
+        hantarEmailDenganTemplate(
+                "contact-acknowledgement",
+                Map.of("name", nama),
+                emailPengirim, "Pengesahan penerimaan mesej - JAS", isiAck, null, null);
     }
 
     public void hantarEmailAduan(String emailPengadu, String nama, String rujukan, String isi) {
         String penerimaSokongan = "jansofficial86@gmail.com";
         String subjekAdmin = "[Aduan JAS] Rujukan: " + rujukan;
-        emailService.hantarEmail(penerimaSokongan, subjekAdmin, isi, null, null);
+        hantarEmailDenganTemplate(
+                "complaint-notification",
+                Map.of("reference", rujukan, "message", isi),
+                penerimaSokongan, subjekAdmin, isi, null, null);
         String isiAck = "<p>Terima kasih, <b>" + nama + "</b>.</p>"
                 + "<p>Aduan anda telah kami terima dengan nombor rujukan: <b>" + rujukan + "</b>.</p>"
                 + "<p>Penyiasatan akan dijalankan dalam masa 3 hari bekerja. "
                 + "Sila simpan nombor rujukan ini untuk semakan susulan.</p>"
                 + "<p>Salam hormat,<br>Pasukan JAS</p>";
-        emailService.hantarEmail(emailPengadu, "Pengesahan aduan " + rujukan + " - JAS", isiAck, null, null);
+        hantarEmailDenganTemplate(
+                "complaint-acknowledgement",
+                Map.of("name", nama, "reference", rujukan),
+                emailPengadu, "Pengesahan aduan " + rujukan + " - JAS", isiAck, null, null);
     }
 }

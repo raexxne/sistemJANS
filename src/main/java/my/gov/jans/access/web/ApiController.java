@@ -428,8 +428,12 @@ public class ApiController {
     }
 
     @PostMapping("/pengarah/permohonan/{id}/keputusan")
-    Permohonan putus(@PathVariable Long id, @RequestBody Map<String, Object> b, Authentication a) {
-        return s.keputusan(id, Boolean.TRUE.equals(b.get("lulus")), (String) b.get("catatan"), a.getName());
+    ResponseEntity<?> putus(@PathVariable Long id, @RequestBody Map<String, Object> b, Authentication a) {
+        try {
+            return ResponseEntity.ok(s.keputusan(id, Boolean.TRUE.equals(b.get("lulus")), (String) b.get("catatan"), a.getName()));
+        } catch (IllegalStateException e) {
+            return ResponseEntity.badRequest().body(Map.of("ralat", e.getMessage()));
+        }
     }
 
     @GetMapping("/penyelia/permohonan")

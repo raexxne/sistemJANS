@@ -1,0 +1,35 @@
+CREATE TABLE system_settings (
+    id BIGINT NOT NULL AUTO_INCREMENT,
+    category VARCHAR(40) NOT NULL,
+    setting_key VARCHAR(100) NOT NULL,
+    setting_value LONGTEXT NOT NULL,
+    created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    PRIMARY KEY (id),
+    CONSTRAINT uk_system_settings_category_key UNIQUE (category, setting_key)
+);
+
+INSERT INTO system_settings (category, setting_key, setting_value) VALUES
+('announcement', 'welcome', '{"title":"Selamat Datang","message":"Sistem permohonan kebenaran masuk kini beroperasi sepenuhnya secara dalam talian bagi memudahkan urusan anda.","active":true,"sortOrder":1}'),
+('announcement', 'processing-time', '{"title":"Waktu Pemprosesan","message":"Permohonan diproses dalam masa 1 hingga 3 hari bekerja. Pastikan maklumat yang diberikan lengkap dan tepat.","active":true,"sortOrder":2}'),
+('announcement', 'safety', '{"title":"Keselamatan Utama","message":"Semua lawatan ke loji rawatan air dan muka sauk tertakluk kepada prosedur keselamatan yang ditetapkan oleh JAS.","active":true,"sortOrder":3}'),
+('smtp', 'primary', '{"host":"smtp.gmail.com","port":587,"username":"","password":"","fromName":"Jabatan Air Sabah","auth":true,"startTls":true}'),
+('email-template', 'application-submitted', '{"name":"Permohonan Dihantar","subject":"Permohonan Berjaya Dihantar - {{applicationNo}}","body":"<p>Tuan/Puan,</p><p>Permohonan akses anda telah <b>berjaya dihantar</b> dan kini menunggu semakan pihak JAS.</p><p><b>No. Permohonan:</b> {{applicationNo}}</p><p>Sila simpan nombor permohonan ini untuk semakan status permohonan anda pada bila-bila masa.</p><p>Terima kasih.</p>","enabled":true}'),
+('email-template', 'application-failed', '{"name":"Permohonan Gagal","subject":"Permohonan Tidak Berjaya Dihantar - JAS","body":"<p>Tuan/Puan,</p><p>Permohonan akses anda <b>tidak berjaya dihantar</b>.</p><p><b>Sebab:</b> {{reason}}</p><p>Sila cuba semula atau hubungi pihak JAS jika masalah berterusan.</p><p>Terima kasih.</p>","enabled":true}'),
+('email-template', 'director-review', '{"name":"Semakan Pengarah","subject":"Permohonan baru diterima - {{applicationNo}}","body":"<p>Tuan/Puan,</p><p>Satu permohonan baru telah dihantar untuk semakan dan keputusan.</p><p><b>No. Permohonan:</b> {{applicationNo}}</p><p>Sila semak butiran permohonan dan pilih sama ada untuk <b>meluluskan</b> atau <b>menolak</b> permohonan tersebut.</p><p>Sila log masuk ke sistem untuk meneruskan urusan ini.</p><p>Terima kasih.</p>","enabled":true}'),
+('email-template', 'decision-approved', '{"name":"Permohonan Diluluskan","subject":"Permohonan Diluluskan - {{applicationNo}}","body":"<p>Tuan/Puan,</p><p>Permohonan akses anda dengan nombor <b>{{applicationNo}}</b> telah <b>diluluskan</b> oleh Pengarah Jabatan Air Sabah dan pas kebenaran telah dikeluarkan.</p><p>Sila semak status permohonan untuk memilih tindakan seterusnya (cetak PDF atau tunjuk QR). <a href=\"{{link}}\">Klik sini</a>.</p><p>Terima kasih.</p>","enabled":true}'),
+('email-template', 'decision-rejected', '{"name":"Permohonan Ditolak","subject":"Permohonan Ditolak - {{applicationNo}}","body":"<p>Tuan/Puan,</p><p>Permohonan akses anda dengan nombor <b>{{applicationNo}}</b> adalah <b>tidak diluluskan</b> oleh Pengarah Jabatan Air Sabah.</p><p><b>Sebab tidak diluluskan:</b> {{reason}}</p><p>Untuk sebarang pertanyaan lanjut, sila hubungi pihak JAS.</p><p>Terima kasih.</p>","enabled":true}'),
+('email-template', 'password-reset-code', '{"name":"Kod Reset Kata Laluan","subject":"Kod Reset Kata Laluan JAS","body":"<p>Tuan/Puan,</p><p>Kod 6 digit untuk reset kata laluan akaun JAS anda ialah:</p><p style=\"font-size:1.4rem;font-weight:700;letter-spacing:0.12em;\">{{code}}</p><p>Kod ini sah selama <b>10 minit</b>.</p><p>Jika anda tidak meminta reset kata laluan, sila abaikan e-mel ini.</p>","enabled":true}'),
+('email-template', 'password-reset-complete', '{"name":"Kata Laluan Baharu","subject":"Reset Kata Laluan JAS","body":"<p>Tuan/Puan,</p><p>Kata laluan baharu untuk akaun JAS anda telah dijana.</p><p><b>Kata laluan baharu:</b></p><p style=\"font-size:1.2rem;font-weight:700;\">{{password}}</p><p>Sila log masuk semula menggunakan kata laluan ini.</p><p>Terima kasih.</p>","enabled":true}'),
+('email-template', 'application-access-code', '{"name":"Kod Semakan Permohonan","subject":"Kod Pengesahan Semakan Permohonan JAS","body":"<p>Tuan/Puan,</p><p>Kod pengesahan untuk melihat status permohonan JAS anda ialah:</p><p style=\"font-size:1.4rem;font-weight:700;letter-spacing:0.12em;\">{{code}}</p><p>Kod ini sah selama 10 minit. Jangan kongsi kod ini dengan orang lain.</p><p>Jika anda tidak meminta kod ini, sila abaikan e-mel ini.</p>","enabled":true}'),
+('email-template', 'contact-notification', '{"name":"Pemberitahuan Pertanyaan","subject":"[Pertanyaan JAS] {{subject}} - daripada {{name}}","body":"{{message}}","enabled":true}'),
+('email-template', 'contact-acknowledgement', '{"name":"Pengesahan Pertanyaan","subject":"Pengesahan penerimaan mesej - JAS","body":"<p>Terima kasih, <b>{{name}}</b>.</p><p>Mesej anda telah kami terima dan akan ditangani dalam masa 2 hari bekerja.</p><p>Salam hormat,<br>Pasukan JAS</p>","enabled":true}'),
+('email-template', 'complaint-notification', '{"name":"Pemberitahuan Aduan","subject":"[Aduan JAS] Rujukan: {{reference}}","body":"{{message}}","enabled":true}'),
+('email-template', 'complaint-acknowledgement', '{"name":"Pengesahan Aduan","subject":"Pengesahan aduan {{reference}} - JAS","body":"<p>Terima kasih, <b>{{name}}</b>.</p><p>Aduan anda telah kami terima dengan nombor rujukan: <b>{{reference}}</b>.</p><p>Penyiasatan akan dijalankan dalam masa 3 hari bekerja. Sila simpan nombor rujukan ini untuk semakan susulan.</p><p>Salam hormat,<br>Pasukan JAS</p>","enabled":true}'),
+('status', 'DIHANTAR', '{"label":"Menunggu Semakan","color":"secondary","description":"Permohonan menunggu semakan CGSO dan KPP Cawangan Pengeluaran."}'),
+('status', 'SEMAKAN_STAFF', '{"label":"Menunggu Semakan","color":"secondary","description":"Permohonan sedang dalam semakan CGSO atau KPP."}'),
+('status', 'MENUNGGU_PENGARAH', '{"label":"Menunggu Pengarah","color":"warning","description":"Permohonan menunggu keputusan Pengarah."}'),
+('status', 'DILULUSKAN', '{"label":"Diluluskan","color":"success","description":"Permohonan telah diluluskan."}'),
+('status', 'DITOLAK', '{"label":"Tidak Diluluskan","color":"danger","description":"Permohonan tidak diluluskan."}'),
+('status', 'PAS_DIKELUARKAN', '{"label":"Pas Dikeluarkan","color":"success","description":"Pas kebenaran telah dikeluarkan."}'),
+('status', 'SELESAI', '{"label":"Selesai","color":"dark","description":"Urusan permohonan telah selesai."}');
