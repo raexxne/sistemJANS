@@ -152,6 +152,25 @@
   .admin-modal-card.admin-modal-wide {
     max-width: 720px;
   }
+  .admin-notice-card {
+    max-width: 480px;
+    padding: 24px;
+  }
+  .admin-notice-title {
+    margin: 0 0 12px;
+    font-size: 1.15rem;
+    font-weight: 600;
+  }
+  .admin-notice-body {
+    overflow-y: auto;
+  }
+  .admin-notice-actions {
+    margin-top: 20px;
+    text-align: right;
+  }
+  .admin-notice-actions .btn {
+    min-width: 90px;
+  }
   .admin-modal-header {
     background: linear-gradient(135deg, #00467f, #0d5ba5);
     color: #fff;
@@ -1012,12 +1031,12 @@
                   body: JSON.stringify(result)
                 }).catch(() => null);
                 if (!response) {
-                  await showInfoModal('Ralat', '<p class="mb-0 text-danger">Sambungan kepada sistem gagal.</p>');
+                  await showInfoModal('Ralat', '<p class="mb-0 text-danger">Sambungan kepada sistem gagal.</p>', 'danger');
                   return;
                 }
                 const updateResult = await response.json().catch(() => ({}));
                 if (!response.ok) {
-                  await showInfoModal('Ralat', `<p class="mb-0 text-danger">${updateResult.ralat || 'Gagal mengemas kini pengguna.'}</p>`);
+                  await showInfoModal('Ralat', `<p class="mb-0 text-danger">${updateResult.ralat || 'Gagal mengemas kini pengguna.'}</p>`, 'danger');
                   return;
                 }
                 await loadUsers();
@@ -1035,7 +1054,7 @@
               const response = await fetch(`api/admin/users/${user.id}`, { method: 'DELETE' });
               const result = await response.json();
               if (!response.ok) {
-                await showInfoModal('Ralat', `<p class="mb-0 text-danger">${result.ralat || 'Gagal memadam pengguna'}</p>`);
+                await showInfoModal('Ralat', `<p class="mb-0 text-danger">${result.ralat || 'Gagal memadam pengguna'}</p>`, 'danger');
                 return;
               }
               await loadUsers();
@@ -1174,18 +1193,55 @@
       });
     }
 
-    function showInfoModal(title, message) {
+    function showInfoModal(title, message, type = 'primary') {
       return new Promise((resolve) => {
-        const { overlay, close } = createModalShell(title, message, { closeButton: true });
+        const color = ['primary', 'success', 'danger', 'warning'].includes(type) ? type : 'primary';
+        const previousFocus = document.activeElement;
+        const overlay = document.createElement('div');
+        overlay.className = 'admin-modal-overlay';
+        overlay.innerHTML = `
+          <div class="admin-modal-card admin-notice-card" role="dialog" aria-modal="true" ${title ? 'aria-labelledby="admin-notice-title"' : 'aria-label="Makluman"'}>
+            ${title ? `<h2 class="admin-notice-title" id="admin-notice-title">${title}</h2>` : ''}
+            <div class="admin-notice-body">${message}</div>
+            <div class="admin-notice-actions"><button type="button" class="btn btn-${color}">OK</button></div>
+          </div>`;
+        document.body.appendChild(overlay);
         const finish = () => {
-          close();
+          document.removeEventListener('keydown', onKey, true);
+          overlay.remove();
+          if (previousFocus?.isConnected) previousFocus.focus();
           resolve(true);
         };
-        overlay.querySelector('.admin-modal-close').addEventListener('click', finish);
-        overlay.addEventListener('click', (e) => {
-          if (e.target === overlay) finish();
-        });
+        const onKey = (event) => {
+          if (event.key === 'Escape') {
+            event.stopImmediatePropagation();
+            finish();
+          }
+        };
+        document.addEventListener('keydown', onKey, true);
+        const button = overlay.querySelector('.admin-notice-actions button');
+        button.addEventListener('click', finish);
+        button.focus();
       });
+    }
+
+    function editFormSnapshot(form, fields = null, isSmtp = false) {
+      return JSON.stringify(Array.from(new FormData(form).entries(), ([name, value]) => {
+        if (!fields) return [name, value];
+        const field = fields.find((entry) => entry.name === name);
+        const text = String(value).trim();
+        if (isSmtp && name === 'password' && (!text || text === '********')) return [name, '********'];
+        if (field?.type === 'number') return [name, Number(text)];
+        return [name, text];
+      }));
+    }
+
+    function showNoChanges() {
+      return showInfoModal('', '<p class="mb-0">Tiada perubahan berlaku.</p>');
+    }
+
+    function selectedDaerahSnapshot(form) {
+      return JSON.stringify(Array.from(form.querySelectorAll('input[type="checkbox"]:checked'), (input) => input.value).sort());
     }
 
     function showEditModal(user) {
@@ -1223,6 +1279,7 @@
         card.appendChild(footer);
         
         const form = overlay.querySelector('#edit-user-form');
+        const initialForm = editFormSnapshot(form);
         const roleSelect = overlay.querySelector('#edit-user-role');
         const daerahRow = overlay.querySelector('#edit-user-daerah-row');
         
@@ -1240,8 +1297,12 @@
         });
 
         footer.querySelector('#edit-user-cancel').addEventListener('click', () => finish(false));
-        form.addEventListener('submit', (event) => {
+        form.addEventListener('submit', async (event) => {
           event.preventDefault();
+          if (editFormSnapshot(form) === initialForm) {
+            await showNoChanges();
+            return;
+          }
           const payload = Object.fromEntries(new FormData(form).entries());
           finish(payload);
         });
@@ -1252,12 +1313,24 @@
     }
 
     async function showTetapkanDaerahModal(userId) {
-      const [daerahRes, lokasiRes] = await Promise.all([
-        fetch(`api/admin/penyelia/${userId}/daerah`),
-                fetch('api/public/locations')
-      ]);
-      const daerahData = daerahRes.ok ? await daerahRes.json() : { daerah: [] };
-      const semuaLokasi = lokasiRes.ok ? await lokasiRes.json() : [];
+      let daerahRes;
+      let lokasiRes;
+      try {
+        [daerahRes, lokasiRes] = await Promise.all([
+          fetch(`api/admin/penyelia/${userId}/daerah`),
+          fetch('api/public/locations')
+        ]);
+      } catch (error) {
+        console.error('Gagal memuatkan daerah seliaan.', error);
+        await showInfoModal('Ralat', '<p class="mb-0 text-danger">Gagal memuatkan daerah seliaan. Sila cuba lagi.</p>', 'danger');
+        return false;
+      }
+      if (!daerahRes.ok || !lokasiRes.ok) {
+        await showInfoModal('Ralat', '<p class="mb-0 text-danger">Gagal memuatkan daerah seliaan. Sila cuba lagi.</p>', 'danger');
+        return false;
+      }
+      const daerahData = await daerahRes.json();
+      const semuaLokasi = await lokasiRes.json();
       const daerahSediaAda = Array.isArray(daerahData.daerah) ? daerahData.daerah : [];
       const senaraiDaerah = [...new Set(semuaLokasi.map((l) => l.daerah).filter((d) => d && d.trim()))].sort();
       
@@ -1279,6 +1352,7 @@
         card.appendChild(footer);
         
         const form = overlay.querySelector('#tetapkan-daerah-form');
+        const initialDaerah = selectedDaerahSnapshot(form);
         const finish = (value) => {
           close();
           resolve(value);
@@ -1287,6 +1361,10 @@
         footer.querySelector('#tetapkan-daerah-cancel').addEventListener('click', () => finish(false));
         form.addEventListener('submit', async (event) => {
           event.preventDefault();
+          if (selectedDaerahSnapshot(form) === initialDaerah) {
+            await showNoChanges();
+            return;
+          }
           const daerahFinal = Array.from(form.querySelectorAll('input[type="checkbox"]:checked')).map((cb) => cb.value);
           const response = await fetch(`api/admin/penyelia/${userId}/daerah`, {
             method: 'POST',
@@ -1295,7 +1373,7 @@
           });
           const data = await response.json();
           if (!response.ok) {
-            await showInfoModal('Ralat', `<p class="mb-0 text-danger">${data.ralat || 'Gagal menetapkan daerah'}</p>`);
+            await showInfoModal('Ralat', `<p class="mb-0 text-danger">${data.ralat || 'Gagal menetapkan daerah'}</p>`, 'danger');
             finish(false);
             return;
           }
@@ -1432,7 +1510,7 @@
                 });
                 const data = await response.json();
                 if (!response.ok) {
-                  await showInfoModal('Ralat', `<p class="mb-0 text-danger">${data.ralat || 'Gagal mengemaskini lokasi'}</p>`);
+                  await showInfoModal('Ralat', `<p class="mb-0 text-danger">${data.ralat || 'Gagal mengemaskini lokasi'}</p>`, 'danger');
                   return;
                 }
                 await loadLokasi();
@@ -1548,13 +1626,18 @@
         card.appendChild(footer);
         
         const form = overlay.querySelector('#edit-lokasi-form');
+        const initialForm = editFormSnapshot(form);
         const finish = (value) => {
           close();
           resolve(value);
         };
         footer.querySelector('#edit-lokasi-cancel').addEventListener('click', () => finish(false));
-        form.addEventListener('submit', (event) => {
+        form.addEventListener('submit', async (event) => {
           event.preventDefault();
+          if (editFormSnapshot(form) === initialForm) {
+            await showNoChanges();
+            return;
+          }
           const payload = Object.fromEntries(new FormData(form).entries());
           finish(payload);
         });
@@ -1638,6 +1721,57 @@
       return String(value ?? '').replace(/[&<>"']/g, (character) => ({
         '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#039;'
       }[character]));
+    }
+
+    async function saveSettingChange(category, method, id = null, payload = null) {
+      const actions = {
+        POST: { success: 'ditambah', failure: 'menambah' },
+        PUT: { success: 'dikemas kini', failure: 'mengemas kini' },
+        DELETE: { success: 'dipadam', failure: 'memadam' }
+      };
+      const action = actions[method];
+      const url = `api/admin/settings/${encodeURIComponent(category)}${id === null ? '' : `/${encodeURIComponent(id)}`}`;
+      const options = { method };
+      if (payload !== null) {
+        options.headers = { 'Content-Type': 'application/json' };
+        options.body = JSON.stringify(payload);
+      }
+
+      let response;
+      try {
+        response = await fetch(url, options);
+      } catch (error) {
+        console.error('Gagal menghantar perubahan tetapan.', error);
+        await showInfoModal('Perubahan Tidak Dapat Disahkan', '<p class="mb-0 text-warning-emphasis">Perubahan tidak dapat disahkan kerana masalah sambungan. Sila muat semula halaman dan semak tetapan sebelum mencuba lagi.</p>', 'warning');
+        return;
+      }
+      if (!response.ok) {
+        let detail = `Gagal ${action.failure} tetapan (HTTP ${response.status}).`;
+        try {
+          const result = await response.json();
+          if (typeof result.ralat === 'string' && result.ralat.trim()) detail = result.ralat;
+        } catch (error) {
+          console.warn('Respons ralat tetapan tidak dapat dibaca.', error);
+        }
+        await showInfoModal('Perubahan Tidak Berjaya', `<p class="mb-0 text-danger">${settingEscape(detail)}</p>`, 'danger');
+        return;
+      }
+      try {
+        await response.json();
+      } catch (error) {
+        console.error('Respons perubahan tetapan tidak dapat dibaca.', error);
+        await showInfoModal('Perubahan Tidak Dapat Disahkan', '<p class="mb-0 text-warning-emphasis">Respons pelayan tidak dapat dibaca. Sila muat semula halaman dan semak tetapan sebelum mencuba lagi.</p>', 'warning');
+        return;
+      }
+      if (category === 'status' && method === 'PUT') {
+        try {
+          localStorage.setItem('statusSettingsUpdated', String(Date.now()));
+        } catch (error) {
+          console.warn('Dashboard lain perlu dimuat semula untuk melihat perubahan warna.', error);
+        }
+      }
+      if (activeSettingCategory === category) await loadSettings(category);
+      await showInfoModal('Perubahan Berjaya', `<p class="mb-0 text-success">Tetapan berjaya ${action.success}.</p>`, 'success');
     }
 
     function renderSettingField(field, value = '') {
@@ -1740,7 +1874,8 @@
 
     function renderSettings() {
       const tbody = document.querySelector('#settings-list');
-      const config = SETTING_CATEGORIES[activeSettingCategory];
+      const category = activeSettingCategory;
+      const config = SETTING_CATEGORIES[category];
       if (!currentSettings.length) {
         tbody.innerHTML = `<tr><td colspan="${config.columns.length}" class="text-center text-muted">Tiada tetapan dijumpai.</td></tr>`;
         return;
@@ -1787,24 +1922,7 @@
         actionCell.appendChild(createActionButton('fas fa-edit', 'Edit tetapan', 'warning', async () => {
           const payload = await showSettingModal(item);
           if (!payload) return;
-          const response = await fetch(`api/admin/settings/${encodeURIComponent(activeSettingCategory)}/${item.id}`, {
-            method: 'PUT',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(payload)
-          });
-          const result = await response.json();
-          if (!response.ok) {
-            await showInfoModal('Ralat', `<p class="mb-0 text-danger">${settingEscape(result.ralat || 'Gagal mengemas kini tetapan')}</p>`);
-            return;
-          }
-          if (activeSettingCategory === 'status') {
-            try {
-              localStorage.setItem('statusSettingsUpdated', String(Date.now()));
-            } catch (error) {
-              console.warn('Dashboard lain perlu dimuat semula untuk melihat perubahan warna.', error);
-            }
-          }
-          await loadSettings();
+          await saveSettingChange(category, 'PUT', item.id, payload);
         }));
         actionCell.appendChild(createActionButton('fas fa-trash', 'Padam tetapan', 'danger', async () => {
           const confirmed = await showConfirmModal({
@@ -1814,15 +1932,7 @@
             confirmText: 'Padam'
           });
           if (!confirmed) return;
-          const response = await fetch(`api/admin/settings/${encodeURIComponent(activeSettingCategory)}/${item.id}`, {
-            method: 'DELETE'
-          });
-          const result = await response.json();
-          if (!response.ok) {
-            await showInfoModal('Ralat', `<p class="mb-0 text-danger">${settingEscape(result.ralat || 'Gagal memadam tetapan')}</p>`);
-            return;
-          }
-          await loadSettings();
+          await saveSettingChange(category, 'DELETE', item.id);
         }));
         tbody.appendChild(row);
       });
@@ -1830,6 +1940,7 @@
 
     function showSettingModal(item = null) {
       const config = SETTING_CATEGORIES[activeSettingCategory];
+      const isSmtp = activeSettingCategory === 'smtp';
       const value = item?.value || {};
       const formFields = config.fields.flatMap((field) => {
         if (activeSettingCategory !== 'status' || item?.key !== 'DIHANTAR' || field.name !== 'color') return [field];
@@ -1863,6 +1974,7 @@
           <button type="submit" form="setting-form" class="btn btn-primary">Simpan</button>`;
         card.appendChild(footer);
         const form = overlay.querySelector('#setting-form');
+        const initialForm = item ? editFormSnapshot(form, formFields, isSmtp) : null;
         const helpButtons = Array.from(form.querySelectorAll('.setting-help'));
         const popovers = helpButtons.map((button) => new bootstrap.Popover(button, {
           container: 'body', trigger: 'manual', placement: 'auto', customClass: 'setting-help-popover',
@@ -1899,8 +2011,12 @@
           resolve(payload);
         };
         footer.querySelector('#setting-cancel').addEventListener('click', () => finish(false));
-        form.addEventListener('submit', (event) => {
+        form.addEventListener('submit', async (event) => {
           event.preventDefault();
+          if (item && editFormSnapshot(form, formFields, isSmtp) === initialForm) {
+            await showNoChanges();
+            return;
+          }
           const formData = new FormData(form);
           const newValue = {};
           formFields.filter((field) => field.name !== 'key').forEach((field) => {
@@ -1971,19 +2087,10 @@
       document.querySelector('#settings-search').addEventListener('input', renderSettings);
 
       document.querySelector('#btn-create-setting').addEventListener('click', async () => {
+        const category = activeSettingCategory;
         const payload = await showSettingModal();
         if (!payload) return;
-        const response = await fetch(`api/admin/settings/${encodeURIComponent(activeSettingCategory)}`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(payload)
-        });
-        const result = await response.json();
-        if (!response.ok) {
-          await showInfoModal('Ralat', `<p class="mb-0 text-danger">${settingEscape(result.ralat || 'Gagal menambah tetapan')}</p>`);
-          return;
-        }
-        await loadSettings();
+        await saveSettingChange(category, 'POST', null, payload);
       });
 
       document.querySelector('#btn-create-user').addEventListener('click', async () => {
@@ -2003,11 +2110,11 @@
           });
           result = await response.json().catch(() => ({}));
         } catch (error) {
-          await showInfoModal('Ralat', '<p class="mb-0 text-danger">Pengguna tidak dapat dicipta kerana sambungan atau token keselamatan gagal. Sila muat semula halaman dan cuba lagi.</p>');
+          await showInfoModal('Ralat', '<p class="mb-0 text-danger">Pengguna tidak dapat dicipta kerana sambungan atau token keselamatan gagal. Sila muat semula halaman dan cuba lagi.</p>', 'danger');
           return;
         }
         if (!response.ok) {
-          await showInfoModal('Ralat', `<p class="mb-0 text-danger">${result.ralat || 'Gagal mencipta pengguna'}</p>`);
+          await showInfoModal('Ralat', `<p class="mb-0 text-danger">${result.ralat || 'Gagal mencipta pengguna'}</p>`, 'danger');
           return;
         }
         if (payload.role === 'PENYELIA_LOJI' && daerahTerpilih.length && result.user?.id) {
@@ -2018,7 +2125,7 @@
           });
         }
         if (result.password) {
-          await showInfoModal('Pengguna Berjaya Dicipta', `<p class="mb-0">Kata laluan sementara: <strong>${result.password}</strong></p>`);
+          await showInfoModal('Pengguna Berjaya Dicipta', `<p class="mb-0">Kata laluan sementara: <strong>${result.password}</strong></p>`, 'success');
         }
         await loadUsers();
       });
@@ -2034,7 +2141,7 @@
         });
         const result = await response.json();
         if (!response.ok) {
-          await showInfoModal('Ralat', `<p class="mb-0 text-danger">${result.ralat || 'Gagal mencipta lokasi'}</p>`);
+          await showInfoModal('Ralat', `<p class="mb-0 text-danger">${result.ralat || 'Gagal mencipta lokasi'}</p>`, 'danger');
           return;
         }
         await loadLokasi();

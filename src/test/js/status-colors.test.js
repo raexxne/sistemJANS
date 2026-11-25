@@ -289,6 +289,7 @@ test('help opens as a dismissible popover and unchanged colors keep their origin
   const modalEnd = html.indexOf("    document.addEventListener('DOMContentLoaded'", modalStart);
   const handlers = {};
   const popovers = [];
+  let snapshot = 0;
   const button = {
     dataset: { helpContent: 'Panduan warna' },
     attributes: { 'aria-expanded': 'false' },
@@ -319,6 +320,7 @@ test('help opens as a dismissible popover and unchanged colors keep their origin
       hide() { this.visible = false; }
       dispose() { this.disposed = true; }
     } },
+    editFormSnapshot: () => snapshot++,
     createModalShell: () => ({ overlay, card: { appendChild() {} }, close() {} }),
     FormData: class {
       get(name) { return { key: 'DIHANTAR', label: 'Menunggu Semakan', color: '#6c757d',
@@ -339,4 +341,277 @@ test('help opens as a dismissible popover and unchanged colors keep their origin
   assert.equal(payload.value.reviewedColor, undefined);
   assert.equal(popovers[0].disposed, true);
   assert.equal(handlers.click, undefined);
+});
+
+test('settings changes show success after saving and refreshing', async () => {
+  const html = fs.readFileSync(path.join(root, 'admin.html'), 'utf8');
+  const start = html.indexOf('    function settingEscape(');
+  const end = html.indexOf('    function renderSettingField(', start);
+  const requests = [];
+  const messages = [];
+  const refreshes = [];
+  const updates = [];
+  const context = vm.createContext({
+    console,
+    fetch: async (url, options) => { requests.push({ url, options }); return { ok: true, json: async () => ({}) }; },
+    showInfoModal: async (title, message, type) => { messages.push({ title, message, type }); },
+    loadSettings: async (category) => { refreshes.push(category); },
+    localStorage: { setItem: (key) => { updates.push(key); } }
+  });
+  vm.runInContext(`let activeSettingCategory = 'announcement';\n${html.slice(start, end)}`, context);
+  await context.saveSettingChange('announcement', 'POST', null, { key: 'notis' });
+  await context.saveSettingChange('announcement', 'PUT', 42, { key: 'notis' });
+  await context.saveSettingChange('announcement', 'DELETE', 42);
+  vm.runInContext("activeSettingCategory = 'status'", context);
+  await context.saveSettingChange('status', 'PUT', 7, { key: 'DIHANTAR' });
+  assert.deepEqual(requests.map((request) => request.options.method), ['POST', 'PUT', 'DELETE', 'PUT']);
+  assert.equal(requests[0].url, 'api/admin/settings/announcement');
+  assert.equal(requests[1].url, 'api/admin/settings/announcement/42');
+  assert.equal(requests[2].options.body, undefined);
+  assert.deepEqual(refreshes, ['announcement', 'announcement', 'announcement', 'status']);
+  assert.deepEqual(updates, ['statusSettingsUpdated']);
+  assert.deepEqual(messages.map((message) => message.title), Array(4).fill('Perubahan Berjaya'));
+  assert.deepEqual(messages.map((message) => message.type), Array(4).fill('success'));
+  assert.match(messages[0].message, /ditambah/);
+  assert.match(messages[1].message, /dikemas kini/);
+  assert.match(messages[2].message, /dipadam/);
+});
+
+test('settings failures show server and connection errors without reporting success', async () => {
+  const html = fs.readFileSync(path.join(root, 'admin.html'), 'utf8');
+  const start = html.indexOf('    function settingEscape(');
+  const end = html.indexOf('    function renderSettingField(', start);
+  const messages = [];
+  let fetchResult = async () => ({ ok: false, status: 400, json: async () => ({ ralat: '<tidak sah>' }) });
+  const context = vm.createContext({
+    console: { error() {}, warn() {} },
+    fetch: (...args) => fetchResult(...args),
+    showInfoModal: async (title, message, type) => { messages.push({ title, message, type }); },
+    loadSettings: () => { throw new Error('Failure must not refresh settings'); }
+  });
+  vm.runInContext(`let activeSettingCategory = 'announcement';\n${html.slice(start, end)}`, context);
+  await context.saveSettingChange('announcement', 'POST', null, {});
+  fetchResult = async () => ({ ok: false, status: 500, json: async () => { throw new Error('Invalid JSON'); } });
+  await context.saveSettingChange('announcement', 'PUT', 1, {});
+  fetchResult = async () => { throw new Error('Offline'); };
+  await context.saveSettingChange('announcement', 'DELETE', 1);
+  fetchResult = async () => ({ ok: true, json: async () => { throw new Error('Invalid JSON'); } });
+  await context.saveSettingChange('announcement', 'POST', null, {});
+  assert.deepEqual(messages.map((message) => message.title), [
+    'Perubahan Tidak Berjaya', 'Perubahan Tidak Berjaya', 'Perubahan Tidak Dapat Disahkan', 'Perubahan Tidak Dapat Disahkan'
+  ]);
+  assert.deepEqual(messages.map((message) => message.type), ['danger', 'danger', 'warning', 'warning']);
+  assert.match(messages[0].message, /&lt;tidak sah&gt;/);
+  assert.match(messages[1].message, /HTTP 500/);
+  assert.match(messages[2].message, /masalah sambungan/);
+  assert.match(messages[3].message, /semak tetapan/);
+});
+
+test('admin notifications use one coloured OK button and return focus when closed', async () => {
+  const html = fs.readFileSync(path.join(root, 'admin.html'), 'utf8');
+  const start = html.indexOf('    function showInfoModal(');
+  const end = html.indexOf('    function showEditModal(', start);
+  const overlays = [];
+  let keyHandler;
+  let restored = false;
+  const document = {
+    activeElement: { isConnected: true, focus() { restored = true; } },
+    createElement() {
+      const overlay = {
+        button: {
+          addEventListener(event, handler) { this.handler = handler; },
+          focus() { this.focused = true; }
+        },
+        querySelector() { return this.button; },
+        remove() { this.removed = true; }
+      };
+      overlays.push(overlay);
+      return overlay;
+    },
+    body: { appendChild() {} },
+    addEventListener(event, handler, capture) { assert.equal(capture, true); keyHandler = handler; },
+    removeEventListener(event, handler, capture) {
+      assert.equal(handler, keyHandler);
+      assert.equal(capture, true);
+      keyHandler = null;
+    }
+  };
+  const context = vm.createContext({ document });
+  const helperStart = html.indexOf('    function editFormSnapshot(');
+  const helperEnd = html.indexOf('    function showEditModal(', helperStart);
+  vm.runInContext(`${html.slice(start, end)}\n${html.slice(helperStart, helperEnd)}`, context);
+  for (const type of ['success', 'danger', 'warning', 'primary']) {
+    restored = false;
+    const result = context.showInfoModal('Notifikasi', '<p>Maklumat</p>', type);
+    const overlay = overlays.at(-1);
+    assert.match(overlay.innerHTML, new RegExp(`class="btn btn-${type}">OK</button>`));
+    assert.equal((overlay.innerHTML.match(/<button\b/g) || []).length, 1);
+    assert.equal(overlay.button.focused, true);
+    overlay.button.handler();
+    assert.equal(await result, true);
+    assert.equal(overlay.removed, true);
+    assert.equal(restored, true);
+    assert.equal(keyHandler, null);
+  }
+  const result = context.showInfoModal('Maklumat', '<p>Maklumat</p>');
+  let stopped = false;
+  keyHandler({ key: 'Escape', stopImmediatePropagation() { stopped = true; } });
+  assert.equal(await result, true);
+  assert.equal(stopped, true);
+  assert.equal(keyHandler, null);
+  const noChanges = context.showNoChanges();
+  const overlay = overlays.at(-1);
+  assert.doesNotMatch(overlay.innerHTML, /<h2\b/);
+  assert.match(overlay.innerHTML, /Tiada perubahan berlaku\./);
+  assert.match(overlay.innerHTML, /aria-label="Makluman"/);
+  overlay.button.handler();
+  await noChanges;
+});
+
+test('unchanged user and location edits show notice and do not submit', async () => {
+  const html = fs.readFileSync(path.join(root, 'admin.html'), 'utf8');
+  const helpers = html.slice(html.indexOf('    function editFormSnapshot('), html.indexOf('    function showEditModal('));
+  for (const [name, next, values] of [
+    ['showEditModal', 'showTetapkanDaerahModal', { name: 'Ali', email: 'ali@example.com', phone: '', address: '', role: 'STAFF' }],
+    ['showEditLokasiModal', null, { type: 'LOJI', name: 'Loji A', daerah: '' }]
+  ]) {
+    const start = html.indexOf(`    function ${name}(`);
+    const end = next ? html.indexOf(`    async function ${next}(`, start) : html.indexOf('    const SETTING_CATEGORIES', start);
+    let submit;
+    let notices = 0;
+    let closed = false;
+    const form = { values: { ...values }, addEventListener(event, handler) { if (event === 'submit') submit = handler; } };
+    const overlay = {
+      querySelector(selector) {
+        if (selector.endsWith('-form')) return form;
+        if (selector === '#edit-user-role') return { addEventListener() {} };
+        if (selector === '#edit-user-daerah-row') return {};
+        return { addEventListener() {} };
+      },
+      addEventListener() {}
+    };
+    const context = vm.createContext({
+      document: { createElement: () => ({ querySelector: () => ({ addEventListener() {} }) }) },
+      FormData: class { constructor(f) { this.values = f.values; } entries() { return Object.entries(this.values)[Symbol.iterator](); } },
+      createModalShell: () => ({ overlay, card: { appendChild() {} }, close() { closed = true; } }),
+      showInfoModal: async () => { notices++; }
+    });
+    vm.runInContext(`${helpers}\n${html.slice(start, end)}`, context);
+    const result = context[name](values);
+    await submit({ preventDefault() {} });
+    assert.equal(notices, 1);
+    assert.equal(closed, false);
+    form.values.name += ' baharu';
+    await submit({ preventDefault() {} });
+    assert.equal((await result).name, values.name + ' baharu');
+    assert.equal(closed, true);
+  }
+});
+
+test('settings snapshots compare normalized fields, passwords and checkbox changes', () => {
+  const html = fs.readFileSync(path.join(root, 'admin.html'), 'utf8');
+  const start = html.indexOf('    function editFormSnapshot(');
+  const end = html.indexOf('    function showEditModal(', start);
+  const context = vm.createContext({
+    FormData: class { constructor(f) { this.values = f.values; } entries() { return Object.entries(this.values)[Symbol.iterator](); } }
+  });
+  vm.runInContext(html.slice(start, end), context);
+  const fields = [{ name: 'port', type: 'number' }, { name: 'password', type: 'password' }, { name: 'auth', type: 'checkbox' }];
+  const form = { values: { port: '587', password: '********', auth: 'on' } };
+  const initial = context.editFormSnapshot(form, fields, true);
+  form.values.password = '';
+  form.values.port = '0587';
+  assert.equal(context.editFormSnapshot(form, fields, true), initial);
+  form.values.password = 'new-password';
+  assert.notEqual(context.editFormSnapshot(form, fields, true), initial);
+  form.values.password = '********';
+  delete form.values.auth;
+  assert.notEqual(context.editFormSnapshot(form, fields, true), initial);
+  const selection = { querySelectorAll: () => [{ value: 'B' }, { value: 'A' }] };
+  assert.equal(context.selectedDaerahSnapshot(selection), '["A","B"]');
+});
+
+test('unchanged settings edits keep the form open, while changed values submit', async () => {
+  const html = fs.readFileSync(path.join(root, 'admin.html'), 'utf8');
+  const helpers = html.slice(html.indexOf('    function editFormSnapshot('), html.indexOf('    function showEditModal('));
+  const config = html.slice(html.indexOf('    const SETTING_CATEGORIES ='), html.indexOf('    async function loadSettings('));
+  const modal = html.slice(html.indexOf('    function showSettingModal('), html.indexOf("    document.addEventListener('DOMContentLoaded'"));
+  let submit;
+  let notices = 0;
+  let closed = false;
+  const form = {
+    values: { key: 'notis', title: 'Tajuk', message: 'Maklumat', active: 'on', sortOrder: '1' },
+    querySelectorAll: () => [],
+    addEventListener(event, handler) { if (event === 'submit') submit = handler; }
+  };
+  const overlay = {
+    querySelector(selector) { return selector === '#setting-form' ? form : { addEventListener() {} }; },
+    addEventListener() {}
+  };
+  const context = vm.createContext({
+    console,
+    document: {
+      createElement: () => ({ querySelector: () => ({ addEventListener() {} }) }),
+      addEventListener() {}, removeEventListener() {}
+    },
+    FormData: class {
+      constructor(f) { this.values = f.values; }
+      entries() { return Object.entries(this.values)[Symbol.iterator](); }
+      get(name) { return this.values[name] ?? null; }
+      has(name) { return Object.hasOwn(this.values, name); }
+    },
+    bootstrap: { Popover: class {} },
+    createModalShell: () => ({ overlay, card: { appendChild() {} }, close() { closed = true; } }),
+    showInfoModal: async () => { notices++; }
+  });
+  vm.runInContext(`${script}\n${helpers}\n${config}\n${modal}`, context);
+  const result = context.showSettingModal({ key: 'notis', value: { title: 'Tajuk', message: 'Maklumat', active: true, sortOrder: 1 } });
+  await submit({ preventDefault() {} });
+  assert.equal(notices, 1);
+  assert.equal(closed, false);
+  form.values.title = 'Tajuk baharu';
+  await submit({ preventDefault() {} });
+  assert.equal((await result).value.title, 'Tajuk baharu');
+  assert.equal(closed, true);
+});
+
+test('unchanged supervisor districts are not saved', async () => {
+  const html = fs.readFileSync(path.join(root, 'admin.html'), 'utf8');
+  const helpers = html.slice(html.indexOf('    function editFormSnapshot('), html.indexOf('    function showEditModal('));
+  const start = html.indexOf('    async function showTetapkanDaerahModal(');
+  const end = html.indexOf('    function renderDaerahCheckboxesHtml(', start);
+  let submit;
+  let notices = 0;
+  const requests = [];
+  const form = {
+    selected: ['A'],
+    querySelectorAll() { return this.selected.map((value) => ({ value })); },
+    addEventListener(event, handler) { if (event === 'submit') submit = handler; }
+  };
+  const context = vm.createContext({
+    console,
+    document: { createElement: () => ({ querySelector: () => ({ addEventListener() {} }) }) },
+    fetch: async (url, options) => {
+      requests.push({ url, options });
+      if (options?.method === 'POST') return { ok: true, json: async () => ({ berjaya: true }) };
+      return { ok: true, json: async () => url.includes('/daerah') ? { daerah: ['A'] } : [{ daerah: 'A' }, { daerah: 'B' }] };
+    },
+    renderDaerahCheckboxesHtml: () => '',
+    createModalShell: () => ({
+      overlay: { querySelector: () => form, addEventListener() {} },
+      card: { appendChild() {} },
+      close() {}
+    }),
+    showInfoModal: async () => { notices++; }
+  });
+  vm.runInContext(`${helpers}\n${html.slice(start, end)}`, context);
+  const result = context.showTetapkanDaerahModal(1);
+  await new Promise((resolve) => setImmediate(resolve));
+  await submit({ preventDefault() {} });
+  assert.equal(notices, 1);
+  assert.equal(requests.length, 2);
+  form.selected.push('B');
+  await submit({ preventDefault() {} });
+  assert.equal(await result, true);
+  assert.deepEqual(JSON.parse(requests[2].options.body), { daerah: ['A', 'B'] });
 });
