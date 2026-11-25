@@ -578,6 +578,7 @@ test('unchanged settings edits keep the form open, while changed values submit',
 test('unchanged supervisor districts are not saved', async () => {
   const html = fs.readFileSync(path.join(root, 'admin.html'), 'utf8');
   const helpers = html.slice(html.indexOf('    function editFormSnapshot('), html.indexOf('    function showEditModal('));
+  const saving = html.slice(html.indexOf('    async function submitAdminSave('), html.indexOf('    function editFormSnapshot('));
   const start = html.indexOf('    async function showTetapkanDaerahModal(');
   const end = html.indexOf('    function renderDaerahCheckboxesHtml(', start);
   let submit;
@@ -604,7 +605,7 @@ test('unchanged supervisor districts are not saved', async () => {
     }),
     showInfoModal: async () => { notices++; }
   });
-  vm.runInContext(`${helpers}\n${html.slice(start, end)}`, context);
+  vm.runInContext(`${saving}\n${helpers}\n${html.slice(start, end)}`, context);
   const result = context.showTetapkanDaerahModal(1);
   await new Promise((resolve) => setImmediate(resolve));
   await submit({ preventDefault() {} });
@@ -614,4 +615,254 @@ test('unchanged supervisor districts are not saved', async () => {
   await submit({ preventDefault() {} });
   assert.equal(await result, true);
   assert.deepEqual(JSON.parse(requests[2].options.body), { daerah: ['A', 'B'] });
+});
+
+test('all admin save forms dismiss without saving when closed', async () => {
+  const html = fs.readFileSync(path.join(root, 'admin.html'), 'utf8');
+  const helpers = html.slice(html.indexOf('    function editFormSnapshot('), html.indexOf('    function showEditModal('));
+  const config = html.slice(html.indexOf('    const SETTING_CATEGORIES ='), html.indexOf('    async function loadSettings('));
+  const cases = [
+    ['showCreateModal', false, []],
+    ['showEditModal', false, [{ role: 'STAFF' }]],
+    ['showTetapkanDaerahModal', true, [1]],
+    ['showPilihDaerahModal', true, [[]]],
+    ['showCreateLokasiModal', false, []],
+    ['showEditLokasiModal', false, [{ type: 'LOJI' }]],
+    ['showSettingModal', false, [{ key: 'notis', value: {} }]]
+  ];
+  for (const [name, asyncFunction, args] of cases) {
+    const start = html.indexOf(`    ${asyncFunction ? 'async ' : ''}function ${name}(`);
+    const remainder = html.slice(start + 1);
+    const next = remainder.search(/\n    (?:(?:async )?function |const SETTING_CATEGORIES|document\.addEventListener\('DOMContentLoaded')/);
+    const source = html.slice(start, start + 1 + next);
+    let options;
+    let footer;
+    let closed = false;
+    const form = {
+      querySelectorAll: () => [],
+      addEventListener() {}
+    };
+    const control = {
+      value: 'STAFF',
+      classList: { toggle() {} },
+      addEventListener() {}
+    };
+    const overlay = {
+      querySelector(selector) { return selector.endsWith('-form') ? form : control; },
+      addEventListener() {}
+    };
+    const context = vm.createContext({
+      console,
+      document: {
+        createElement: () => (footer = { querySelector: () => control }),
+        addEventListener() {}, removeEventListener() {}
+      },
+      fetch: async (url) => ({ ok: true, json: async () => url.includes('/daerah') ? { daerah: [] } : [] }),
+      FormData: class { entries() { return [][Symbol.iterator](); } },
+      bootstrap: { Popover: class {} },
+      renderDaerahCheckboxesHtml: () => '',
+      createModalShell: (title, body, opts) => {
+        options = opts;
+        return { overlay, card: { appendChild() {} }, close() { closed = true; } };
+      }
+    });
+    vm.runInContext(`${script}\n${helpers}\n${config}\n${source}`, context);
+    const result = context[name](...args);
+    if (asyncFunction) await new Promise((resolve) => setImmediate(resolve));
+    assert.equal(options.closeButton, true, name);
+    assert.match(footer.innerHTML, />Simpan<\/button>/, name);
+    assert.doesNotMatch(footer.innerHTML, />Batal<\/button>/, name);
+    options.onDismiss();
+    assert.equal(await result, false, name);
+    assert.equal(closed, true, name);
+  }
+});
+
+test('modal X and Escape dismiss only the active form', () => {
+  const html = fs.readFileSync(path.join(root, 'admin.html'), 'utf8');
+  const start = html.indexOf('    function createModalShell(');
+  const end = html.indexOf('    function showCreateModal(', start);
+  const overlays = [];
+  const keyHandlers = new Set();
+  const document = {
+    createElement() {
+      const overlay = {
+        button: { addEventListener(event, handler) { this.handler = handler; } },
+        addEventListener(event, handler) { this.backdrop = handler; },
+        querySelector(selector) { return selector === '.admin-modal-close' ? this.button : {}; },
+        remove() { overlays.splice(overlays.indexOf(this), 1); }
+      };
+      return overlay;
+    },
+    body: { appendChild(overlay) { overlays.push(overlay); } },
+    querySelectorAll: () => overlays,
+    addEventListener(event, handler) { keyHandlers.add(handler); },
+    removeEventListener(event, handler) { keyHandlers.delete(handler); }
+  };
+  const context = vm.createContext({ document });
+  vm.runInContext(html.slice(start, end), context);
+  const dismissed = [];
+  let first;
+  first = context.createModalShell('Induk', '', { closeButton: true, onDismiss() { dismissed.push('induk'); first.close(); } });
+  let second;
+  second = context.createModalShell('Anak', '', { compact: true, closeButton: true, onDismiss() { dismissed.push('anak'); second.close(); } });
+  assert.match(second.overlay.innerHTML, /admin-modal-compact/);
+  assert.doesNotMatch(first.overlay.innerHTML, /admin-modal-compact/);
+  assert.match(second.overlay.innerHTML, /class="admin-modal-close" aria-label="Tutup"/);
+  second.overlay.button.handler();
+  assert.deepEqual(dismissed, ['anak']);
+  assert.equal(overlays.length, 1);
+  for (const handler of [...keyHandlers]) handler({ key: 'Escape' });
+  assert.deepEqual(dismissed, ['anak', 'induk']);
+  assert.equal(keyHandlers.size, 0);
+});
+
+test('delete confirmation X cancels and Padam confirms', async () => {
+  const html = fs.readFileSync(path.join(root, 'admin.html'), 'utf8');
+  const start = html.indexOf('    function showConfirmModal(');
+  const end = html.indexOf('    function renderJenisLokasiBadge(', start);
+  let options;
+  let footer;
+  let closed;
+  const context = vm.createContext({
+    document: {
+      createElement: () => (footer = {
+        querySelector: () => ({ addEventListener(event, handler) { footer.confirm = handler; } })
+      })
+    },
+    createModalShell: (title, body, opts) => {
+      options = opts;
+      closed = false;
+      return { card: { appendChild() {} }, close() { closed = true; } };
+    }
+  });
+  vm.runInContext(html.slice(start, end), context);
+  const cancelled = context.showConfirmModal({ title: 'Padam', message: 'Padam?', type: 'danger', confirmText: 'Padam' });
+  assert.equal(options.closeButton, true);
+  assert.equal(options.danger, true);
+  assert.equal(options.compact, true);
+  assert.match(footer.innerHTML, /btn-danger[^>]*>Padam<\/button>/);
+  assert.doesNotMatch(footer.innerHTML, />Batal<\/button>/);
+  options.onDismiss();
+  assert.equal(await cancelled, false);
+  assert.equal(closed, true);
+  const confirmed = context.showConfirmModal({ title: 'Padam', message: 'Padam?', type: 'danger', confirmText: 'Padam' });
+  footer.confirm();
+  assert.equal(await confirmed, true);
+  assert.equal(closed, true);
+});
+
+test('admin save requests report rejected and uncertain results without claiming success', async () => {
+  const html = fs.readFileSync(path.join(root, 'admin.html'), 'utf8');
+  const start = html.indexOf('    async function submitAdminSave(');
+  const end = html.indexOf('    function editFormSnapshot(', start);
+  const escapeStart = html.indexOf('    function settingEscape(');
+  const escapeEnd = html.indexOf('    async function saveSettingChange(', escapeStart);
+  const notices = [];
+  let fetchResult = async () => ({ ok: true, json: async () => ({ berjaya: true }) });
+  const context = vm.createContext({
+    console: { error() {}, warn() {} },
+    fetch: (...args) => fetchResult(...args),
+    showInfoModal: async (title, message, type) => { notices.push({ title, message, type }); }
+  });
+  vm.runInContext(`${html.slice(escapeStart, escapeEnd)}\n${html.slice(start, end)}`, context);
+  assert.equal((await context.submitAdminSave('url', 'PUT', {}, 'Gagal')).ok, true);
+  fetchResult = async () => ({ ok: false, status: 400, json: async () => ({ ralat: '<tidak sah>' }) });
+  const rejected = await context.submitAdminSave('url', 'PUT', {}, 'Gagal');
+  await context.showAdminSaveFailure(rejected);
+  assert.equal(rejected.type, 'danger');
+  assert.match(notices[0].message, /&lt;tidak sah&gt;/);
+  for (const response of [
+    async () => { throw new Error('Offline'); },
+    async () => ({ ok: true, json: async () => { throw new Error('Invalid JSON'); } }),
+    async () => ({ ok: true, json: async () => ({}) })
+  ]) {
+    fetchResult = response;
+    const outcome = await context.submitAdminSave('url', 'PUT', {}, 'Gagal');
+    assert.equal(outcome.ok, false);
+    assert.equal(outcome.type, 'warning');
+    await context.showAdminSaveFailure(outcome);
+  }
+  assert.deepEqual(notices.map((notice) => notice.type), ['danger', 'warning', 'warning', 'warning']);
+});
+
+test('user and location edits show success or failure after a changed save', async () => {
+  const html = fs.readFileSync(path.join(root, 'admin.html'), 'utf8');
+  for (const [loader, next, editTitle, object] of [
+    ['loadUsers', 'filterUsers', 'Edit pengguna', { id: 1, name: 'Ali', email: 'a@example.com', role: 'STAFF' }],
+    ['loadLokasi', 'filterLokasi', 'Edit lokasi', { id: 2, name: 'Loji', type: 'LOJI', daerah: 'A' }]
+  ]) {
+    const start = html.indexOf(`    async function ${loader}(`);
+    const end = html.indexOf(`    function ${next}(`, start);
+    const actions = {};
+    const notices = [];
+    let outcome = { ok: true, data: { berjaya: true } };
+    const cell = { appendChild() {} };
+    const tbody = { appendChild() {} };
+    const context = vm.createContext({
+      console,
+      document: {
+        querySelector: () => tbody,
+        createElement: () => ({ dataset: {}, querySelector: () => cell })
+      },
+      fetch: async () => ({ ok: true, json: async () => [object] }),
+      renderRoleBadge: () => '', renderJenisLokasiBadge: () => '',
+      createUserPhotoCell: () => ({}), updateSummary() {}, updateLokasiSummary() {},
+      filterUsers() {}, filterLokasi() {},
+      createActionButton: (icon, title, color, handler) => { actions[title] = handler; return {}; },
+      showEditModal: async () => ({ name: 'Baharu' }),
+      showEditLokasiModal: async () => ({ name: 'Baharu' }),
+      submitAdminSave: async () => outcome,
+      showInfoModal: async (title, message, type) => { notices.push(type); },
+      showAdminSaveFailure: async (result) => { notices.push(result.type); }
+    });
+    vm.runInContext(html.slice(start, end), context);
+    await context[loader]();
+    await actions[editTitle]();
+    outcome = { ok: false, type: 'danger', detail: 'Ralat' };
+    await actions[editTitle]();
+    assert.deepEqual(notices, ['success', 'danger'], loader);
+  }
+});
+
+test('new user and location saves report success and partial district failure', async () => {
+  const html = fs.readFileSync(path.join(root, 'admin.html'), 'utf8');
+  const start = html.indexOf("      document.querySelector('#btn-create-user').addEventListener");
+  const end = start + html.slice(start).search(/\r?\n    \}\);\r?\n  <\/script>/);
+  const escapeStart = html.indexOf('    function settingEscape(');
+  const escapeEnd = html.indexOf('    async function saveSettingChange(', escapeStart);
+  const handlers = {};
+  const notices = [];
+  let user = { name: 'Ali', role: 'STAFF' };
+  let outcomes = [];
+  const context = vm.createContext({
+    document: { querySelector: (selector) => ({ addEventListener(event, handler) { handlers[selector] = handler; } }) },
+    showCreateModal: async () => ({ ...user }),
+    showCreateLokasiModal: async () => ({ name: 'Loji' }),
+    submitAdminSave: async () => outcomes.shift(),
+    showAdminSaveFailure: async (outcome) => { notices.push({ type: outcome.type }); },
+    showInfoModal: async (title, message, type) => { notices.push({ title, message, type }); },
+    loadUsers: async () => {}, loadLokasi: async () => {}
+  });
+  vm.runInContext(`${html.slice(escapeStart, escapeEnd)}\n${html.slice(start, end)}`, context);
+  outcomes = [{ ok: true, data: { password: '<sementara>', user: { id: 1 } } }];
+  await handlers['#btn-create-user']();
+  assert.equal(notices.at(-1).type, 'success');
+  assert.match(notices.at(-1).message, /&lt;sementara&gt;/);
+  user = { name: 'Ali', role: 'PENYELIA_LOJI', daerah: ['A'] };
+  outcomes = [
+    { ok: true, data: { password: '<sementara>', user: { id: 1 } } },
+    { ok: false, type: 'danger', detail: 'Daerah gagal' }
+  ];
+  await handlers['#btn-create-user']();
+  assert.equal(notices.at(-1).type, 'warning');
+  assert.match(notices.at(-1).message, /Pengguna telah dicipta/);
+  assert.match(notices.at(-1).message, /Daerah gagal/);
+  assert.match(notices.at(-1).message, /&lt;sementara&gt;/);
+  outcomes = [{ ok: true, data: {} }];
+  await handlers['#btn-create-lokasi']();
+  assert.equal(notices.at(-1).type, 'success');
+  outcomes = [{ ok: false, type: 'danger', detail: 'Gagal' }];
+  await handlers['#btn-create-lokasi']();
+  assert.equal(notices.at(-1).type, 'danger');
 });

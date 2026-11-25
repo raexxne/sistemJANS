@@ -152,6 +152,9 @@
   .admin-modal-card.admin-modal-wide {
     max-width: 720px;
   }
+  .admin-modal-card.admin-modal-compact {
+    max-width: 480px;
+  }
   .admin-notice-card {
     max-width: 480px;
     padding: 24px;
@@ -1025,21 +1028,13 @@
             createActionButton('fas fa-edit', 'Edit pengguna', 'warning', async () => {
               const result = await showEditModal(user);
               if (result) {
-                const response = await fetch(`api/admin/users/${user.id}`, {
-                  method: 'PUT',
-                  headers: { 'Content-Type': 'application/json' },
-                  body: JSON.stringify(result)
-                }).catch(() => null);
-                if (!response) {
-                  await showInfoModal('Ralat', '<p class="mb-0 text-danger">Sambungan kepada sistem gagal.</p>', 'danger');
-                  return;
-                }
-                const updateResult = await response.json().catch(() => ({}));
-                if (!response.ok) {
-                  await showInfoModal('Ralat', `<p class="mb-0 text-danger">${updateResult.ralat || 'Gagal mengemas kini pengguna.'}</p>`, 'danger');
+                const outcome = await submitAdminSave(`api/admin/users/${user.id}`, 'PUT', result, 'Gagal mengemas kini pengguna.');
+                if (!outcome.ok) {
+                  await showAdminSaveFailure(outcome);
                   return;
                 }
                 await loadUsers();
+                await showInfoModal('Perubahan Berjaya', '<p class="mb-0 text-success">Pengguna berjaya dikemas kini.</p>', 'success');
               }
             }),
             createActionButton('fas fa-trash', 'Padam pengguna', 'danger', async () => {
@@ -1047,8 +1042,7 @@
                 title: 'Padam pengguna',
                 message: `Padam ${user.name || user.email}?`,
                 type: 'danger',
-                confirmText: 'Padam',
-                cancelText: 'Batal'
+                confirmText: 'Padam'
               });
               if (!confirmed) return;
               const response = await fetch(`api/admin/users/${user.id}`, { method: 'DELETE' });
@@ -1095,7 +1089,7 @@
       const overlay = document.createElement('div');
       overlay.className = 'admin-modal-overlay';
       overlay.innerHTML = `
-        <div class="admin-modal-card ${opts.wide ? 'admin-modal-wide' : ''} ${opts.danger ? 'admin-modal-danger' : ''}">
+        <div class="admin-modal-card ${opts.wide ? 'admin-modal-wide' : ''} ${opts.compact ? 'admin-modal-compact' : ''} ${opts.danger ? 'admin-modal-danger' : ''}">
           <div class="admin-modal-header">
             <span>${title}</span>
             ${opts.closeButton ? '<button type="button" class="admin-modal-close" aria-label="Tutup" title="Tutup"><i class="fas fa-xmark"></i></button>' : ''}
@@ -1104,20 +1098,27 @@
         </div>
       `;
       document.body.appendChild(overlay);
-      const close = () => overlay.remove();
+      const close = () => {
+        document.removeEventListener('keydown', onKey);
+        overlay.remove();
+      };
+      const dismiss = () => {
+        if (opts.onDismiss) opts.onDismiss();
+        else close();
+      };
       if (opts.closeOnOverlay !== false) {
         overlay.addEventListener('click', (e) => {
-          if (e.target === overlay) close();
+          if (e.target === overlay) dismiss();
         });
       }
       const onKey = (e) => {
-        if (e.key === 'Escape') {
-          document.removeEventListener('keydown', onKey);
-          close();
+        const overlays = document.querySelectorAll('.admin-modal-overlay');
+        if (e.key === 'Escape' && overlays[overlays.length - 1] === overlay) {
+          dismiss();
         }
       };
       document.addEventListener('keydown', onKey);
-      overlay.querySelector('.admin-modal-close')?.addEventListener('click', close);
+      overlay.querySelector('.admin-modal-close')?.addEventListener('click', dismiss);
       return { overlay, card: overlay.querySelector('.admin-modal-card'), close };
     }
 
@@ -1148,11 +1149,12 @@
             <div class="mb-2"><label class="form-label">Alamat</label><input name="address" class="form-control"></div>
           </form>
         `;
-        const { overlay, card, close } = createModalShell('Tambah Pengguna Baharu', bodyHtml);
+        const { overlay, card, close } = createModalShell('Tambah Pengguna Baharu', bodyHtml, {
+          closeButton: true, onDismiss: () => finish(false)
+        });
         const footer = document.createElement('div');
         footer.className = 'admin-modal-footer';
         footer.innerHTML = `
-          <button type="button" class="btn btn-outline-secondary" id="create-user-cancel">Batal</button>
           <button type="submit" form="create-user-form" class="btn btn-primary" id="create-user-submit">Simpan</button>
         `;
         card.appendChild(footer);
@@ -1178,7 +1180,6 @@
           close();
           resolve(value);
         };
-        footer.querySelector('#create-user-cancel').addEventListener('click', () => finish(false));
         form.addEventListener('submit', (event) => {
           event.preventDefault();
           const payload = Object.fromEntries(new FormData(form).entries());
@@ -1186,9 +1187,6 @@
             payload.daerah = pendingDaerah;
           }
           finish(payload);
-        });
-        overlay.addEventListener('click', (e) => {
-          if (e.target === overlay) finish(false);
         });
       });
     }
@@ -1223,6 +1221,42 @@
         button.addEventListener('click', finish);
         button.focus();
       });
+    }
+
+    async function submitAdminSave(url, method, payload, failureMessage) {
+      let response;
+      try {
+        response = await fetch(url, {
+          method,
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload)
+        });
+      } catch (error) {
+        console.error('Sambungan semasa menyimpan perubahan gagal.', error);
+        return { ok: false, type: 'warning', detail: 'Perubahan tidak dapat disahkan kerana masalah sambungan. Sila muat semula dan semak sebelum mencuba lagi.' };
+      }
+
+      let data;
+      try {
+        data = await response.json();
+      } catch (error) {
+        console.warn('Respons simpanan tidak dapat dibaca.', error);
+        if (!response.ok) return { ok: false, type: 'danger', detail: `${failureMessage} (HTTP ${response.status})` };
+        return { ok: false, type: 'warning', detail: 'Respons pelayan tidak dapat dibaca. Sila muat semula dan semak sebelum mencuba lagi.' };
+      }
+      if (!response.ok) {
+        return { ok: false, type: 'danger', detail: typeof data?.ralat === 'string' && data.ralat.trim() ? data.ralat : failureMessage };
+      }
+      if (data?.berjaya !== true) {
+        return { ok: false, type: 'warning', detail: 'Pelayan tidak mengesahkan perubahan. Sila muat semula dan semak sebelum mencuba lagi.' };
+      }
+      return { ok: true, data };
+    }
+
+    function showAdminSaveFailure(outcome) {
+      const title = outcome.type === 'danger' ? 'Perubahan Tidak Berjaya' : 'Perubahan Tidak Dapat Disahkan';
+      const color = outcome.type === 'danger' ? 'danger' : 'warning-emphasis';
+      return showInfoModal(title, `<p class="mb-0 text-${color}">${settingEscape(outcome.detail)}</p>`, outcome.type);
     }
 
     function editFormSnapshot(form, fields = null, isSmtp = false) {
@@ -1269,11 +1303,12 @@
             </div>
           </form>
         `;
-        const { overlay, card, close } = createModalShell('Edit Pengguna', bodyHtml);
+        const { overlay, card, close } = createModalShell('Edit Pengguna', bodyHtml, {
+          closeButton: true, onDismiss: () => finish(false)
+        });
         const footer = document.createElement('div');
         footer.className = 'admin-modal-footer';
         footer.innerHTML = `
-          <button type="button" class="btn btn-outline-secondary" id="edit-user-cancel">Batal</button>
           <button type="submit" form="edit-user-form" class="btn btn-primary" id="edit-user-submit">Simpan</button>
         `;
         card.appendChild(footer);
@@ -1296,7 +1331,6 @@
           await showTetapkanDaerahModal(user.id);
         });
 
-        footer.querySelector('#edit-user-cancel').addEventListener('click', () => finish(false));
         form.addEventListener('submit', async (event) => {
           event.preventDefault();
           if (editFormSnapshot(form) === initialForm) {
@@ -1305,9 +1339,6 @@
           }
           const payload = Object.fromEntries(new FormData(form).entries());
           finish(payload);
-        });
-        overlay.addEventListener('click', (e) => {
-          if (e.target === overlay) finish(false);
         });
       });
     }
@@ -1342,11 +1373,12 @@
             <div class="mb-2">${checkboxesHtml}</div>
           </form>
         `;
-        const { overlay, card, close } = createModalShell('Tetapkan Daerah Seliaan', bodyHtml);
+        const { overlay, card, close } = createModalShell('Tetapkan Daerah Seliaan', bodyHtml, {
+          closeButton: true, onDismiss: () => finish(false)
+        });
         const footer = document.createElement('div');
         footer.className = 'admin-modal-footer';
         footer.innerHTML = `
-          <button type="button" class="btn btn-outline-secondary" id="tetapkan-daerah-cancel">Batal</button>
           <button type="submit" form="tetapkan-daerah-form" class="btn btn-primary" id="tetapkan-daerah-submit">Simpan</button>
         `;
         card.appendChild(footer);
@@ -1358,7 +1390,6 @@
           resolve(value);
         };
         
-        footer.querySelector('#tetapkan-daerah-cancel').addEventListener('click', () => finish(false));
         form.addEventListener('submit', async (event) => {
           event.preventDefault();
           if (selectedDaerahSnapshot(form) === initialDaerah) {
@@ -1366,21 +1397,13 @@
             return;
           }
           const daerahFinal = Array.from(form.querySelectorAll('input[type="checkbox"]:checked')).map((cb) => cb.value);
-          const response = await fetch(`api/admin/penyelia/${userId}/daerah`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ daerah: daerahFinal })
-          });
-          const data = await response.json();
-          if (!response.ok) {
-            await showInfoModal('Ralat', `<p class="mb-0 text-danger">${data.ralat || 'Gagal menetapkan daerah'}</p>`, 'danger');
-            finish(false);
+          const outcome = await submitAdminSave(`api/admin/penyelia/${userId}/daerah`, 'POST', { daerah: daerahFinal }, 'Gagal menetapkan daerah seliaan.');
+          if (!outcome.ok) {
+            await showAdminSaveFailure(outcome);
             return;
           }
+          await showInfoModal('Perubahan Berjaya', '<p class="mb-0 text-success">Daerah seliaan berjaya dikemas kini.</p>', 'success');
           finish(true);
-        });
-        overlay.addEventListener('click', (e) => {
-          if (e.target === overlay) finish(false);
         });
       });
     }
@@ -1410,11 +1433,12 @@
             <div class="mb-2">${checkboxesHtml}</div>
           </form>
         `;
-        const { overlay, card, close } = createModalShell('Tetapkan Daerah Seliaan', bodyHtml);
+        const { overlay, card, close } = createModalShell('Tetapkan Daerah Seliaan', bodyHtml, {
+          closeButton: true, onDismiss: () => finish(false)
+        });
         const footer = document.createElement('div');
         footer.className = 'admin-modal-footer';
         footer.innerHTML = `
-          <button type="button" class="btn btn-outline-secondary" id="pilih-daerah-cancel">Batal</button>
           <button type="submit" form="pilih-daerah-form" class="btn btn-primary" id="pilih-daerah-submit">Simpan</button>
         `;
         card.appendChild(footer);
@@ -1425,27 +1449,24 @@
           resolve(value);
         };
         
-        footer.querySelector('#pilih-daerah-cancel').addEventListener('click', () => finish(false));
         form.addEventListener('submit', (event) => {
           event.preventDefault();
           const daerahFinal = Array.from(form.querySelectorAll('input[type="checkbox"]:checked')).map((cb) => cb.value);
           finish(daerahFinal);
         });
-        overlay.addEventListener('click', (e) => {
-          if (e.target === overlay) finish(false);
-        });
       });
     }
 
-    function showConfirmModal({ title, message, type = 'primary', confirmText = 'Ya', cancelText = 'Batal' }) {
+    function showConfirmModal({ title, message, type = 'primary', confirmText = 'Ya' }) {
       return new Promise((resolve) => {
         const bodyHtml = `<p class="mb-0">${message}</p>`;
-        const { overlay, card, close } = createModalShell(title, bodyHtml, { danger: type === 'danger' });
+        const { card, close } = createModalShell(title, bodyHtml, {
+          danger: type === 'danger', compact: true, closeButton: true, onDismiss: () => finish(false)
+        });
         const color = type === 'danger' ? 'danger' : 'primary';
         const footer = document.createElement('div');
         footer.className = 'admin-modal-footer';
         footer.innerHTML = `
-          <button type="button" class="btn btn-outline-secondary" id="confirm-modal-cancel">${cancelText}</button>
           <button type="button" class="btn btn-${color}" id="confirm-modal-ok">${confirmText}</button>
         `;
         card.appendChild(footer);
@@ -1454,11 +1475,7 @@
           close();
           resolve(value);
         };
-        footer.querySelector('#confirm-modal-cancel').addEventListener('click', () => finish(false));
         footer.querySelector('#confirm-modal-ok').addEventListener('click', () => finish(true));
-        overlay.addEventListener('click', (e) => {
-          if (e.target === overlay) finish(false);
-        });
       });
     }
 
@@ -1503,17 +1520,13 @@
             createActionButton('fas fa-edit', 'Edit lokasi', 'warning', async () => {
               const result = await showEditLokasiModal(lokasi);
               if (result) {
-                const response = await fetch(`api/locations/${lokasi.id}`, {
-                  method: 'PUT',
-                  headers: { 'Content-Type': 'application/json' },
-                  body: JSON.stringify(result)
-                });
-                const data = await response.json();
-                if (!response.ok) {
-                  await showInfoModal('Ralat', `<p class="mb-0 text-danger">${data.ralat || 'Gagal mengemaskini lokasi'}</p>`, 'danger');
+                const outcome = await submitAdminSave(`api/locations/${lokasi.id}`, 'PUT', result, 'Gagal mengemas kini lokasi.');
+                if (!outcome.ok) {
+                  await showAdminSaveFailure(outcome);
                   return;
                 }
                 await loadLokasi();
+                await showInfoModal('Perubahan Berjaya', '<p class="mb-0 text-success">Lokasi berjaya dikemas kini.</p>', 'success');
               }
             }),
             createActionButton('fas fa-trash', 'Padam lokasi', 'danger', async () => {
@@ -1521,8 +1534,7 @@
                 title: 'Padam lokasi',
                 message: `Padam lokasi "${lokasi.name}"?`,
                 type: 'danger',
-                confirmText: 'Padam',
-                cancelText: 'Batal'
+                confirmText: 'Padam'
               });
               if (!confirmed) return;
               await fetch(`api/locations/${lokasi.id}`, { method: 'DELETE' });
@@ -1575,11 +1587,12 @@
             <div class="mb-2"><label class="form-label">Daerah</label><input name="daerah" class="form-control"></div>
           </form>
         `;
-        const { overlay, card, close } = createModalShell('Tambah Lokasi Baharu', bodyHtml);
+        const { overlay, card, close } = createModalShell('Tambah Lokasi Baharu', bodyHtml, {
+          closeButton: true, onDismiss: () => finish(false)
+        });
         const footer = document.createElement('div');
         footer.className = 'admin-modal-footer';
         footer.innerHTML = `
-          <button type="button" class="btn btn-outline-secondary" id="create-lokasi-cancel">Batal</button>
           <button type="submit" form="create-lokasi-form" class="btn btn-primary" id="create-lokasi-submit">Simpan</button>
         `;
         card.appendChild(footer);
@@ -1589,14 +1602,10 @@
           close();
           resolve(value);
         };
-        footer.querySelector('#create-lokasi-cancel').addEventListener('click', () => finish(false));
         form.addEventListener('submit', (event) => {
           event.preventDefault();
           const payload = Object.fromEntries(new FormData(form).entries());
           finish(payload);
-        });
-        overlay.addEventListener('click', (e) => {
-          if (e.target === overlay) finish(false);
         });
       });
     }
@@ -1616,11 +1625,12 @@
             <div class="mb-2"><label class="form-label">Daerah</label><input name="daerah" class="form-control" value="${lokasi.daerah || ''}"></div>
           </form>
         `;
-        const { overlay, card, close } = createModalShell('Edit Lokasi', bodyHtml);
+        const { overlay, card, close } = createModalShell('Edit Lokasi', bodyHtml, {
+          closeButton: true, onDismiss: () => finish(false)
+        });
         const footer = document.createElement('div');
         footer.className = 'admin-modal-footer';
         footer.innerHTML = `
-          <button type="button" class="btn btn-outline-secondary" id="edit-lokasi-cancel">Batal</button>
           <button type="submit" form="edit-lokasi-form" class="btn btn-primary" id="edit-lokasi-submit">Simpan</button>
         `;
         card.appendChild(footer);
@@ -1631,7 +1641,6 @@
           close();
           resolve(value);
         };
-        footer.querySelector('#edit-lokasi-cancel').addEventListener('click', () => finish(false));
         form.addEventListener('submit', async (event) => {
           event.preventDefault();
           if (editFormSnapshot(form) === initialForm) {
@@ -1640,9 +1649,6 @@
           }
           const payload = Object.fromEntries(new FormData(form).entries());
           finish(payload);
-        });
-        overlay.addEventListener('click', (e) => {
-          if (e.target === overlay) finish(false);
         });
       });
     }
@@ -1965,12 +1971,12 @@
       return new Promise((resolve) => {
         const { overlay, card, close } = createModalShell(
           `${item ? 'Edit' : 'Tambah'} ${config.title}`,
-          `<form id="setting-form">${introduction}${fields}</form>`
+          `<form id="setting-form">${introduction}${fields}</form>`,
+          { closeButton: true, onDismiss: () => finish(false) }
         );
         const footer = document.createElement('div');
         footer.className = 'admin-modal-footer';
         footer.innerHTML = `
-          <button type="button" class="btn btn-outline-secondary" id="setting-cancel">Batal</button>
           <button type="submit" form="setting-form" class="btn btn-primary">Simpan</button>`;
         card.appendChild(footer);
         const form = overlay.querySelector('#setting-form');
@@ -2010,7 +2016,6 @@
           close();
           resolve(payload);
         };
-        footer.querySelector('#setting-cancel').addEventListener('click', () => finish(false));
         form.addEventListener('submit', async (event) => {
           event.preventDefault();
           if (item && editFormSnapshot(form, formFields, isSmtp) === initialForm) {
@@ -2039,9 +2044,6 @@
             }
           });
           finish({ key: String(formData.get('key') || '').trim(), value: newValue });
-        });
-        overlay.addEventListener('click', (event) => {
-          if (event.target === overlay) finish(false);
         });
       });
     }
@@ -2100,51 +2102,39 @@
         const daerahTerpilih = Array.isArray(payload.daerah) ? payload.daerah : [];
         delete payload.daerah;
         
-        let response;
-        let result = {};
-        try {
-          response = await fetch('api/admin/users', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(payload)
-          });
-          result = await response.json().catch(() => ({}));
-        } catch (error) {
-          await showInfoModal('Ralat', '<p class="mb-0 text-danger">Pengguna tidak dapat dicipta kerana sambungan atau token keselamatan gagal. Sila muat semula halaman dan cuba lagi.</p>', 'danger');
+        const outcome = await submitAdminSave('api/admin/users', 'POST', payload, 'Gagal mencipta pengguna.');
+        if (!outcome.ok) {
+          await showAdminSaveFailure(outcome);
           return;
         }
-        if (!response.ok) {
-          await showInfoModal('Ralat', `<p class="mb-0 text-danger">${result.ralat || 'Gagal mencipta pengguna'}</p>`, 'danger');
-          return;
-        }
-        if (payload.role === 'PENYELIA_LOJI' && daerahTerpilih.length && result.user?.id) {
-          await fetch(`api/admin/penyelia/${result.user.id}/daerah`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ daerah: daerahTerpilih })
-          });
-        }
-        if (result.password) {
-          await showInfoModal('Pengguna Berjaya Dicipta', `<p class="mb-0">Kata laluan sementara: <strong>${result.password}</strong></p>`, 'success');
+        const result = outcome.data;
+        const passwordInfo = result.password ? `<p class="mb-0">Kata laluan sementara: <strong>${settingEscape(result.password)}</strong></p>` : '';
+        let daerahOutcome = null;
+        if (payload.role === 'PENYELIA_LOJI' && daerahTerpilih.length) {
+          daerahOutcome = result.user?.id
+            ? await submitAdminSave(`api/admin/penyelia/${result.user.id}/daerah`, 'POST', { daerah: daerahTerpilih }, 'Gagal menetapkan daerah seliaan.')
+            : { ok: false, type: 'warning', detail: 'Daerah seliaan tidak dapat ditetapkan kerana ID pengguna tidak diterima.' };
         }
         await loadUsers();
+        if (daerahOutcome && !daerahOutcome.ok) {
+          await showInfoModal('Pengguna Dicipta, Daerah Perlu Disemak',
+            `<p class="mb-2 text-warning-emphasis">Pengguna telah dicipta, tetapi daerah seliaan belum dapat disahkan. ${settingEscape(daerahOutcome.detail)}</p>${passwordInfo}`, 'warning');
+          return;
+        }
+        await showInfoModal('Pengguna Berjaya Dicipta', `<p class="mb-2 text-success">Pengguna berjaya dicipta.</p>${passwordInfo}`, 'success');
       });
 
       document.querySelector('#btn-create-lokasi').addEventListener('click', async () => {
         const payload = await showCreateLokasiModal();
         if (!payload) return;
         
-        const response = await fetch('api/locations', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(payload)
-        });
-        const result = await response.json();
-        if (!response.ok) {
-          await showInfoModal('Ralat', `<p class="mb-0 text-danger">${result.ralat || 'Gagal mencipta lokasi'}</p>`, 'danger');
+        const outcome = await submitAdminSave('api/locations', 'POST', payload, 'Gagal mencipta lokasi.');
+        if (!outcome.ok) {
+          await showAdminSaveFailure(outcome);
           return;
         }
         await loadLokasi();
+        await showInfoModal('Perubahan Berjaya', '<p class="mb-0 text-success">Lokasi berjaya dicipta.</p>', 'success');
       });
     });
   </script>
