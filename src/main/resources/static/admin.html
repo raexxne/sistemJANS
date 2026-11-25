@@ -8,6 +8,7 @@
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.6.0/css/all.min.css">
   <link rel="stylesheet" href="css/style.css">
   <script src="js/csrf.js"></script>
+  <script src="js/status-colors.js"></script>
 </head>
 <style>
   .admin-hero {
@@ -197,6 +198,25 @@
   }
   .admin-modal-body .mb-2 {
     margin-bottom: 14px !important;
+  }
+  .setting-help {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    margin-left: 0.35rem;
+    width: 1.25rem;
+    height: 1.25rem;
+    border: 1px solid #0d6efd;
+    border-radius: 50%;
+    background: #fff;
+    color: #0d6efd;
+    cursor: pointer;
+    font-size: 0.8rem;
+    font-weight: 700;
+  }
+  .setting-help-popover {
+    --bs-popover-zindex: 2100;
+    --bs-popover-max-width: min(320px, calc(100vw - 32px));
   }
   .admin-modal-footer {
     padding: 14px 22px;
@@ -1548,11 +1568,11 @@
       announcement: {
         title: 'Pengurusan Pengumuman',
         description: 'Urus pengumuman yang dipaparkan pada halaman utama.',
-        guidance: '<strong>Panduan:</strong> Klik simbol + untuk menambah pengumuman baharu. Gunakan Kunci Unik dan Urutan supaya pengumuman mudah dikenali dan dipaparkan mengikut susunan.',
+        guidance: '<strong>Panduan:</strong> Klik simbol + untuk menambah pengumuman baharu. Kunci boleh dipilih sendiri dan mesti unik; urutan menentukan susunan paparan.',
         icon: 'fa-bullhorn',
         columns: ['Kunci', 'Tajuk', 'Pratonton', 'Status', 'Urutan', 'Tindakan'],
         fields: [
-          { name: 'key', label: 'Kunci Unik', type: 'text', required: true },
+          { name: 'key', label: 'Kunci Unik', type: 'text', required: true, help: 'Pengecam unik bagi pengumuman. Anda boleh menggunakan kunci sendiri, contohnya notis-air; gunakan huruf, nombor, titik, garis bawah atau sempang tanpa ruang. welcome, processing-time dan safety hanyalah contoh sedia ada.' },
           { name: 'title', label: 'Tajuk', type: 'text', required: true },
           { name: 'message', label: 'Kandungan Pengumuman', type: 'textarea', required: true },
           { name: 'active', label: 'Aktifkan pengumuman', type: 'checkbox' },
@@ -1566,40 +1586,40 @@
         icon: 'fa-server',
         columns: ['Profil', 'Pelayan', 'Port', 'Pengguna / Pengirim', 'TLS', 'Tindakan'],
         fields: [
-          { name: 'key', label: 'Nama Profil', type: 'text', required: true },
-          { name: 'host', label: 'Hos SMTP', type: 'text', required: true },
-          { name: 'port', label: 'Port', type: 'number', required: true },
-          { name: 'username', label: 'Nama Pengguna / E-mel Pengirim', type: 'email' },
-          { name: 'password', label: 'Kata Laluan / App Password', type: 'password' },
-          { name: 'fromName', label: 'Nama Pengirim', type: 'text' },
-          { name: 'auth', label: 'Gunakan pengesahan SMTP', type: 'checkbox' },
-          { name: 'startTls', label: 'Gunakan STARTTLS', type: 'checkbox' }
+          { name: 'key', label: 'Nama Profil', type: 'text', required: true, help: 'Pengecam tetapan pengirim. Sistem menggunakan profil primary; nama profil sedia ada tidak boleh diubah.' },
+          { name: 'host', label: 'Hos SMTP', type: 'text', required: true, help: 'Alamat pelayan penghantaran e-mel yang diberikan oleh penyedia e-mel atau pentadbir IT, contohnya smtp.gmail.com untuk Gmail.' },
+          { name: 'port', label: 'Port', type: 'number', required: true, help: 'Nombor sambungan yang diberikan oleh penyedia. Contohnya Gmail menggunakan port 587 dengan STARTTLS. Semak nilai dan pilihan keselamatan dengan penyedia anda.' },
+          { name: 'username', label: 'Nama Pengguna / E-mel Pengirim', type: 'email', help: 'Alamat e-mel akaun yang menghantar e-mel, contohnya akaun rasmi jabatan. Sistem juga menggunakannya sebagai alamat pengirim dan balasan.' },
+          { name: 'password', label: 'Kata Laluan / App Password', type: 'password', help: 'Masukkan kata laluan aplikasi yang diberikan oleh penyedia jika diperlukan. Untuk Gmail, aktifkan pengesahan dua langkah dan cipta App Password jika tersedia. Biarkan kosong atau kekalkan tanda bintang untuk menggunakan kata laluan tersimpan; jangan kongsikannya.' },
+          { name: 'fromName', label: 'Nama Pengirim', type: 'text', help: 'Nama ini disimpan dalam profil, tetapi penghantaran semasa menggunakan alamat e-mel pengirim tanpa nama paparan ini.' },
+          { name: 'auth', label: 'Gunakan pengesahan SMTP', type: 'checkbox', help: 'Gunakan tetapan pengesahan yang disyorkan penyedia. Sistem memerlukan nama pengguna dan kata laluan untuk penghantaran.' },
+          { name: 'startTls', label: 'Gunakan STARTTLS', type: 'checkbox', help: 'Aktifkan jika penyedia memerlukan STARTTLS; contohnya Gmail pada port 587.' }
         ]
       },
       'email-template': {
         title: 'Pengurusan Template E-mel & Pemberitahuan',
         description: 'Urus subjek dan kandungan semua template e-mel serta pemberitahuan sistem.',
-        guidance: '<strong>Panduan:</strong> Pilih Edit untuk mengubah nama atau subjek template. Kekalkan placeholder seperti {{applicationNo}} dan {{code}} supaya maklumat tetap dijana oleh sistem.',
+        guidance: '<strong>Panduan:</strong> Pilih Edit untuk mengubah template. Kekalkan placeholder sedia ada; placeholder yang boleh digunakan berbeza mengikut template.',
         icon: 'fa-envelope-open-text',
         columns: ['Kunci', 'Nama', 'Subjek', 'Status', 'Tindakan'],
         fields: [
-          { name: 'key', label: 'Kunci Template', type: 'text', required: true },
+          { name: 'key', label: 'Kunci Template', type: 'text', required: true, help: 'Pengecam yang digunakan sistem untuk memilih template bagi sesuatu peristiwa. Jangan ubah kunci ini.' },
           { name: 'name', label: 'Nama Template', type: 'text', required: true },
-          { name: 'subject', label: 'Subjek E-mel', type: 'text', required: true },
-          { name: 'body', label: 'Kandungan HTML (placeholder {{applicationNo}}, {{reason}}, {{code}}, {{link}})', type: 'textarea', required: true },
+          { name: 'subject', label: 'Subjek E-mel', type: 'text', required: true, help: 'Tajuk yang dilihat penerima. Ubah ayat mengikut keperluan, tetapi kekalkan placeholder sedia ada termasuk kurungan {{ dan }}.' },
+          { name: 'body', label: 'Kandungan HTML', type: 'textarea', required: true, help: 'Isi e-mel boleh menggunakan HTML ringkas seperti <p>...</p> untuk perenggan dan <b>...</b> untuk tebal. Kekalkan placeholder sedia ada dengan ejaan dan kurungan tepat; pemboleh ubah berbeza mengikut template. Jangan masukkan kata laluan atau data sebenar secara tetap.' },
           { name: 'enabled', label: 'Aktifkan penghantaran template', type: 'checkbox' }
         ]
       },
       status: {
         title: 'Pengurusan Konfigurasi Status',
         description: 'Urus label, warna lencana dan penerangan status aplikasi.',
-        guidance: '<strong>Panduan:</strong> Pilih Edit untuk menukar nama atau warna status. Pastikan Kod Status tidak ditukar kerana ia digunakan oleh aliran permohonan sistem.',
+        guidance: '<strong>Panduan:</strong> Pilih Edit untuk menukar label, warna atau penerangan. DIHANTAR mempunyai warna berasingan untuk permohonan yang sudah dan belum disemak. Kad petugas gabungan menggunakan warna DIHANTAR untuk Menunggu Semakan dan DILULUSKAN untuk Diluluskan.',
         icon: 'fa-tags',
         columns: ['Kod Status', 'Pratonton', 'Penerangan', 'Tindakan'],
         fields: [
-          { name: 'key', label: 'Kod Status Sistem', type: 'text', required: true },
+          { name: 'key', label: 'Kod Status Sistem', type: 'text', required: true, help: 'Kod ini mengenal pasti status dalam aliran permohonan dan tidak boleh diubah. Pilih rekod status yang ingin diedit dalam jadual.' },
           { name: 'label', label: 'Label Paparan', type: 'text', required: true },
-          { name: 'color', label: 'Warna Lencana Bootstrap', type: 'select', required: true, options: ['primary', 'secondary', 'success', 'danger', 'warning', 'info', 'dark'] },
+          { name: 'color', label: 'Warna Lencana dan Kad Dashboard', type: 'color', required: true, help: 'Pilih sebarang warna. Warna digunakan pada lencana, kad dan carta dashboard yang berkaitan selepas disimpan. Teks lencana berwarna putih; warna latar yang terlalu cerah mungkin sukar dibaca. Kad jumlah keseluruhan tidak mewakili satu status.' },
           { name: 'description', label: 'Penerangan Status', type: 'textarea', required: true }
         ]
       }
@@ -1622,16 +1642,19 @@
 
     function renderSettingField(field, value = '') {
       const id = `setting-${field.name}`;
+      const help = field.help ? `<button type="button" class="setting-help" aria-label="Panduan ${settingEscape(field.label)}" aria-expanded="false" data-help-content="${settingEscape(field.help)}">?</button>` : '';
+      const label = `<label class="form-label" for="${id}">${field.label}</label>${help}`;
       if (field.type === 'textarea') {
-        return `<div class="mb-2"><label class="form-label" for="${id}">${field.label}</label><textarea class="form-control" id="${id}" name="${field.name}" rows="5" ${field.required ? 'required' : ''}>${settingEscape(value)}</textarea></div>`;
+        return `<div class="mb-2">${label}<textarea class="form-control" id="${id}" name="${field.name}" rows="5" ${field.required ? 'required' : ''}>${settingEscape(value)}</textarea></div>`;
       }
       if (field.type === 'checkbox') {
-        return `<div class="form-check mb-3"><input class="form-check-input" type="checkbox" id="${id}" name="${field.name}" ${value ? 'checked' : ''}><label class="form-check-label" for="${id}">${field.label}</label></div>`;
+        return `<div class="form-check mb-3"><input class="form-check-input" type="checkbox" id="${id}" name="${field.name}" ${value ? 'checked' : ''}><label class="form-check-label" for="${id}">${field.label}</label>${help}</div>`;
       }
       if (field.type === 'select') {
-        return `<div class="mb-2"><label class="form-label" for="${id}">${field.label}</label><select class="form-select" id="${id}" name="${field.name}" ${field.required ? 'required' : ''}>${field.options.map((option) => `<option value="${option}" ${option === value ? 'selected' : ''}>${option}</option>`).join('')}</select></div>`;
+        return `<div class="mb-2">${label}<select class="form-select" id="${id}" name="${field.name}" ${field.required ? 'required' : ''}>${field.options.map((option) => `<option value="${option}" ${option === value ? 'selected' : ''}>${option}</option>`).join('')}</select></div>`;
       }
-      return `<div class="mb-2"><label class="form-label" for="${id}">${field.label}</label><input class="form-control" id="${id}" name="${field.name}" type="${field.type}" value="${settingEscape(value)}" ${field.required ? 'required' : ''} ${field.readonly ? 'readonly' : ''}></div>`;
+      const inputValue = field.type === 'color' ? (StatusColors.hex(value) || '#6c757d') : value;
+      return `<div class="mb-2">${label}<input class="form-control ${field.type === 'color' ? 'form-control-color' : ''}" id="${id}" name="${field.name}" type="${field.type}" value="${settingEscape(inputValue)}" ${field.required ? 'required' : ''} ${field.readonly ? 'readonly' : ''}></div>`;
     }
 
     async function loadSettings(category = activeSettingCategory) {
@@ -1702,9 +1725,12 @@
             `<span class="badge bg-${value.enabled ? 'success' : 'secondary'}">${value.enabled ? 'Aktif' : 'Nyahaktif'}</span>`
           ];
         case 'status':
+          const reviewedPreview = item.key === 'DIHANTAR'
+            ? `<div class="mt-1"><span class="badge" style="${StatusColors.badgeStyle(value.reviewedColor || 'primary')}">${settingEscape(value.label || item.key)}</span> <small class="text-muted">Sudah disemak</small></div>`
+            : '';
           return [
             settingEscape(item.key),
-            `<span class="badge bg-${settingEscape(value.color || 'secondary')}">${settingEscape(value.label || item.key)}</span>`,
+            `<span class="badge" style="${StatusColors.badgeStyle(value.color || 'secondary')}">${settingEscape(value.label || item.key)}</span>${item.key === 'DIHANTAR' ? ' <small class="text-muted">Belum disemak</small>' : ''}${reviewedPreview}`,
             `<div class="settings-value-preview" title="${settingEscape(value.description)}">${settingEscape(value.description)}</div>`
           ];
         default:
@@ -1771,6 +1797,13 @@
             await showInfoModal('Ralat', `<p class="mb-0 text-danger">${settingEscape(result.ralat || 'Gagal mengemas kini tetapan')}</p>`);
             return;
           }
+          if (activeSettingCategory === 'status') {
+            try {
+              localStorage.setItem('statusSettingsUpdated', String(Date.now()));
+            } catch (error) {
+              console.warn('Dashboard lain perlu dimuat semula untuk melihat perubahan warna.', error);
+            }
+          }
           await loadSettings();
         }));
         actionCell.appendChild(createActionButton('fas fa-trash', 'Padam tetapan', 'danger', async () => {
@@ -1798,19 +1831,30 @@
     function showSettingModal(item = null) {
       const config = SETTING_CATEGORIES[activeSettingCategory];
       const value = item?.value || {};
-      const fields = config.fields.map((field) => {
+      const formFields = config.fields.flatMap((field) => {
+        if (activeSettingCategory !== 'status' || item?.key !== 'DIHANTAR' || field.name !== 'color') return [field];
+        return [
+          { ...field, label: 'Warna Belum Disemak' },
+          { name: 'reviewedColor', label: 'Warna Sudah Disemak CGSO dan KPP', type: 'color', required: true,
+            defaultValue: 'primary', help: 'Warna lencana Menunggu Semakan selepas CGSO dan KPP selesai memberi ulasan. Warna lalai ialah biru.' }
+        ];
+      });
+      const fields = formFields.map((field) => {
         const fieldConfig = item && activeSettingCategory !== 'announcement' && field.name === 'key'
           ? { ...field, readonly: true }
           : field;
         return renderSettingField(
           fieldConfig,
-          field.name === 'key' ? (item?.key || '') : value[field.name]
+          field.name === 'key' ? (item?.key || '') : (value[field.name] ?? field.defaultValue)
         );
       }).join('');
+      const introduction = activeSettingCategory === 'smtp'
+        ? '<p class="small text-muted">Dapatkan hos, port dan kelayakan daripada penyedia e-mel atau pentadbir IT. Isi medan di bawah, pilih pengesahan dan STARTTLS mengikut penyedia, kemudian simpan. Tekan ? untuk bantuan setiap medan.</p>'
+        : '';
       return new Promise((resolve) => {
         const { overlay, card, close } = createModalShell(
           `${item ? 'Edit' : 'Tambah'} ${config.title}`,
-          `<form id="setting-form">${fields}</form>`
+          `<form id="setting-form">${introduction}${fields}</form>`
         );
         const footer = document.createElement('div');
         footer.className = 'admin-modal-footer';
@@ -1819,7 +1863,38 @@
           <button type="submit" form="setting-form" class="btn btn-primary">Simpan</button>`;
         card.appendChild(footer);
         const form = overlay.querySelector('#setting-form');
+        const helpButtons = Array.from(form.querySelectorAll('.setting-help'));
+        const popovers = helpButtons.map((button) => new bootstrap.Popover(button, {
+          container: 'body', trigger: 'manual', placement: 'auto', customClass: 'setting-help-popover',
+          content: button.dataset.helpContent
+        }));
+        const hideHelp = () => {
+          popovers.forEach((popover, index) => {
+            popover.hide();
+            helpButtons[index].setAttribute('aria-expanded', 'false');
+          });
+        };
+        const dismissHelp = (event) => {
+          if (!event.target.closest('.setting-help, .setting-help-popover')) hideHelp();
+        };
+        const escapeHelp = (event) => {
+          if (event.key === 'Escape') hideHelp();
+        };
+        helpButtons.forEach((button, index) => button.addEventListener('click', () => {
+          const open = button.getAttribute('aria-expanded') === 'true';
+          hideHelp();
+          if (!open) {
+            popovers[index].show();
+            button.setAttribute('aria-expanded', 'true');
+          }
+        }));
+        document.addEventListener('click', dismissHelp);
+        document.addEventListener('keydown', escapeHelp);
+        overlay.querySelector('.admin-modal-body').addEventListener('scroll', hideHelp);
         const finish = (payload) => {
+          document.removeEventListener('click', dismissHelp);
+          document.removeEventListener('keydown', escapeHelp);
+          popovers.forEach((popover) => popover.dispose());
           close();
           resolve(payload);
         };
@@ -1828,11 +1903,21 @@
           event.preventDefault();
           const formData = new FormData(form);
           const newValue = {};
-          config.fields.filter((field) => field.name !== 'key').forEach((field) => {
+          formFields.filter((field) => field.name !== 'key').forEach((field) => {
             if (field.type === 'checkbox') {
               newValue[field.name] = formData.has(field.name);
             } else if (field.type === 'number') {
               newValue[field.name] = Number(formData.get(field.name));
+            } else if (field.type === 'color') {
+              const selected = String(formData.get(field.name) || '').trim();
+              const original = value[field.name];
+              if (original && StatusColors.hex(original) === selected) {
+                newValue[field.name] = original;
+              } else if (!original && field.defaultValue && StatusColors.hex(field.defaultValue) === selected) {
+                return;
+              } else {
+                newValue[field.name] = selected;
+              }
             } else {
               newValue[field.name] = String(formData.get(field.name) || '').trim();
             }

@@ -22,6 +22,8 @@ public class TetapanSistemService {
     public static final String STATUS = "status";
 
     private static final List<String> CATEGORIES = List.of(PENGUMUMAN, SMTP, TEMPLATE, STATUS);
+    private static final List<String> STATUS_COLORS =
+            List.of("primary", "secondary", "success", "danger", "warning", "info", "dark");
 
     private final TetapanSistemRepository repository;
     private final ObjectMapper objectMapper;
@@ -55,7 +57,9 @@ public class TetapanSistemService {
         TetapanSistem setting = new TetapanSistem();
         setting.setCategory(normalizedCategory);
         setting.setSettingKey(key);
-        setting.setSettingValue(serialize(payload.get("value")));
+        Map<String, Object> value = parseObject(payload.get("value"));
+        validateStatusColor(normalizedCategory, value);
+        setting.setSettingValue(serialize(value));
         try {
             return toResponse(repository.saveAndFlush(setting), false);
         } catch (DataIntegrityViolationException e) {
@@ -73,6 +77,9 @@ public class TetapanSistemService {
         }
 
         String key = normalizeKey(payload.get("key"));
+        if (STATUS.equals(normalizedCategory) && !setting.getSettingKey().equals(key)) {
+            throw new IllegalArgumentException("Kod status sistem tidak boleh diubah");
+        }
         repository.findByCategoryAndSettingKey(normalizedCategory, key)
                 .filter(existing -> !existing.getId().equals(id))
                 .ifPresent(existing -> {
@@ -80,6 +87,7 @@ public class TetapanSistemService {
                 });
 
         Map<String, Object> value = parseObject(payload.get("value"));
+        validateStatusColor(normalizedCategory, value);
         if (SMTP.equals(normalizedCategory)) {
             String password = String.valueOf(value.getOrDefault("password", ""));
             if (password.isBlank() || "********".equals(password)) {
@@ -137,7 +145,20 @@ public class TetapanSistemService {
             map.forEach((key, item) -> converted.put(String.valueOf(key), item));
             return converted;
         }
+
         throw new IllegalArgumentException("Nilai tetapan mesti berbentuk objek");
+    }
+
+    private void validateStatusColor(String category, Map<String, Object> value) {
+        if (!STATUS.equals(category)) return;
+        for (String field : List.of("color", "reviewedColor")) {
+            if ("reviewedColor".equals(field) && !value.containsKey(field)) continue;
+            Object color = value.get(field);
+            if (!(color instanceof String text)
+                    || !(STATUS_COLORS.contains(text) || text.matches("#[0-9a-fA-F]{6}"))) {
+                throw new IllegalArgumentException("Warna status mesti berupa kod warna hex atau warna Bootstrap yang disokong");
+            }
+        }
     }
 
     private String serialize(Object value) {

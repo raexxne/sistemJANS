@@ -59,8 +59,9 @@
     .dashboard-kpi-row .col:nth-child(2) { --kpi-color: #16a34a; }
     .dashboard-kpi-row .col:nth-child(3) { --kpi-color: #dc2626; }
     .dashboard-kpi-row .col:nth-child(4) { --kpi-color: #0d6efd; }
-    .dashboard-kpi-row .col:nth-child(5) { --kpi-color: #ffc107; }
-    .dashboard-kpi-row .col:nth-child(6) { --kpi-color: #495057; }
+    .dashboard-kpi-row .col:nth-child(5) { --kpi-color: #6c757d; }
+    .dashboard-kpi-row .col:nth-child(6) { --kpi-color: #ffc107; }
+    .dashboard-kpi-row .col:nth-child(7) { --kpi-color: #495057; }
     .cursor-pointer { cursor: pointer; }
     .notification-trigger {
       width: 44px;
@@ -832,7 +833,7 @@
 
     <section class="py-4">
       <div class="container-fluid">
-        <div class="row row-cols-2 row-cols-md-3 row-cols-xl-6 g-3 dashboard-kpi-row">
+        <div class="row row-cols-2 row-cols-md-3 row-cols-xl-4 g-3 dashboard-kpi-row">
           <div class="col">
             <div class="card dashboard-stat-card dashboard-kpi-card h-100">
               <div class="card-body d-flex flex-column justify-content-center">
@@ -870,10 +871,21 @@
             <div class="card dashboard-stat-card dashboard-kpi-card h-100">
               <div class="card-body d-flex flex-column justify-content-center">
                 <div class="d-flex justify-content-between align-items-start gap-2 mb-2">
-                  <span class="kpi-label">Menunggu Semakan</span>
+                  <span class="kpi-label">Menunggu Semakan (Sudah Disemak)</span>
                   <i class="fas fa-clock stat-icon"></i>
                 </div>
                 <h3 id="stat-pending-review" class="fw-bold mb-0">0</h3>
+              </div>
+            </div>
+          </div>
+          <div class="col">
+            <div class="card dashboard-stat-card dashboard-kpi-card h-100">
+              <div class="card-body d-flex flex-column justify-content-center">
+                <div class="d-flex justify-content-between align-items-start gap-2 mb-2">
+                  <span class="kpi-label">Menunggu Semakan (Belum Selesai)</span>
+                  <i class="fas fa-clock stat-icon"></i>
+                </div>
+                <h3 id="stat-pending-unreviewed" class="fw-bold mb-0">0</h3>
               </div>
             </div>
           </div>
@@ -907,9 +919,8 @@
               <div class="card-body p-4 d-flex flex-column">
                 <h4 class="h5 mb-3">Carta Ringkasan Permohonan</h4>
                 <div class="pie-chart-wrap flex-grow-1 d-flex align-items-center justify-content-center">
-                  <canvas id="pieChart" width="280" height="280"></canvas>
+                  <canvas id="pieChart" width="280" height="280" role="img" aria-label="Carta ringkasan permohonan"></canvas>
                 </div>
-                <div id="pie-legend" class="d-flex flex-column gap-2 mt-3 small text-muted"></div>
               </div>
             </div>
           </div>
@@ -919,7 +930,7 @@
               <div class="card-body p-4">
                 <h4 class="h5 mb-3">Trend Status Permohonan</h4>
                 <div class="category-chart-wrap">
-                  <canvas id="categoryChart"></canvas>
+                  <canvas id="categoryChart" role="img" aria-label="Trend status permohonan"></canvas>
                 </div>
               </div>
             </div>
@@ -1027,6 +1038,8 @@
     </div>
   </footer>
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script src="js/status-colors.js"></script>
+  <script src="js/review-status.js"></script>
   <script>
     let pieChartInstance = null;
     let categoryChartInstance = null;
@@ -1091,14 +1104,38 @@
     }
 
 
-    function renderPieChart(pendingReview, waitingDirector, approved, rejected, completed) {
-      const ctx = document.getElementById('pieChart').getContext('2d');
+    function getChartStatusCounts(applications) {
+      const review = getReviewCounts(applications);
+      return {
+        pending: review.pending,
+        reviewed: review.reviewed,
+        waitingDirector: applications.filter((item) => item.status === 'MENUNGGU_PENGARAH').length,
+        approved: applications.filter((item) => ['DILULUSKAN', 'PAS_DIKELUARKAN'].includes(item.status)).length,
+        rejected: applications.filter((item) => item.status === 'DITOLAK').length,
+        completed: applications.filter((item) => item.status === 'SELESAI').length
+      };
+    }
+
+    function renderPieChart(applications) {
+      const canvas = document.getElementById('pieChart');
+      const ctx = canvas.getContext('2d');
       if (pieChartInstance) pieChartInstance.destroy();
 
-      const labels = ['Menunggu Semakan', 'Menunggu Pengarah', 'Diluluskan', 'Tidak Diluluskan', 'Selesai'];
-      const values = [pendingReview, waitingDirector, approved, rejected, completed];
-      const colors = ['#0d6efd', '#ffc107', '#198754', '#dc3545', '#495057'];
+      const counts = getChartStatusCounts(applications);
+      const labels = ['Semakan Belum Selesai', 'Semakan Selesai', 'Menunggu Pengarah', 'Diluluskan', 'Tidak Diluluskan', 'Selesai'];
+      const values = [counts.pending, counts.reviewed, counts.waitingDirector, counts.approved, counts.rejected, counts.completed];
+      const colors = [
+        StatusColors.chartColor(statusSettings, 'DIHANTAR', '#6c757d'),
+        StatusColors.chartColor(statusSettings, 'DIHANTAR', '#0d6efd', 'reviewedColor'),
+        StatusColors.chartColor(statusSettings, 'MENUNGGU_PENGARAH', '#ffc107'),
+        StatusColors.chartColor(statusSettings, 'DILULUSKAN', '#198754'),
+        StatusColors.chartColor(statusSettings, 'DITOLAK', '#dc3545'),
+        StatusColors.chartColor(statusSettings, 'SELESAI', '#495057')
+      ];
       const hasData = values.some(v => v > 0);
+      canvas.setAttribute('aria-label', hasData
+        ? labels.map((label, index) => `${label}: ${values[index]}`).join(', ')
+        : 'Tiada data permohonan');
 
       pieChartInstance = new Chart(ctx, {
         type: 'pie',
@@ -1117,12 +1154,14 @@
           plugins: {
             legend: { display: false },
             tooltip: {
+              displayColors: true,
               callbacks: {
+                title: () => '',
                 label: function(context) {
                   if (!hasData) return 'Tiada data';
                   const total = context.dataset.data.reduce((a, b) => a + b, 0);
                   const pct = total ? ((context.raw / total) * 100).toFixed(1) : 0;
-                  return `${context.label}: ${context.raw} (${pct}%)`;
+                  return `${context.label}: ${pct}%`;
                 }
               }
             }
@@ -1131,35 +1170,25 @@
         }
       });
 
-      const legendEl = document.getElementById('pie-legend');
-      if (hasData) {
-        const legendItem = (label, i) => `
-          <span class="d-inline-flex align-items-center gap-1">
-            <span style="width:12px;height:12px;border-radius:3px;background:${colors[i]};display:inline-block;"></span>
-            ${label}: <strong>${values[i]}</strong>
-          </span>
-        `;
-        const legendRow = (indices) => `<div class="d-flex flex-wrap justify-content-center gap-3">${indices.map(i => legendItem(labels[i], i)).join('')}</div>`;
-        legendEl.innerHTML = legendRow([0, 2, 4]) + legendRow([1, 3]);
-      } else {
-        legendEl.innerHTML = '<span>Tiada data permohonan</span>';
-      }
-
     }
 
     function renderCategoryChart(applications) {
-      const ctx = document.getElementById('categoryChart').getContext('2d');
+      const canvas = document.getElementById('categoryChart');
+      const ctx = canvas.getContext('2d');
       if (categoryChartInstance) categoryChartInstance.destroy();
 
-      const labels = ['Diluluskan', 'Tidak Diluluskan', 'Menunggu Semakan', 'Menunggu Pengarah', 'Selesai'];
-      const values = [
-        applications.filter((item) => ['DILULUSKAN', 'PAS_DIKELUARKAN'].includes(item.status)).length,
-        applications.filter((item) => item.status === 'DITOLAK').length,
-        applications.filter((item) => ['DIHANTAR', 'SEMAKAN_STAFF'].includes(item.status)).length,
-        applications.filter((item) => item.status === 'MENUNGGU_PENGARAH').length,
-        applications.filter((item) => item.status === 'SELESAI').length
+      const counts = getChartStatusCounts(applications);
+      const labels = ['Diluluskan', 'Tidak Diluluskan', 'Semakan Belum Selesai', 'Semakan Selesai', 'Menunggu Pengarah', 'Selesai'];
+      const values = [counts.approved, counts.rejected, counts.pending, counts.reviewed, counts.waitingDirector, counts.completed];
+      canvas.setAttribute('aria-label', labels.map((label, index) => `${label}: ${values[index]}`).join(', '));
+      const colors = [
+        StatusColors.chartColor(statusSettings, 'DILULUSKAN', '#16a34a'),
+        StatusColors.chartColor(statusSettings, 'DITOLAK', '#dc2626'),
+        StatusColors.chartColor(statusSettings, 'DIHANTAR', '#6c757d'),
+        StatusColors.chartColor(statusSettings, 'DIHANTAR', '#0d6efd', 'reviewedColor'),
+        StatusColors.chartColor(statusSettings, 'MENUNGGU_PENGARAH', '#ffc107'),
+        StatusColors.chartColor(statusSettings, 'SELESAI', '#495057')
       ];
-      const colors = ['#16a34a', '#dc2626', '#0d6efd', '#ffc107', '#495057'];
 
       categoryChartInstance = new Chart(ctx, {
         type: 'line',
@@ -1194,7 +1223,7 @@
           scales: {
             x: {
               grid: { display: false },
-              ticks: { color: '#343a40', font: { weight: '600' } }
+              ticks: { display: false }
             },
             y: {
               beginAtZero: true,
@@ -1287,7 +1316,8 @@
     function renderStatusBadge(status, item = null) {
       const normalized = (status || '').toUpperCase();
       if (normalized === 'DIHANTAR' && isKppReturnedApplication(item)) {
-        return '<span class="badge bg-primary">Menunggu Semakan</span>';
+        const color = statusSettings.DIHANTAR?.reviewedColor || 'primary';
+        return `<span class="badge" style="${StatusColors.badgeStyle(color)}">Menunggu Semakan</span>`;
       }
       const map = {
         'DIHANTAR': { label: 'Menunggu Semakan', color: 'secondary' },
@@ -1299,23 +1329,23 @@
         'SELESAI': { label: 'Selesai', color: 'dark' }
       };
       const configured = statusSettings[normalized];
-      const info = configured || map[normalized] || { label: status || '-', color: 'secondary' };
-      return `<span class="badge bg-${info.color}">${info.label}</span>`;
+      const info = configured
+        ? { label: configured.label || normalized, color: configured.color || 'secondary' }
+        : (map[normalized] || { label: status || '-', color: 'secondary' });
+      return `<span class="badge" style="${StatusColors.badgeStyle(info.color)}">${escapeHtml(info.label)}</span>`;
     }
 
     async function loadStatusSettings() {
       try {
-        const response = await fetch('api/public/settings/statuses');
-        if (!response.ok) return;
-        const settings = await response.json();
-        statusSettings = Object.fromEntries(settings.map((item) => [
-          String(item.key || '').toUpperCase(),
-          {
-            label: item.value?.label || item.key,
-            color: item.value?.color || 'secondary',
-            description: item.value?.description || ''
-          }
-        ]));
+        statusSettings = await StatusColors.load();
+        StatusColors.applyCards(statusSettings, {
+          'stat-approved': 'DILULUSKAN',
+          'stat-rejected': 'DITOLAK',
+          'stat-pending-review': { status: 'DIHANTAR', field: 'reviewedColor', fallback: 'primary' },
+          'stat-pending-unreviewed': 'DIHANTAR',
+          'stat-waiting-director': 'MENUNGGU_PENGARAH',
+          'stat-completed': 'SELESAI'
+        });
       } catch (error) {
         console.warn('Konfigurasi status tidak dapat dimuatkan; guna tetapan lalai.', error);
       }
@@ -1462,18 +1492,6 @@
     function locationTypeLabel(value) {
       const map = { LOJI: 'Loji Rawatan Air', INTAKE: 'Muka Sauk' };
       return map[(value || '').toUpperCase()] || value || '-';
-    }
-
-    function isPendingReviewStatus(status) {
-      return ['DIHANTAR', 'SEMAKAN_STAFF'].includes((status || '').toUpperCase());
-    }
-
-    function isKppReturnedApplication(item) {
-      return Boolean(
-        item
-        && String(item.status || '').toUpperCase() === 'DIHANTAR'
-        && String(item.kppNote || '').trim()
-      );
     }
 
     function showNotifyModal({
@@ -2611,8 +2629,7 @@
         if (!response.ok) return;
         const applications = await response.json();
         allApplications = applications;
-        const pendingReview = applications.filter((item) =>
-          ['DIHANTAR', 'SEMAKAN_STAFF'].includes(item.status)).length;
+        const review = getReviewCounts(applications);
         const waitingDirector = applications.filter((item) => item.status === 'MENUNGGU_PENGARAH').length;
         const approved = applications.filter((item) => ['DILULUSKAN', 'PAS_DIKELUARKAN'].includes(item.status)).length;
         const rejected = applications.filter((item) => item.status === 'DITOLAK').length;
@@ -2622,7 +2639,8 @@
         document.querySelector('#stat-total').textContent = applications.length;
         document.querySelector('#stat-approved').textContent = approved;
         document.querySelector('#stat-rejected').textContent = rejected;
-        document.querySelector('#stat-pending-review').textContent = pendingReview;
+        document.querySelector('#stat-pending-review').textContent = review.reviewed;
+        document.querySelector('#stat-pending-unreviewed').textContent = review.pending;
         document.querySelector('#stat-waiting-director').textContent = waitingDirector;
         document.querySelector('#stat-completed').textContent = completed;
         document.querySelector('#dashboard-today').textContent = new Date().toLocaleDateString('ms-MY', {
@@ -2631,7 +2649,7 @@
         document.querySelector('#dashboard-updated').textContent = new Date().toLocaleTimeString('ms-MY', {
           hour: '2-digit', minute: '2-digit'
         });
-        renderPieChart(pendingReview, waitingDirector, approved, rejected, completed);
+        renderPieChart(applications);
         renderCategoryChart(applications);
       } catch (error) {
         console.error('Error loading dashboard stats:', error);
@@ -2689,6 +2707,12 @@
 
     document.addEventListener('DOMContentLoaded', async () => {
       await loadStatusSettings();
+      window.addEventListener('storage', async (event) => {
+        if (event.key !== 'statusSettingsUpdated') return;
+        await loadStatusSettings();
+        await loadDashboardStats();
+        await loadPermohonanTable();
+      });
       loadDashboardProfile();
       loadDashboardStats();
       bindFilterEvents();

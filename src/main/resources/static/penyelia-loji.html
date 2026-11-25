@@ -8,9 +8,6 @@
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.6.0/css/all.min.css">
   <link rel="stylesheet" href="css/style.css">
   <style>
-    body.internal-portal {
-      font-size: 0.9rem;
-    }
     .dashboard-stat-card {
       border: 0;
       border-radius: 8px;
@@ -42,53 +39,23 @@
       font-weight: 700;
       line-height: 1.2;
     }
-    .dashboard-kpi-row .col:nth-child(1) { --kpi-color: #0d6efd; }
-    .dashboard-kpi-row .col:nth-child(2) { --kpi-color: #ffc107; }
-    .dashboard-kpi-row .col:nth-child(3) { --kpi-color: #fd7e14; }
-    .dashboard-kpi-row .col:nth-child(4) { --kpi-color: #dc3545; }
-    .dashboard-kpi-row .col:nth-child(5) { --kpi-color: #495057; }
+    .dashboard-kpi-row .col:nth-child(1) { --kpi-color: #7c3aed; }
+    .dashboard-kpi-row .col:nth-child(2) { --kpi-color: #0d6efd; }
+    .dashboard-kpi-row .col:nth-child(3) { --kpi-color: #6c757d; }
+    .dashboard-kpi-row .col:nth-child(4) { --kpi-color: #ffc107; }
+    .dashboard-kpi-row .col:nth-child(5) { --kpi-color: #fd7e14; }
+    .dashboard-kpi-row .col:nth-child(6) { --kpi-color: #dc3545; }
+    .dashboard-kpi-row .col:nth-child(7) { --kpi-color: #495057; }
     .dashboard-chart-card {
       border: 0;
       border-radius: 8px;
       box-shadow: 0 2px 8px rgba(31, 45, 61, 0.18);
       overflow: hidden;
     }
-    .dashboard-chart-row .dashboard-chart-card {
-      height: 310px !important;
-    }
     .pie-chart-wrap {
       position: relative;
-      width: 145px;
-      height: 145px;
-      flex: 0 0 145px;
+      max-width: 300px;
       margin: 0 auto;
-    }
-    .pie-chart-wrap canvas {
-      width: 145px !important;
-      height: 145px !important;
-    }
-    #pie-legend {
-      flex: 0 0 auto;
-      margin-top: 12px !important;
-    }
-    .pie-legend-grid {
-      display: grid;
-      grid-template-columns: repeat(2, minmax(0, 1fr));
-      gap: 7px 14px;
-      width: 100%;
-    }
-    .pie-legend-item {
-      display: grid;
-      grid-template-columns: 12px minmax(0, 1fr) auto;
-      align-items: center;
-      gap: 6px;
-      min-width: 0;
-      line-height: 1.2;
-    }
-    .pie-legend-swatch {
-      width: 12px;
-      height: 12px;
-      border-radius: 3px;
     }
     .status-badge-waiting-visit {
       background-color: #fd7e14;
@@ -100,7 +67,60 @@
     }
     .status-trend-chart-wrap {
       position: relative;
-      height: 225px;
+      height: 300px;
+      margin-top: 8px;
+    }
+    .card-flat,
+    .card-flat:hover {
+      background: transparent !important;
+      box-shadow: none !important;
+    }
+    .search-panel {
+      border: 1px solid #e9ecef;
+      border-radius: 16px;
+      background: linear-gradient(135deg, #f8fbff 0%, #f3f7ff 100%);
+      padding: 16px;
+      box-shadow: inset 0 1px 0 rgba(255,255,255,0.7);
+    }
+    .search-panel .form-label {
+      font-size: 0.72rem;
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+      margin-bottom: 0.3rem;
+      color: #64748b;
+    }
+    .search-panel .form-control,
+    .search-panel .input-group-text {
+      height: 40px;
+      min-height: 40px;
+      border-color: #dbe3ee;
+      font-size: 0.9rem;
+    }
+    .search-panel .form-control {
+      border-radius: 10px;
+    }
+    .search-panel .input-group-text {
+      background: #fff;
+      border-right: 0;
+      color: #64748b;
+    }
+    .search-panel .input-group .form-control {
+      border-left: 0;
+    }
+    @media (max-width: 767.98px) {
+      .dashboard-stat-card .card-body,
+      .dashboard-chart-card .card-body {
+        padding: 1rem !important;
+      }
+      .status-trend-chart-wrap {
+        height: 240px;
+      }
+    }
+    @media (max-width: 575.98px) {
+      .search-panel {
+        padding: 10px;
+        border-radius: 12px;
+      }
     }
     .dashboard-table {
       width: 100%;
@@ -108,19 +128,20 @@
       table-layout: fixed;
     }
     .dashboard-table thead th {
-      font-size: 0.9rem;
-      letter-spacing: 0.03em;
+      font-size: 0.95rem;
+      letter-spacing: 0.04em;
       white-space: nowrap;
+      padding-top: 0.9rem;
+      padding-bottom: 0.9rem;
       background: #f8fbff;
     }
     .dashboard-table th,
     .dashboard-table td {
       padding: 0.75rem;
     }
-    .dashboard-table tbody tr {
-      height: 58px;
-    }
     .dashboard-table tbody td {
+      padding-top: 0.85rem;
+      padding-bottom: 0.85rem;
       vertical-align: middle;
       overflow-wrap: anywhere;
     }
@@ -163,12 +184,13 @@
       gap: 6px;
     }
     .tindakan-buttons .btn {
-      width: 32px;
-      height: 32px;
+      width: 36px;
+      height: 36px;
       padding: 0;
       display: inline-flex;
       align-items: center;
       justify-content: center;
+      border-radius: 10px;
     }
     .detail-modal-overlay {
       position: fixed;
@@ -305,7 +327,7 @@
 
     <section class="py-4">
       <div class="container-fluid">
-        <div class="row row-cols-2 row-cols-md-3 row-cols-xl-5 g-3 dashboard-kpi-row">
+        <div class="row row-cols-2 row-cols-md-3 row-cols-xl-4 g-3 dashboard-kpi-row">
           <div class="col">
             <div class="card dashboard-stat-card dashboard-kpi-card h-100">
               <div class="card-body d-flex flex-column justify-content-center">
@@ -314,6 +336,28 @@
                   <i class="fas fa-file-alt stat-icon"></i>
                 </div>
                 <h3 id="stat-total" class="fw-bold mb-0">0</h3>
+              </div>
+            </div>
+          </div>
+          <div class="col">
+            <div class="card dashboard-stat-card dashboard-kpi-card h-100">
+              <div class="card-body d-flex flex-column justify-content-center">
+                <div class="d-flex justify-content-between align-items-start gap-2 mb-2">
+                  <span class="kpi-label">Menunggu Semakan (Sudah Disemak)</span>
+                  <i class="fas fa-clock stat-icon"></i>
+                </div>
+                <h3 id="stat-pending-review" class="fw-bold mb-0">0</h3>
+              </div>
+            </div>
+          </div>
+          <div class="col">
+            <div class="card dashboard-stat-card dashboard-kpi-card h-100">
+              <div class="card-body d-flex flex-column justify-content-center">
+                <div class="d-flex justify-content-between align-items-start gap-2 mb-2">
+                  <span class="kpi-label">Menunggu Semakan (Belum Selesai)</span>
+                  <i class="fas fa-clock stat-icon"></i>
+                </div>
+                <h3 id="stat-pending-unreviewed" class="fw-bold mb-0">0</h3>
               </div>
             </div>
           </div>
@@ -363,15 +407,14 @@
           </div>
         </div>
 
-        <div class="row g-4 mb-4 align-items-stretch dashboard-chart-row">
+        <div class="row g-4 mb-4 align-items-stretch">
           <div class="col-lg-4">
             <div class="card dashboard-chart-card h-100">
               <div class="card-body p-4 d-flex flex-column">
                 <h4 class="h5 mb-3">Carta Ringkasan Permohonan</h4>
-                <div class="pie-chart-wrap d-flex align-items-center justify-content-center">
-                  <canvas id="pieChart" width="260" height="260"></canvas>
+                <div class="pie-chart-wrap flex-grow-1 d-flex align-items-center justify-content-center">
+                  <canvas id="pieChart" width="280" height="280" role="img" aria-label="Carta ringkasan permohonan"></canvas>
                 </div>
-                <div id="pie-legend" class="d-flex flex-column gap-2 mt-3 small text-muted"></div>
               </div>
             </div>
           </div>
@@ -381,31 +424,41 @@
               <div class="card-body p-4">
                 <h4 class="h5 mb-3">Trend Status Permohonan</h4>
                 <div class="status-trend-chart-wrap">
-                  <canvas id="statusTrendChart"></canvas>
+                  <canvas id="statusTrendChart" role="img" aria-label="Trend status permohonan"></canvas>
                 </div>
               </div>
             </div>
           </div>
         </div>
 
-        <div class="card shadow-sm dashboard-card">
-          <div class="card-header bg-info text-white py-3">
+        <div class="card card-flat border-0 shadow-none bg-transparent">
+          <div class="card-header bg-transparent border-0 py-3 px-0">
             <h2 class="h5 mb-0"><i class="fas fa-list me-2"></i>Senarai Permohonan Daerah Seliaan</h2>
+            <p class="text-muted mb-0 small">Tambah "Catatan Penyelia" apabila pelawat selesai urusan di lokasi. Status permohonan akan bertukar kepada <strong>Selesai</strong> secara automatik.</p>
           </div>
-          <div class="card-body">
-            <p class="text-muted small mb-3">Tambah "Catatan Penyelia" apabila pelawat selesai urusan di lokasi. Status permohonan akan bertukar kepada <strong>Selesai</strong> secara automatik.</p>
+          <div class="card-body px-0">
+            <div class="search-panel mb-4">
+              <div class="row g-2 align-items-end">
+                <div class="col-md-8">
+                  <label class="form-label" for="permohonan-search">Cari permohonan</label>
+                  <div class="input-group">
+                    <span class="input-group-text"><i class="fas fa-search"></i></span>
+                    <input type="search" id="permohonan-search" class="form-control" placeholder="Cari syarikat, lokasi atau status..." autocomplete="off">
+                  </div>
+                </div>
+                <div class="col-md-4">
+                  <label class="form-label" for="permohonan-date-search">Tarikh lawatan</label>
+                  <div class="input-group">
+                    <span class="input-group-text"><i class="fas fa-search"></i></span>
+                    <input type="text" id="permohonan-date-search" class="form-control" placeholder="Cari tarikh lawatan" aria-label="Cari tarikh lawatan" autocomplete="off"
+                      onfocus="this.type='date'" onblur="if(!this.value)this.type='text'">
+                  </div>
+                </div>
+              </div>
+            </div>
             <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-3">
               <div id="pagination-summary" class="text-muted small">Sila tunggu...</div>
               <div class="d-flex align-items-center gap-2 flex-wrap">
-                <div class="input-group input-group-sm" style="width: 340px;">
-                  <span class="input-group-text"><i class="fas fa-search"></i></span>
-                  <input type="search" id="permohonan-search" class="form-control" placeholder="Cari syarikat, lokasi atau status..." autocomplete="off">
-                </div>
-                <div class="input-group input-group-sm" style="width: 200px;">
-                  <span class="input-group-text"><i class="fas fa-search"></i></span>
-                  <input type="text" id="permohonan-date-search" class="form-control" placeholder="Cari tarikh lawatan" aria-label="Cari tarikh lawatan" autocomplete="off"
-                    onfocus="this.type='date'" onblur="if(!this.value)this.type='text'">
-                </div>
                 <label class="form-label mb-0 small text-muted" for="page-size-select">Paparkan</label>
                 <select id="page-size-select" class="form-select form-select-sm" style="width: auto; min-width: 90px;">
                   <option value="20">20</option>
@@ -458,9 +511,28 @@
   </footer>
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <script src="js/app.js"></script>
+  <script src="js/status-colors.js"></script>
+  <script src="js/review-status.js"></script>
   <script>
     let pieChartInstance = null;
     let statusTrendChartInstance = null;
+    let statusSettings = {};
+
+    async function loadStatusSettings() {
+      try {
+        statusSettings = await StatusColors.load();
+        StatusColors.applyCards(statusSettings, {
+          'stat-pending-review': { status: 'DIHANTAR', field: 'reviewedColor', fallback: 'primary' },
+          'stat-pending-unreviewed': 'DIHANTAR',
+          'stat-waiting-director': 'MENUNGGU_PENGARAH',
+          'stat-pas-issued': 'PAS_DIKELUARKAN',
+          'stat-rejected': 'DITOLAK',
+          'stat-completed': 'SELESAI'
+        });
+      } catch (error) {
+        console.warn('Konfigurasi status tidak dapat dimuatkan; guna tetapan lalai.', error);
+      }
+    }
 
     async function loadProfile() {
       try {
@@ -487,10 +559,15 @@
         .catch(() => {});
     }
 
-    function penyeliaStatusBadge(status) {
+    function penyeliaStatusBadge(status, item = null) {
       const normalized = (status || '').toUpperCase();
+      if (normalized === 'DIHANTAR') {
+        const color = isKppReturnedApplication(item)
+          ? (statusSettings.DIHANTAR?.reviewedColor || 'primary')
+          : (statusSettings.DIHANTAR?.color || 'secondary');
+        return `<span class="badge" style="${StatusColors.badgeStyle(color)}">Menunggu Semakan</span>`;
+      }
       const map = {
-        'DIHANTAR': { label: 'Menunggu Semakan', color: 'primary' },
         'SEMAKAN_STAFF': { label: 'Menunggu Semakan', color: 'secondary' },
         'MENUNGGU_PENGARAH': { label: 'Menunggu Pengarah', color: 'warning' },
         'DILULUSKAN': { label: 'Diluluskan', color: 'success' },
@@ -499,8 +576,11 @@
         'SELESAI': { label: 'Selesai', customClass: 'status-badge-completed' }
       };
       const info = map[normalized] || { label: status || '-', color: 'secondary' };
+      if (statusSettings[normalized]?.color) {
+        return `<span class="badge" style="${StatusColors.badgeStyle(statusSettings[normalized].color)}">${esc(info.label)}</span>`;
+      }
       const badgeClass = info.customClass || `bg-${info.color}`;
-      return `<span class="badge ${badgeClass}">${info.label}</span>`;
+      return `<span class="badge ${badgeClass}">${esc(info.label)}</span>`;
     }
 
     function formatDisplayDate(value) {
@@ -584,7 +664,7 @@
                 <div class="col-md-4">
                   <div class="detail-field">
                     <label>Status</label>
-                    <div class="value">${penyeliaStatusBadge(status)}</div>
+                    <div class="value">${penyeliaStatusBadge(status, item)}</div>
                   </div>
                 </div>
               </div>
@@ -644,20 +724,38 @@
       document.body.appendChild(modal);
     }
 
-    function renderPieChart(applications) {
-      const ctx = document.getElementById('pieChart').getContext('2d');
-      if (pieChartInstance) pieChartInstance.destroy();
-
-      const labels = ['Menunggu Pengarah', 'Menunggu Lawatan', 'Tidak Diluluskan', 'Selesai'];
+    function getSupervisorChartData(applications) {
+      const review = getReviewCounts(applications);
+      const labels = ['Semakan Belum Selesai', 'Semakan Selesai', 'Menunggu Pengarah', 'Menunggu Lawatan', 'Tidak Diluluskan', 'Selesai'];
       const statusGroups = [
         ['MENUNGGU_PENGARAH'],
         ['PAS_DIKELUARKAN'],
         ['DITOLAK'],
         ['SELESAI']
       ];
-      const values = statusGroups.map((statuses) => applications.filter((item) => statuses.includes(item.status)).length);
-      const colors = ['#ffc107', '#fd7e14', '#dc3545', '#495057'];
+      const values = [review.pending, review.reviewed,
+        ...statusGroups.map((statuses) => applications.filter((item) => statuses.includes(item.status)).length)];
+      const colors = [
+        StatusColors.chartColor(statusSettings, 'DIHANTAR', '#6c757d'),
+        StatusColors.chartColor(statusSettings, 'DIHANTAR', '#0d6efd', 'reviewedColor'),
+        StatusColors.chartColor(statusSettings, 'MENUNGGU_PENGARAH', '#ffc107'),
+        StatusColors.chartColor(statusSettings, 'PAS_DIKELUARKAN', '#fd7e14'),
+        StatusColors.chartColor(statusSettings, 'DITOLAK', '#dc3545'),
+        StatusColors.chartColor(statusSettings, 'SELESAI', '#495057')
+      ];
+      return { labels, values, colors };
+    }
+
+    function renderPieChart(applications) {
+      const canvas = document.getElementById('pieChart');
+      const ctx = canvas.getContext('2d');
+      if (pieChartInstance) pieChartInstance.destroy();
+
+      const { labels, values, colors } = getSupervisorChartData(applications);
       const hasData = values.some((v) => v > 0);
+      canvas.setAttribute('aria-label', hasData
+        ? labels.map((label, index) => `${label}: ${values[index]}`).join(', ')
+        : 'Tiada data permohonan');
 
       pieChartInstance = new Chart(ctx, {
         type: 'pie',
@@ -676,12 +774,14 @@
           plugins: {
             legend: { display: false },
             tooltip: {
+              displayColors: true,
               callbacks: {
+                title: () => '',
                 label: (context) => {
                   if (!hasData) return 'Tiada data';
                   const total = context.dataset.data.reduce((sum, value) => sum + value, 0);
                   const percentage = total ? ((context.raw / total) * 100).toFixed(1) : 0;
-                  return `${context.label}: ${context.raw} (${percentage}%)`;
+                  return `${context.label}: ${percentage}%`;
                 }
               }
             }
@@ -690,30 +790,16 @@
         }
       });
 
-      const legendEl = document.getElementById('pie-legend');
-      legendEl.innerHTML = `<div class="pie-legend-grid">${labels.map((label, i) => `
-          <span class="pie-legend-item">
-            <span class="pie-legend-swatch" style="background:${colors[i]};"></span>
-            <span>${label}</span>
-            <strong>${values[i]}</strong>
-          </span>
-        `).join('')}</div>`;
     }
 
     function renderStatusTrendChart(applications) {
-      const ctx = document.getElementById('statusTrendChart').getContext('2d');
+      const canvas = document.getElementById('statusTrendChart');
+      const ctx = canvas.getContext('2d');
       if (statusTrendChartInstance) statusTrendChartInstance.destroy();
 
-      const labels = ['Menunggu Pengarah', 'Menunggu Lawatan', 'Tidak Diluluskan', 'Selesai'];
-      const statusGroups = [
-        ['MENUNGGU_PENGARAH'],
-        ['PAS_DIKELUARKAN'],
-        ['DITOLAK'],
-        ['SELESAI']
-      ];
-      const values = statusGroups.map((statuses) => applications.filter((item) => statuses.includes(item.status)).length);
+      const { labels, values, colors } = getSupervisorChartData(applications);
+      canvas.setAttribute('aria-label', labels.map((label, index) => `${label}: ${values[index]}`).join(', '));
       const trendColor = '#0d6efd';
-      const pointColors = ['#ffc107', '#fd7e14', '#dc3545', '#495057'];
 
       statusTrendChartInstance = new Chart(ctx, {
         type: 'line',
@@ -729,7 +815,7 @@
             fill: true,
             pointRadius: 6,
             pointHoverRadius: 8,
-            pointBackgroundColor: pointColors,
+            pointBackgroundColor: colors,
             pointBorderColor: '#ffffff',
             pointBorderWidth: 2
           }]
@@ -748,7 +834,7 @@
           scales: {
             x: {
               grid: { display: false },
-              ticks: { color: '#343a40', font: { weight: '600' } }
+              ticks: { display: false }
             },
             y: {
               beginAtZero: true,
@@ -923,12 +1009,15 @@
         if (!response.ok) throw new Error('Gagal memuat senarai permohonan');
         const applications = await response.json();
 
+        const review = getReviewCounts(applications);
         const waitingDirector = applications.filter((item) => item.status === 'MENUNGGU_PENGARAH').length;
         const pasIssued = applications.filter((item) => item.status === 'PAS_DIKELUARKAN').length;
         const completed = applications.filter((item) => item.status === 'SELESAI').length;
         const rejected = applications.filter((item) => item.status === 'DITOLAK').length;
 
         document.querySelector('#stat-total').textContent = applications.length;
+        document.querySelector('#stat-pending-review').textContent = review.reviewed;
+        document.querySelector('#stat-pending-unreviewed').textContent = review.pending;
         document.querySelector('#stat-waiting-director').textContent = waitingDirector;
         document.querySelector('#stat-pas-issued').textContent = pasIssued;
         document.querySelector('#stat-completed').textContent = completed;
@@ -972,7 +1061,7 @@
             <td>${esc(item.organisation || '-')}</td>
             <td>${esc(item.locationName || '-')}</td>
             <td class="text-center">${esc(item.visitDate || '-')}</td>
-            <td class="text-center">${penyeliaStatusBadge(item.status)}</td>
+            <td class="text-center">${penyeliaStatusBadge(item.status, item)}</td>
             <td class="catatan-penyelia-column">${esc(item.penyeliaNote || '-')}</td>
             <td class="text-center">
               <span class="tindakan-buttons">
@@ -1088,7 +1177,15 @@
       });
     }
 
-    document.addEventListener('DOMContentLoaded', () => {
+    document.addEventListener('DOMContentLoaded', async () => {
+      await loadStatusSettings();
+      window.addEventListener('storage', async (event) => {
+        if (event.key !== 'statusSettingsUpdated') return;
+        await loadStatusSettings();
+        renderPieChart(cachedApplications);
+        renderStatusTrendChart(cachedApplications);
+        renderTablePage();
+      });
       loadProfile();
       bindPaginationEvents();
       ['#permohonan-search', '#permohonan-date-search'].forEach((sel) => {
